@@ -1,5 +1,6 @@
 set(Nyast_Sources
-    ObjectModel.cpp
+    Object.cpp
+    BaseClassLibrary.cpp
 )
 
 add_library(nyast STATIC ${Nyast_Sources})

@@ -1,6 +1,6 @@
 set(NyastTests_Sources
     Main.cpp
-    ObjectModel.cpp
+    Object.cpp
 )
 
 add_executable(NyastTests ${NyastTests_Sources})
