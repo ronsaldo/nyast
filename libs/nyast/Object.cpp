@@ -23,4 +23,9 @@ std::string Oop::printString() const
     return out.str();
 }
 
+std::string Oop::getClassName() const
+{
+    return getClass()->asString();
+}
+
 } // End of namespace nyast

@@ -204,6 +204,11 @@ struct Oop : OopPointerSizeDependentImplementation<uintptr_t>
         return value != nil().value;
     }
 
+    bool isNotNilOrNull() const
+    {
+        return value != 0 && value != nil().value;
+    }
+
     bool isNil() const
     {
         return value == nil().value;
@@ -261,6 +266,7 @@ struct Oop : OopPointerSizeDependentImplementation<uintptr_t>
     std::vector<Oop> asStdOopList() const;
 
     NyastObject *getClass() const;
+    std::string getClassName() const;
 
     template<typename ResultType, typename... Args>
     ResultType typedPerformInSuperclass(InlineCache *inlineCache, Oop clazz, Oop typedSelector, Args... args);

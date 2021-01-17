@@ -3,13 +3,26 @@
 namespace nyast
 {
 
+static std::unordered_map<std::string, Oop> internedSymbols;
+
 NyastObject *OopPointerSizeDependentImplementation<uint32_t>::ImmediateClassTable[ImmediateClassTableSize] = {
+    staticClassObjectFor<UndefinedObject> ().asObjectPtr(), // 2r00
+    staticClassObjectFor<SmallInteger> ().asObjectPtr(),	 // 2r01
+    staticClassObjectFor<Character> ().asObjectPtr(),	 	 // 2r10
+    staticClassObjectFor<SmallInteger> ().asObjectPtr(),	 // 2r11
 };
 
 NyastObject *OopPointerSizeDependentImplementation<uint64_t>::ImmediateClassTable[ImmediateClassTableSize] = {
-};
+    staticClassObjectFor<UndefinedObject> ().asObjectPtr(), // 2r000
+    staticClassObjectFor<SmallInteger> ().asObjectPtr(),	 // 2r001
+    staticClassObjectFor<Character> ().asObjectPtr(),	 	 // 2r010
+    staticClassObjectFor<UndefinedObject> ().asObjectPtr(), // 2r011 (Reserved)
 
-static std::unordered_map<std::string, Oop> internedSymbols;
+    staticClassObjectFor<SmallFloat64> ().asObjectPtr(), 	 // 2r100
+    staticClassObjectFor<UndefinedObject> ().asObjectPtr(), // 2r101 (Reserved)
+    staticClassObjectFor<UndefinedObject> ().asObjectPtr(), // 2r110 (Reserved)
+    staticClassObjectFor<UndefinedObject> ().asObjectPtr(), // 2r111 (Reserved)
+};
 
 Oop Oop::fromString(const std::string &string)
 {
@@ -63,11 +76,6 @@ Oop Oop::falseValue()
 //==============================================================================
 // ProtoObject
 //==============================================================================
-
-NyastObject *ProtoObject::getClass() const
-{
-    return nullptr;
-}
 
 Oop ProtoObject::lookupSelector(Oop selector) const
 {
@@ -157,6 +165,27 @@ Oop Behavior::lookupSelector(Oop selector) const
 
     return Oop::nil();
 }
+
+//==============================================================================
+// Class
+//==============================================================================
+
+std::string Class::asString() const
+{
+    return name.asString();
+}
+
+//==============================================================================
+// Metaclass
+//==============================================================================
+
+std::string Metaclass::asString() const
+{
+    if(thisClass.isNotNil())
+        return thisClass.asString() + " class";
+    return Super::asString();
+}
+
 
 //==============================================================================
 // MethodDictionary
