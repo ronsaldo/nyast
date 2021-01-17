@@ -58,6 +58,11 @@ Oop Oop::fromOopList(const std::vector<Oop> &list)
 }
 
 // The important singletons.
+Oop::Oop()
+    : OopPointerSizeDependentImplementation{UndefinedObject::uniqueInstance().value}
+{
+}
+
 Oop Oop::nil()
 {
     return UndefinedObject::uniqueInstance();

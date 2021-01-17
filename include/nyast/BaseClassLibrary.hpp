@@ -57,7 +57,7 @@ struct StaticClassObjectFor<void>
 };
 
 template<typename T>
-Oop StaticClassObjectFor<T>::oop = Oop::nil();
+Oop StaticClassObjectFor<T>::oop = Oop();
 
 template<typename T>
 Oop staticClassObjectFor ()

@@ -146,18 +146,21 @@ struct Oop : OopPointerSizeDependentImplementation<uintptr_t>
     static constexpr intptr_t SmallIntegerMinValue = -( ((intptr_t)1)<<(SmallIntegerUsableBits - 1) ) ;
     static constexpr intptr_t SmallIntegerMaxValue = +( ((intptr_t)1)<<(SmallIntegerUsableBits - 1) ) - 1;
 
+    Oop();
+    Oop(uintptr_t cvalue) : OopPointerSizeDependentImplementation{cvalue} {}
+
     static Oop nil();
     static Oop trueValue();
     static Oop falseValue();
 
     static Oop fromObjectPtr(NyastObject *ptr)
     {
-        return Oop{{reinterpret_cast<uintptr_t> (ptr)}};
+        return Oop{reinterpret_cast<uintptr_t> (ptr)};
     }
 
     static Oop fromChar32(char32_t value)
     {
-        return Oop{{(value << CharacterTagShift) | CharacterTagValue}};
+        return Oop{(value << CharacterTagShift) | CharacterTagValue};
     }
 
     static Oop fromBoolean8(bool value)
@@ -168,11 +171,11 @@ struct Oop : OopPointerSizeDependentImplementation<uintptr_t>
     static Oop fromInt32(int32_t value)
     {
         if constexpr(sizeof(int32_t) < sizeof(uintptr_t))
-            return Oop{{(value << SmallIntegerTagShift) | SmallIntegerTagValue}};
+            return Oop{(value << SmallIntegerTagShift) | SmallIntegerTagValue};
         else
         {
             if(SmallIntegerMinValue <= value && value <= SmallIntegerMaxValue)
-                return Oop{{(uint32_t(value) << SmallIntegerTagShift) | SmallIntegerTagValue}};
+                return Oop{(uint32_t(value) << SmallIntegerTagShift) | SmallIntegerTagValue};
             else
                 return fromInt64(value);
         }
@@ -181,11 +184,11 @@ struct Oop : OopPointerSizeDependentImplementation<uintptr_t>
     static Oop fromUInt32(uint32_t value)
     {
         if constexpr(sizeof(int32_t) < sizeof(uintptr_t))
-            return Oop{{(value << SmallIntegerTagShift) | SmallIntegerTagValue}};
+            return Oop{(value << SmallIntegerTagShift) | SmallIntegerTagValue};
         else
         {
             if(value <= uint32_t(SmallIntegerMaxValue))
-                return Oop{{(value << SmallIntegerTagShift) | SmallIntegerTagValue}};
+                return Oop{(value << SmallIntegerTagShift) | SmallIntegerTagValue};
             else
                 return fromUInt64(value);
         }
