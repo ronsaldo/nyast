@@ -162,7 +162,7 @@ struct Oop : OopPointerSizeDependentImplementation<uintptr_t>
 
     static Oop fromChar32(char32_t value)
     {
-        return Oop{(value << CharacterTagShift) | CharacterTagValue};
+        return Oop{(uintptr_t(value) << CharacterTagShift) | CharacterTagValue};
     }
 
     static Oop fromBoolean8(bool value)
@@ -199,7 +199,7 @@ struct Oop : OopPointerSizeDependentImplementation<uintptr_t>
     static Oop fromSize(size_t value)
     {
         if constexpr(sizeof(uint32_t) == sizeof(size_t))
-            return fromUInt32(value);
+            return fromUInt32(uint32_t(value));
         else
             return fromUInt64(value);
     }
@@ -274,7 +274,7 @@ struct Oop : OopPointerSizeDependentImplementation<uintptr_t>
     char32_t decodeCharacter() const
     {
         assert(isCharacter());
-        return value >> CharacterTagShift;
+        return char32_t(value >> CharacterTagShift);
     }
 
     std::size_t hash() const;

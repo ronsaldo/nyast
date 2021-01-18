@@ -521,7 +521,7 @@ int64_t LargePositiveInteger::asInt64() const
 double LargePositiveInteger::asFloat64() const
 {
     // FIXME: Implement this in a much more proper way.
-    return asUInt64();
+    return double(asUInt64());
 }
 
 //==============================================================================
@@ -544,7 +544,7 @@ int64_t LargeNegativeInteger::asInt64() const
 double LargeNegativeInteger::asFloat64() const
 {
     // FIXME: Implement this in a much more proper way.
-    return asInt64();
+    return double(asInt64());
 }
 
 //==============================================================================

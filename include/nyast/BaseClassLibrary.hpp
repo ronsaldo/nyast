@@ -21,7 +21,7 @@ T *makeInstance(size_t variableDataSize = 0)
     char *allocation = new char[allocationSize] ();
     memset(allocation, 0, allocationSize);
     auto result = new (allocation) T;
-    result->__variableDataSize = variableDataSize;
+    result->__variableDataSize = uint32_t(variableDataSize);
     return result;
 }
 
