@@ -196,6 +196,14 @@ struct Oop : OopPointerSizeDependentImplementation<uintptr_t>
         }
     }
 
+    static Oop fromSize(size_t value)
+    {
+        if constexpr(sizeof(uint32_t) == sizeof(size_t))
+            return fromUInt32(value);
+        else
+            return fromUInt64(value);
+    }
+
     static Oop fromInt64(int64_t value);
     static Oop fromUInt64(uint64_t value);
     static Oop fromFloat64(double value);
@@ -225,6 +233,11 @@ struct Oop : OopPointerSizeDependentImplementation<uintptr_t>
         return (value & PointerTagMask) == PointerTagValue;
     }
 
+    bool isImmediate() const
+    {
+        return !isPointer();
+    }
+
     bool isSmallInteger() const
     {
         return (value & SmallIntegerTagMask) == SmallIntegerTagValue;
@@ -239,6 +252,11 @@ struct Oop : OopPointerSizeDependentImplementation<uintptr_t>
     {
         assert(isPointer());
         return reinterpret_cast<NyastObject*> (value);
+    }
+
+    NyastObject *operator->() const
+    {
+        return asObjectPtr();
     }
 
     template<typename T>
@@ -258,6 +276,12 @@ struct Oop : OopPointerSizeDependentImplementation<uintptr_t>
         assert(isCharacter());
         return value >> CharacterTagShift;
     }
+
+    std::size_t hash() const;
+    bool equals(Oop other) const;
+
+    std::size_t identityHash() const;
+    bool identityEquals(Oop other) const;
 
     bool asBoolean8() const;
     uint32_t asUInt32() const;
@@ -387,9 +411,26 @@ struct NyastObject
 {
     virtual NyastObject *getClass() const = 0;
     virtual Oop lookupSelector(Oop selector) const = 0;
-    virtual Oop atOrNil(Oop key) const = 0;
     virtual Oop runWithIn(Oop selector, const OopList &arguments, Oop self) = 0;
     virtual MethodLookupResult asMethodLookupResult(MessageDispatchTrampolineSet trampolineSet) const = 0;
+
+    // Basic operations
+    virtual bool identityHash() const = 0;
+    virtual bool identityEquals(Oop other) const = 0;
+    virtual bool hash() const = 0;
+    virtual bool equals(Oop other) const = 0;
+
+    // Common collection methods.
+    virtual Oop scanFor(Oop key) const = 0;
+    virtual size_t getBasicSize() const = 0;
+    virtual Oop basicAt(size_t index) const = 0;
+    virtual Oop basicAtPut(size_t index, Oop value) = 0;
+    virtual size_t getSize() const = 0;
+    virtual Oop at(Oop key) const = 0;
+    virtual Oop atPut(Oop key, Oop value) = 0;
+    virtual Oop atOrNil(Oop key) const = 0;
+    virtual Oop getKey() const = 0;
+    virtual Oop getValue() const = 0;
 
     // Common conversion methods
     virtual std::string asString() const = 0;
@@ -430,9 +471,26 @@ struct NyastObjectVTable
 {
     NyastObject *(getClass) (NyastObject *self);
     Oop (*lookupSelector)(NyastObject *self, Oop selector);
-    Oop (*atOrNil)(Oop key);
     Oop (*runWithIn) (Oop selector, const OopList &marshalledArguments, Oop self);
     MethodLookupResult (*asMethodLookupResult)(NyastObject *self, MessageDispatchTrampolineSet trampolineSet);
+
+    // Basic operations
+    bool (*identityHash)();
+    bool (*identityEquals)(Oop other);
+    bool (*hash)();
+    bool (*equals)(Oop other);
+
+    // Common collection methods.
+    Oop (*scanFor)(Oop key);
+    Oop (*getBasicSize)();
+    Oop (*basicAt)(Oop key);
+    Oop (*basicAtPut)(Oop key, Oop value);
+    Oop (*getSize)();
+    Oop (*at)(Oop key);
+    Oop (*atPut)(Oop key, Oop value);
+    Oop (*atOrNil)(Oop key);
+    Oop (*getKey)();
+    Oop (*getValue)();
 
     std::string (*asString)();
     std::string (*printString)();
@@ -447,6 +505,53 @@ struct NyastObjectVTable
     std::vector<Oop> (*asOopList)();
     ByteArrayData (*asByteArrayData)();
 };
+
+inline bool Oop::identityEquals(Oop other) const
+{
+    if(isImmediate())
+        return *this == other;
+    return asObjectPtr()->identityEquals(other);
+}
+
+inline std::size_t Oop::identityHash() const
+{
+    if(isImmediate())
+        return std::hash<uintptr_t> ()(value);
+
+    return asObjectPtr()->identityHash();
+}
+
+inline bool Oop::equals(Oop other) const
+{
+    if(isPointer())
+        return asObjectPtr()->equals(other);
+
+    if(*this == other)
+        return true;
+    else if(other.isPointer())
+        return other.asObjectPtr()->equals(*this);
+
+    // SmallInteger = SmallFloat
+    if(isSmallInteger())
+    {
+        if(other.isSmallFloat())
+            return decodeSmallInteger() == other.decodeSmallFloat();
+    }
+    else if(isSmallFloat())
+    {
+        if(other.isSmallInteger())
+            return decodeSmallFloat() == other.decodeSmallInteger();
+    }
+
+    return false;
+}
+
+inline std::size_t Oop::hash() const
+{
+    if(isImmediate())
+        return std::hash<uintptr_t> ()(value);
+    return asObjectPtr()->hash();
+}
 
 inline bool Oop::asBoolean8() const
 {
@@ -826,17 +931,4 @@ ResultType Oop::performInSuperclass(InlineCache *inlineCache, Oop clazz, Oop sel
 }
 
 } // End of namespace nyast
-
-namespace std
-{
-template<>
-struct hash<nyast::Oop>
-{
-    size_t operator()(const nyast::Oop &oop) const
-    {
-        return std::hash<uintptr_t> ()(oop.value);
-    }
-};
-
-} // End of namespace std
 #endif //NYAST_OBJECT_HPP

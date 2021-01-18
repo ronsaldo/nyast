@@ -154,9 +154,24 @@ struct ProtoObject : NyastObject
     }
 
     virtual Oop lookupSelector(Oop selector) const override;
-    virtual Oop atOrNil(Oop key) const override;
     virtual Oop runWithIn(Oop selector, const OopList &marshalledArguments, Oop self) override;
     virtual MethodLookupResult asMethodLookupResult(MessageDispatchTrampolineSet trampolineSet) const override;
+
+    virtual bool identityHash() const override;
+    virtual bool identityEquals(Oop other) const override;
+    virtual bool hash() const override;
+    virtual bool equals(Oop other) const override;
+
+    virtual Oop scanFor(Oop key) const override;
+    virtual size_t getBasicSize() const override;
+    virtual Oop basicAt(size_t index) const override;
+    virtual Oop basicAtPut(size_t index, Oop value) override;
+    virtual size_t getSize() const override;
+    virtual Oop at(Oop key) const override;
+    virtual Oop atPut(Oop key, Oop value) override;
+    virtual Oop atOrNil(Oop key) const override;
+    virtual Oop getKey() const override;
+    virtual Oop getValue() const override;
 
     virtual std::string asString() const override;
     virtual std::string printString() const override;
@@ -304,27 +319,26 @@ struct Symbol : Subclass<String, Symbol>
 struct HashedCollection : Subclass<Collection, HashedCollection>
 {
     static constexpr char const __className__[] = "HashedCollection";
+
+    Oop tally;
+    Oop array;
 };
 
-
-struct AbstractDictionary : Subclass<HashedCollection, AbstractDictionary>
-{
-    static constexpr char const __className__[] = "AbstractDictionary";
-
-};
-
-struct Dictionary : Subclass<AbstractDictionary, Dictionary>
+struct Dictionary : Subclass<HashedCollection, Dictionary>
 {
     static constexpr char const __className__[] = "Dictionary";
+
+    virtual Oop atOrNil(Oop key) const override;
 };
 
-struct MethodDictionary : Subclass<AbstractDictionary, MethodDictionary>
+struct MethodDictionary : Subclass<Dictionary, MethodDictionary>
 {
     static constexpr char const __className__[] = "MethodDictionary";
 
+    virtual Oop scanFor(Oop key) const override;
     virtual Oop atOrNil(Oop key) const override;
 
-    std::unordered_map<Oop, Oop> elements;
+    Oop methods;
 };
 
 struct Magnitude : Subclass<Object, Magnitude>

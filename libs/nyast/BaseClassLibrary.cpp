@@ -146,14 +146,79 @@ static bool isVowel(char c)
     }
 }
 
+bool ProtoObject::identityHash() const
+{
+    return std::hash<uintptr_t> ()(reinterpret_cast<uintptr_t> (this));
+}
+
+bool ProtoObject::identityEquals(Oop other) const
+{
+    return asOop() == other;
+}
+
+bool ProtoObject::hash() const
+{
+    return identityHash();
+}
+
+bool ProtoObject::equals(Oop other) const
+{
+    return identityEquals(other);
+}
+
 Oop ProtoObject::lookupSelector(Oop selector) const
 {
     return asOop().perform<Oop> ("lookupSelector:", selector);
 }
 
+Oop ProtoObject::scanFor(Oop key) const
+{
+    return asOop().perform<Oop> ("scanFor:", key);
+}
+
+size_t ProtoObject::getBasicSize() const
+{
+    return asOop().perform<size_t> ("basicSize");
+}
+
+Oop ProtoObject::basicAt(size_t index) const
+{
+    return asOop().perform<Oop> ("basicAt:", index);
+}
+
+Oop ProtoObject::basicAtPut(size_t index, Oop value)
+{
+    return asOop().perform<Oop> ("basicAt:put:", index, value);
+}
+
+size_t ProtoObject::getSize() const
+{
+    return asOop().perform<size_t> ("size");
+}
+
+Oop ProtoObject::at(Oop key) const
+{
+    return asOop().perform<Oop> ("at:", key);
+}
+
+Oop ProtoObject::atPut(Oop key, Oop value)
+{
+    return asOop().perform<Oop> ("at:put:", key, value);
+}
+
 Oop ProtoObject::atOrNil(Oop key) const
 {
     return asOop().perform<Oop> ("atOrNil:", key);
+}
+
+Oop ProtoObject::getKey() const
+{
+    return asOop().perform<Oop> ("key");
+}
+
+Oop ProtoObject::getValue() const
+{
+    return asOop().perform<Oop> ("value");
 }
 
 Oop ProtoObject::runWithIn(Oop selector, const OopList &arguments, Oop self)
@@ -253,7 +318,6 @@ std::string Class::asString() const
 //==============================================================================
 // Metaclass
 //==============================================================================
-
 std::string Metaclass::asString() const
 {
     if(thisClass.isNotNil())
@@ -261,16 +325,60 @@ std::string Metaclass::asString() const
     return Super::asString();
 }
 
+//==============================================================================
+// Dictionary
+//==============================================================================
+Oop Dictionary::atOrNil(Oop key) const
+{
+    auto elementIndexOop = scanFor(key);
+    if(!elementIndexOop.isSmallInteger())
+        return Oop::nil();
+
+    auto elementIndex = elementIndexOop.decodeSmallInteger();
+    if(elementIndex == 0)
+        return Oop::nil();
+
+    return array.asObjectPtr()->at(elementIndex)
+        .asObjectPtr()->getValue();
+}
 
 //==============================================================================
 // MethodDictionary
 //==============================================================================
+Oop MethodDictionary::scanFor(Oop key) const
+{
+    auto hash = key.identityHash();
+    auto finish = array->getBasicSize();
+    auto start = (hash % finish) + 1;
+
+    for(size_t i = start; i <= finish; ++i)
+    {
+        auto element = array->basicAt(i);
+        if(element.isNil() || element.identityEquals(key))
+            return Oop::fromSize(i);
+    }
+
+    for(size_t i = 1; i < start; ++i)
+    {
+        auto element = array->basicAt(i);
+        if(element.isNil() || element.identityEquals(key))
+            return Oop::fromSize(i);
+    }
+
+    return Oop::fromSize(0);
+}
+
 Oop MethodDictionary::atOrNil(Oop key) const
 {
-    auto it = elements.find(key);
-    if(it == elements.end())
-        return it->second;
-    return Oop::nil();
+    auto elementIndexOop = scanFor(key);
+    if(!elementIndexOop.isSmallInteger())
+        return Oop::nil();
+
+    auto elementIndex = elementIndexOop.decodeSmallInteger();
+    if(elementIndex == 0)
+        return Oop::nil();
+
+    return methods.asObjectPtr()->at(elementIndex);
 }
 
 //==============================================================================
