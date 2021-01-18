@@ -1,6 +1,8 @@
 set(NyastTests_Sources
     Main.cpp
     Object.cpp
+    ScannerTests.cpp
+    ParserTests.cpp
 )
 
 add_executable(NyastTests ${NyastTests_Sources})
