@@ -1,8 +1,9 @@
 set(NyastTests_Sources
     Main.cpp
     Object.cpp
-    ScannerTests.cpp
-    ParserTests.cpp
+    SmalltalkCompiler/ScannerTests.cpp
+    SmalltalkCompiler/ParserTests.cpp
+    SmalltalkCompiler/EvaluatorTests.cpp
 )
 
 add_executable(NyastTests ${NyastTests_Sources})

@@ -19,7 +19,7 @@ static std::string scanSingleTokenText(const std::string &source)
     return tokenList[0].text();
 }
 
-SUITE(Scanner)
+SUITE(SmalltalkScanner)
 {
     TEST(EndOfSource)
     {

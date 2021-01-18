@@ -16,6 +16,8 @@ struct Oop;
 struct NyastObject;
 struct NyastObjectVTable;
 
+typedef std::vector<uint8_t> ByteArrayData;
+
 template<typename T, typename Enable=void>
 struct CppToOop;
 
@@ -198,6 +200,7 @@ struct Oop : OopPointerSizeDependentImplementation<uintptr_t>
     static Oop fromUInt64(uint64_t value);
     static Oop fromFloat64(double value);
     static Oop fromOopList(const std::vector<Oop> &value);
+    static Oop fromByteArray(const ByteArrayData &value);
 
     static Oop fromString(const std::string &string);
     static Oop internSymbol(const std::string &string);
@@ -266,7 +269,8 @@ struct Oop : OopPointerSizeDependentImplementation<uintptr_t>
     std::string asString() const;
     std::string printString() const;
     std::string asStdString() const;
-    std::vector<Oop> asStdOopList() const;
+    std::vector<Oop> asOopList() const;
+    ByteArrayData asByteArrayData() const;
 
     NyastObject *getClass() const;
     std::string getClassName() const;
@@ -399,7 +403,8 @@ struct NyastObject
     virtual char32_t asChar32() const = 0;
     virtual double asFloat64() const = 0;
     virtual std::string asStdString() const = 0;
-    virtual std::vector<Oop> asStdOopList() const = 0;
+    virtual std::vector<Oop> asOopList() const = 0;
+    virtual ByteArrayData asByteArrayData() const = 0;
 
     const NyastObjectVTable *getVTable() const
     {
@@ -429,8 +434,8 @@ struct NyastObjectVTable
     Oop (*runWithIn) (Oop selector, const OopList &marshalledArguments, Oop self);
     MethodLookupResult (*asMethodLookupResult)(NyastObject *self, MessageDispatchTrampolineSet trampolineSet);
 
-    std::string (*asString)() = 0;
-    std::string (*printString)() = 0;
+    std::string (*asString)();
+    std::string (*printString)();
     bool (*asBoolean8)();
     uint32_t (*asUInt32)();
     int32_t (*asInt32)();
@@ -439,7 +444,8 @@ struct NyastObjectVTable
     char32_t (*asChar32)();
     double (*asFloat64)();
     std::string (*asStdString)();
-    std::vector<Oop> (*asStdOopList)();
+    std::vector<Oop> (*asOopList)();
+    ByteArrayData (*asByteArrayData)();
 };
 
 inline bool Oop::asBoolean8() const
@@ -496,9 +502,15 @@ inline std::string Oop::asStdString() const
     return asObjectPtr()->asStdString();
 }
 
-inline std::vector<Oop> Oop::asStdOopList() const
+inline std::vector<Oop> Oop::asOopList() const
 {
-    return asObjectPtr()->asStdOopList();
+    return asObjectPtr()->asOopList();
+}
+
+
+inline ByteArrayData Oop::asByteArrayData() const
+{
+    return asObjectPtr()->asByteArrayData();
 }
 
 inline NyastObject *Oop::getClass() const
@@ -507,6 +519,23 @@ inline NyastObject *Oop::getClass() const
         return reinterpret_cast<NyastObject*> (value)->getClass();
 
     return ImmediateClassTable[value & TagMask];
+}
+
+inline std::ostream &operator<<(std::ostream &out, const OopList &list)
+{
+    out << "#(";
+    bool isFirst = true;
+    for(auto &el : list)
+    {
+        if(isFirst)
+            isFirst = false;
+        else
+            out << ' ';
+        out << el;
+    }
+
+    out << ')';
+    return out;
 }
 
 template<typename T>
@@ -727,7 +756,7 @@ struct OopToCpp<OopList>
 {
     OopList operator()(Oop v)
     {
-        return v.asStdOopList();
+        return v.asOopList();
     }
 };
 

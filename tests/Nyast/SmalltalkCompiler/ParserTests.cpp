@@ -18,7 +18,7 @@ static ASTNodePtr parseSequence(const std::string &text)
     return node;
 }
 
-SUITE(Parser)
+SUITE(SmalltalkParser)
 {
     TEST(Empty)
     {

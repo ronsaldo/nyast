@@ -1,4 +1,5 @@
 #include "nyast/BaseClassLibrary.hpp"
+#include <sstream>
 
 namespace nyast
 {
@@ -23,6 +24,51 @@ NyastObject *OopPointerSizeDependentImplementation<uint64_t>::ImmediateClassTabl
     staticClassObjectFor<UndefinedObject> ().asObjectPtr(), // 2r110 (Reserved)
     staticClassObjectFor<UndefinedObject> ().asObjectPtr(), // 2r111 (Reserved)
 };
+
+Oop Oop::fromInt64(int64_t value)
+{
+    if(SmallIntegerMinValue <= value && value <= SmallIntegerMaxValue)
+        return Oop{(uintptr_t(value) << SmallIntegerTagShift) | SmallIntegerTagValue};
+
+    if(value < 0)
+    {
+        auto largeInteger = makeInstance<LargeNegativeInteger> (8);
+        auto absoluteValue = -value;
+        memcpy(largeInteger->variableData(), &absoluteValue, 8);
+        return Oop::fromObjectPtr(largeInteger);
+    }
+    else
+    {
+        auto largeInteger = makeInstance<LargePositiveInteger> (8);
+        memcpy(largeInteger->variableData(), &value, 8);
+        return Oop::fromObjectPtr(largeInteger);
+    }
+}
+
+Oop Oop::fromUInt64(uint64_t value)
+{
+    if(value <= uint64_t(SmallIntegerMaxValue))
+        return Oop{(uintptr_t(value) << SmallIntegerTagShift) | SmallIntegerTagValue};
+
+    auto largeInteger = makeInstance<LargePositiveInteger> (8);
+    memcpy(largeInteger->variableData(), &value, 8);
+    return Oop::fromObjectPtr(largeInteger);
+}
+
+Oop Oop::fromFloat64(double value)
+{
+    auto boxedFloat64 = makeInstance<BoxedFloat64> ();
+    boxedFloat64->value = value;
+    return Oop::fromObjectPtr(boxedFloat64);
+}
+
+Oop Oop::fromByteArray(const ByteArrayData &data)
+{
+    auto object = makeInstance<ByteArray> (data.size());
+    if(!data.empty())
+        memcpy(object->variableData(), data.data(), data.size());
+    return Oop::fromObjectPtr(object);
+}
 
 Oop Oop::fromString(const std::string &string)
 {
@@ -82,6 +128,24 @@ Oop Oop::falseValue()
 // ProtoObject
 //==============================================================================
 
+static bool isVowel(char c)
+{
+    switch(c)
+    {
+    case 'a': return true;
+    case 'A': return true;
+    case 'e': return true;
+    case 'E': return true;
+    case 'i': return true;
+    case 'I': return true;
+    case 'o': return true;
+    case 'O': return true;
+    case 'u': return true;
+    case 'U': return true;
+    default: return false;
+    }
+}
+
 Oop ProtoObject::lookupSelector(Oop selector) const
 {
     return asOop().perform<Oop> ("lookupSelector:", selector);
@@ -104,7 +168,10 @@ MethodLookupResult ProtoObject::asMethodLookupResult(MessageDispatchTrampolineSe
 
 std::string ProtoObject::asString() const
 {
-    return "a " + getClass()->asString();
+    auto className = getClass()->asString();
+    if(!className.empty() && isVowel(className.front()))
+        return "an " + className;
+    return "a " + className;
 }
 
 std::string ProtoObject::printString() const
@@ -152,15 +219,19 @@ std::string ProtoObject::asStdString() const
     throw std::runtime_error("Cannot cast object into std::string.");
 }
 
-std::vector<Oop> ProtoObject::asStdOopList() const
+std::vector<Oop> ProtoObject::asOopList() const
 {
-    throw std::runtime_error("Cannot cast object into std::vector<oop>.");
+    throw std::runtime_error("Cannot cast object into std::vector<Oop>.");
+}
+
+ByteArrayData ProtoObject::asByteArrayData() const
+{
+    throw std::runtime_error("Cannot cast object into ByteArrayData.");
 }
 
 //==============================================================================
 // Behavior
 //==============================================================================
-
 Oop Behavior::lookupSelector(Oop selector) const
 {
     (void)selector;
@@ -174,7 +245,6 @@ Oop Behavior::lookupSelector(Oop selector) const
 //==============================================================================
 // Class
 //==============================================================================
-
 std::string Class::asString() const
 {
     return name.asString();
@@ -201,6 +271,71 @@ Oop MethodDictionary::atOrNil(Oop key) const
     if(it == elements.end())
         return it->second;
     return Oop::nil();
+}
+
+//==============================================================================
+// UndefinedObject
+//==============================================================================
+std::string UndefinedObject::asString() const
+{
+    return "nil";
+}
+
+//==============================================================================
+// True
+//==============================================================================
+std::string True::asString() const
+{
+    return "true";
+}
+
+//==============================================================================
+// False
+//==============================================================================
+std::string False::asString() const
+{
+    return "false";
+}
+
+//==============================================================================
+// Array
+//==============================================================================
+OopList Array::asOopList() const
+{
+    return OopList(begin(), end());
+}
+
+//==============================================================================
+// ByteArray
+//==============================================================================
+
+ByteArrayData ByteArray::asByteArrayData() const
+{
+    return ByteArrayData(begin(), end());
+}
+
+std::string ByteArray::asString() const
+{
+    return printString();
+}
+
+std::string ByteArray::printString() const
+{
+    std::ostringstream out;
+    out << "#[";
+    auto isFirst = true;
+    for(auto &v : *this)
+    {
+        if(isFirst)
+            isFirst = false;
+        else
+            out << ' ';
+
+        out << int(v);
+    }
+
+    out << ']' << std::ends;
+    return out.str();
 }
 
 //==============================================================================
@@ -250,6 +385,73 @@ std::string Symbol::printString() const
 
     out.push_back('\'');
     return out;
+}
+
+//==============================================================================
+// LargePositiveInteger
+//==============================================================================
+uint64_t LargePositiveInteger::asUInt64() const
+{
+    if(size() > sizeof(uint64_t))
+        return Super::asUInt64();
+
+    uint64_t decodedValue = 0;
+    // FIXME: Support the big endian variant.
+    memcpy(&decodedValue, variableData(), size());
+    return decodedValue;
+}
+
+int64_t LargePositiveInteger::asInt64() const
+{
+    auto value = asUInt64();
+    if(value > uint64_t(INT64_MAX))
+        return Super::asInt64();
+
+    return int64_t(value);
+}
+
+double LargePositiveInteger::asFloat64() const
+{
+    // FIXME: Implement this in a much more proper way.
+    return asUInt64();
+}
+
+//==============================================================================
+// LargeNegativeInteger
+//==============================================================================
+int64_t LargeNegativeInteger::asInt64() const
+{
+    if(size() > sizeof(uint64_t))
+        return Super::asInt64();
+
+    uint64_t decodedValue = 0;
+    // FIXME: Support the big endian variant.
+    memcpy(&decodedValue, variableData(), size());
+    if(decodedValue > uint64_t(-INT64_MIN))
+        return Super::asInt64();
+
+    return -int64_t(decodedValue);
+}
+
+double LargeNegativeInteger::asFloat64() const
+{
+    // FIXME: Implement this in a much more proper way.
+    return asInt64();
+}
+
+//==============================================================================
+// BoxedFloat64
+//==============================================================================
+std::string BoxedFloat64::asString() const
+{
+    std::ostringstream out;
+    out << value << std::ends;
+    return out.str();
+}
+
+double BoxedFloat64::asFloat64() const
+{
+    return value;
 }
 
 } // End of namespace nyast

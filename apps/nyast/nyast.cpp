@@ -1,6 +1,6 @@
 #include "nyast/SmalltalkCompiler/Parser.hpp"
 #include "nyast/SmalltalkCompiler/Visitors.hpp"
-#include "nyast/SmalltalkCompiler/Interpreter.hpp"
+#include "nyast/SmalltalkCompiler/Evaluator.hpp"
 #include <fstream>
 #include <iostream>
 
@@ -11,13 +11,13 @@ bool evaluateSmalltalkStreamNamed(std::istream &in, const std::string &fileName)
     auto content = std::string(std::istreambuf_iterator<char> (in), std::istreambuf_iterator<char> ());
 
     auto ast = SmalltalkCompiler::parseStringWithDoIt(content, fileName);
-    SmalltalkCompiler::validateASTParseErrors(ast, [&](SmalltalkCompiler::ASTParseErrorNode &parseErrorNode) {
+    if(!SmalltalkCompiler::validateASTParseErrors(ast, [&](SmalltalkCompiler::ASTParseErrorNode &parseErrorNode) {
         std::cout << parseErrorNode.sourcePosition << ": " << parseErrorNode.errorMessage << '\n';
         std::cout << parseErrorNode.sourcePosition.content() << std::endl;
-    });
+    }))
+        return false;
 
-    //auto result = evaluateSmalltalkScriptAST(ast, createDefaultBootstrapEvaluationEnvironmentFor(environment));
-    //std::cout << result->asString() << std::endl;
+    std::cout << SmalltalkCompiler::evaluateValidatedParsedDoIt(ast) << std::endl;
 
     return true;
 }

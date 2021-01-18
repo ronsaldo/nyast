@@ -103,6 +103,11 @@ struct SubclassWithVariableDataOfType : Subclass<ST, SelfType>
         return variableDataOf(static_cast<SelfType*> (this));
     }
 
+    const value_type *variableData() const
+    {
+        return variableDataOf(static_cast<const SelfType*> (this));
+    }
+
     iterator begin()
     {
         return variableDataOf(static_cast<SelfType*> (this));
@@ -164,7 +169,8 @@ struct ProtoObject : NyastObject
     virtual char32_t asChar32() const override;
     virtual double asFloat64() const override;
     virtual std::string asStdString() const override;
-    virtual std::vector<Oop> asStdOopList() const override;
+    virtual std::vector<Oop> asOopList() const override;
+    virtual ByteArrayData asByteArrayData() const override;
 
     uint32_t __variableDataSize;
 };
@@ -220,6 +226,8 @@ struct True : Subclass<Boolean, True>
     {
         return ObjectSingletonInstanceOf<True>::value();
     }
+
+    virtual std::string asString() const override;
 };
 
 struct False : Subclass<Boolean, False>
@@ -230,6 +238,8 @@ struct False : Subclass<Boolean, False>
     {
         return ObjectSingletonInstanceOf<False>::value();
     }
+
+    virtual std::string asString() const override;
 };
 
 struct UndefinedObject : Subclass<Object, UndefinedObject>
@@ -240,6 +250,8 @@ struct UndefinedObject : Subclass<Object, UndefinedObject>
     {
         return ObjectSingletonInstanceOf<UndefinedObject>::value();
     }
+
+    virtual std::string asString() const override;
 };
 
 struct Collection : Subclass<Object, Collection>
@@ -260,6 +272,17 @@ struct ArrayedCollection : Subclass<SequenceableCollection, ArrayedCollection>
 struct Array : SubclassWithVariableDataOfType<ArrayedCollection, Array, Oop>
 {
     static constexpr char const __className__[] = "Array";
+
+    virtual std::vector<Oop> asOopList() const override;
+};
+
+struct ByteArray : SubclassWithVariableDataOfType<ArrayedCollection, ByteArray, uint8_t>
+{
+    static constexpr char const __className__[] = "ByteArray";
+
+    virtual ByteArrayData asByteArrayData() const override;
+    virtual std::string asString() const override;
+    virtual std::string printString() const override;
 };
 
 struct String : SubclassWithVariableDataOfType<ArrayedCollection, String, char>
@@ -324,6 +347,28 @@ struct Integer : Subclass<Number, Integer>
     static constexpr char const __className__[] = "Integer";
 };
 
+struct LargeInteger : SubclassWithVariableDataOfType<Integer, LargeInteger, uint8_t>
+{
+    static constexpr char const __className__[] = "LargeInteger";
+};
+
+struct LargePositiveInteger : Subclass<LargeInteger, LargePositiveInteger>
+{
+    static constexpr char const __className__[] = "LargePositiveInteger";
+
+    virtual uint64_t asUInt64() const override;
+    virtual int64_t asInt64() const override;
+    virtual double asFloat64() const override;
+};
+
+struct LargeNegativeInteger : Subclass<LargeInteger, LargeNegativeInteger>
+{
+    static constexpr char const __className__[] = "LargeNegativeInteger";
+
+    virtual int64_t asInt64() const override;
+    virtual double asFloat64() const override;
+};
+
 struct SmallInteger : Subclass<Integer, SmallInteger>
 {
     static constexpr char const __className__[] = "SmallInteger";
@@ -332,11 +377,22 @@ struct SmallInteger : Subclass<Integer, SmallInteger>
 struct Float : Subclass<Number, Float>
 {
     static constexpr char const __className__[] = "Float";
+
 };
 
 struct SmallFloat64 : Subclass<Float, SmallFloat64>
 {
     static constexpr char const __className__[] = "SmallFloat64";
+};
+
+struct BoxedFloat64 : Subclass<Float, BoxedFloat64>
+{
+    static constexpr char const __className__[] = "BoxedFloat64";
+
+    virtual std::string asString() const override;
+    virtual double asFloat64() const override;
+
+    double value;
 };
 
 template <typename T>
