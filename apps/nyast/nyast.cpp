@@ -6,11 +6,8 @@
 
 using namespace nyast;
 
-bool evaluateSmalltalkStreamNamed(std::istream &in, const std::string &fileName)
+bool evaluateSmalltalkAST(const SmalltalkCompiler::ASTNodePtr &ast)
 {
-    auto content = std::string(std::istreambuf_iterator<char> (in), std::istreambuf_iterator<char> ());
-
-    auto ast = SmalltalkCompiler::parseStringWithDoIt(content, fileName);
     if(!SmalltalkCompiler::validateASTParseErrors(ast, [&](SmalltalkCompiler::ASTParseErrorNode &parseErrorNode) {
         std::cout << parseErrorNode.sourcePosition << ": " << parseErrorNode.errorMessage << '\n';
         std::cout << parseErrorNode.sourcePosition.content() << std::endl;
@@ -20,6 +17,14 @@ bool evaluateSmalltalkStreamNamed(std::istream &in, const std::string &fileName)
     std::cout << SmalltalkCompiler::evaluateValidatedParsedDoIt(ast) << std::endl;
 
     return true;
+}
+
+bool evaluateSmalltalkStreamNamed(std::istream &in, const std::string &fileName)
+{
+    auto content = std::string(std::istreambuf_iterator<char> (in), std::istreambuf_iterator<char> ());
+
+    auto ast = SmalltalkCompiler::parseStringWithDoIt(content, fileName);
+    return evaluateSmalltalkAST(ast);
 }
 
 bool evaluateSmalltalkFileNamed(const std::string &fileName)
@@ -36,11 +41,25 @@ bool evaluateSmalltalkFileNamed(const std::string &fileName)
     return evaluateSmalltalkStreamNamed(in, fileName);
 }
 
+bool evaluateSmalltalkExpression(const std::string &expression)
+{
+    auto ast = SmalltalkCompiler::parseStringWithDoIt(expression, "eval");
+    return evaluateSmalltalkAST(ast);
+}
+
 int main(int argc, const char *argv[])
 {
     for(int i = 1; i < argc; ++i)
     {
-        evaluateSmalltalkFileNamed(argv[i]);
+        std::string arg = argv[i];
+        if(arg == "-e" || arg == "-eval")
+        {
+            evaluateSmalltalkExpression(argv[++i]);
+        }
+        else
+        {
+            evaluateSmalltalkFileNamed(arg);
+        }
     }
 
     return 0;

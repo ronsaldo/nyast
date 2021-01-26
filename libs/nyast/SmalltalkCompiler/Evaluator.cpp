@@ -91,7 +91,18 @@ struct ASTEvaluator : ASTVisitor
         throw std::runtime_error("Failed to solve identifier reference " + node.identifier);
     }
 
-    virtual std::any visitMessageSendNode(ASTMessageSendNode &) override { abort(); }
+    virtual std::any visitMessageSendNode(ASTMessageSendNode &node) override
+    {
+        auto receiver = std::any_cast<Oop> (visitNode(*node.receiver));
+        auto selector = std::any_cast<Oop> (visitNode(*node.selector));
+        OopList arguments;
+        arguments.reserve(node.arguments.size());
+        for(auto &argNode : node.arguments)
+            arguments.push_back(std::any_cast<Oop> (visitNode(*argNode)));
+
+        return receiver.performWithArguments(selector, arguments);
+    }
+
     virtual std::any visitMessageChainNode(ASTMessageChainNode &) override { abort(); }
     virtual std::any visitMessageChainMessageNode(ASTMessageChainMessageNode &) override { abort(); }
     virtual std::any visitAssignmentNode(ASTAssignmentNode &) override { abort(); }

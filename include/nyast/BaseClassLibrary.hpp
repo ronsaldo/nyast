@@ -14,14 +14,40 @@ struct Class;
 struct Metaclass;
 struct String;
 
+typedef std::pair<Oop, Oop> MethodBinding;
+typedef std::vector<MethodBinding> MethodBindings;
+
 template<typename T>
-T *makeInstance(size_t variableDataSize = 0)
+typename T::value_type *variableDataOf(T *self)
+{
+    return reinterpret_cast<typename T::value_type*> (&self[1]);
+}
+
+template<typename T>
+const typename T::value_type *variableDataOf(const T *self)
+{
+    return reinterpret_cast<const typename T::value_type*> (&self[1]);
+}
+
+template<typename T>
+T *basicNewInstance(size_t variableDataSize = 0)
 {
     size_t allocationSize = sizeof(T) + T::variableDataElementSize * variableDataSize;
     char *allocation = new char[allocationSize] ();
     memset(allocation, 0, allocationSize);
     auto result = new (allocation) T;
     result->__variableDataSize = uint32_t(variableDataSize);
+
+    if constexpr(T::variableDataElementSize > 0)
+        new (variableDataOf(result)) typename T::value_type[variableDataSize];
+    return result;
+}
+
+template<typename T>
+T *newInstance(size_t variableDataSize = 0)
+{
+    auto result = basicNewInstance<T> (variableDataSize);
+    result->initialize();
     return result;
 }
 
@@ -65,18 +91,6 @@ Oop staticClassObjectFor ()
     return StaticClassObjectFor<T>::value();
 }
 
-template<typename T>
-typename T::value_type *variableDataOf(T *self)
-{
-    return reinterpret_cast<typename T::value_type*> (&self[1]);
-}
-
-template<typename T>
-const typename T::value_type *variableDataOf(const T *self)
-{
-    return reinterpret_cast<const typename T::value_type*> (&self[1]);
-}
-
 template<typename BT, typename ST>
 struct Subclass : BT
 {
@@ -86,6 +100,16 @@ struct Subclass : BT
     virtual NyastObject *getClass() const override
     {
         return StaticClassObjectFor<SelfType>::value().asObjectPtr();
+    }
+
+    static MethodBindings __instanceMethods__()
+    {
+        return MethodBindings{};
+    }
+
+    static MethodBindings __classMethods__()
+    {
+        return MethodBindings{};
     }
 };
 
@@ -137,6 +161,28 @@ struct SubclassWithVariableDataOfType : Subclass<ST, SelfType>
     {
         return size() == 0;
     }
+
+    virtual size_t getBasicSize() const override
+    {
+        return size();
+    }
+
+    virtual Oop basicAt(size_t index) const
+    {
+        if(index < 1 || index > size())
+            throw std::runtime_error("Out of bounds.");
+
+        return CppToOop<value_type>() (variableData()[index - 1]);
+    }
+
+    virtual Oop basicAtPut(size_t index, Oop value)
+    {
+        if(index < 1 || index > size())
+            throw std::runtime_error("Out of bounds.");
+
+        variableData()[index - 1] = OopToCpp<value_type> ()(value);
+        return value;
+    }
 };
 
 struct ProtoObject : NyastObject
@@ -148,6 +194,12 @@ struct ProtoObject : NyastObject
     static constexpr size_t variableDataElementSize = 0;
     static constexpr char const __className__[] = "ProtoObject";
 
+    static MethodBindings __instanceMethods__();
+    static MethodBindings __classMethods__();
+
+    virtual ~ProtoObject() override;
+    virtual void initialize() override;
+
     virtual NyastObject *getClass() const override
     {
         return StaticClassObjectFor<SelfType>::value().asObjectPtr();
@@ -156,20 +208,25 @@ struct ProtoObject : NyastObject
     virtual Oop lookupSelector(Oop selector) const override;
     virtual Oop runWithIn(Oop selector, const OopList &marshalledArguments, Oop self) override;
     virtual MethodLookupResult asMethodLookupResult(MessageDispatchTrampolineSet trampolineSet) const override;
+    virtual Oop doesNotUnderstand(Oop message) override;
 
     virtual bool identityHash() const override;
     virtual bool identityEquals(Oop other) const override;
     virtual bool hash() const override;
     virtual bool equals(Oop other) const override;
 
-    virtual Oop scanFor(Oop key) const override;
     virtual size_t getBasicSize() const override;
     virtual Oop basicAt(size_t index) const override;
     virtual Oop basicAtPut(size_t index, Oop value) override;
     virtual size_t getSize() const override;
     virtual Oop at(Oop key) const override;
     virtual Oop atPut(Oop key, Oop value) override;
+
     virtual Oop atOrNil(Oop key) const override;
+    virtual Oop scanFor(Oop key) const override;
+    virtual void grow() override;
+    virtual void add(Oop value) override;
+
     virtual Oop getKey() const override;
     virtual Oop getValue() const override;
 
@@ -198,8 +255,13 @@ struct Object : Subclass<ProtoObject, Object>
 struct Behavior : Subclass<Object, Behavior>
 {
     static constexpr char const __className__[] = "Behavior";
+    static MethodBindings __instanceMethods__();
 
+    virtual void initialize() override;
     virtual Oop lookupSelector(Oop selector) const override;
+    virtual Oop runWithIn(Oop selector, const OopList &marshalledArguments, Oop self) override;
+
+    void addMethodBindings(const MethodBindings &methods);
 
     Oop superclass;
     Oop methodDict;
@@ -215,8 +277,10 @@ struct Class : Subclass<ClassDescription, Class>
     static constexpr char const __className__[] = "Class";
 
     virtual std::string asString() const override;
+    virtual NyastObject *getClass() const override;
 
     Oop name;
+    Oop metaClass;
 };
 
 struct Metaclass : Subclass<ClassDescription, Metaclass>
@@ -316,11 +380,36 @@ struct Symbol : Subclass<String, Symbol>
     virtual std::string printString() const override;
 };
 
+struct Association : Subclass<Object, Association>
+{
+    static constexpr char const __className__[] = "Association";
+
+    virtual Oop getKey() const override;
+    virtual Oop getValue() const override;
+
+    Oop key;
+    Oop value;
+};
+
+struct Message : Subclass<Object, Message>
+{
+    static constexpr char const __className__[] = "Message";
+
+    virtual std::string printString() const override;
+
+    Oop selector;
+    Oop args;
+    Oop lookupClass;
+};
+
 struct HashedCollection : Subclass<Collection, HashedCollection>
 {
     static constexpr char const __className__[] = "HashedCollection";
 
-    Oop tally;
+    virtual void initialize() override;
+    void fullCheck();
+
+    size_t tally = 0;
     Oop array;
 };
 
@@ -335,8 +424,13 @@ struct MethodDictionary : Subclass<Dictionary, MethodDictionary>
 {
     static constexpr char const __className__[] = "MethodDictionary";
 
+    virtual void initialize() override;
+
     virtual Oop scanFor(Oop key) const override;
     virtual Oop atOrNil(Oop key) const override;
+
+    virtual Oop atPut(Oop key, Oop value) override;
+    virtual void grow() override;
 
     Oop methods;
 };
@@ -415,19 +509,48 @@ Oop StaticClassObjectFor<T>::value()
     if(oop.isNotNilOrNull())
         return oop;
 
-    Oop superClass = staticClassObjectFor<typename T::Super> ();
-    auto metaClass = makeInstance<Metaclass> ();
-    auto clazz = makeInstance<Class> ();
-    clazz->superclass = superClass;
-    clazz->name = Oop::internSymbol(T::__className__);
+    auto metaClass = newInstance<Metaclass> ();
+    auto clazz = newInstance<Class> ();
+    clazz->metaClass = Oop::fromObjectPtr(metaClass);
+    metaClass->thisClass = Oop::fromObjectPtr(clazz);
     oop = Oop::fromObjectPtr(clazz);
+
+    Oop superClass = staticClassObjectFor<typename T::Super> ();
+    clazz->superclass = superClass;
 
     if(superClass.isNotNil())
         metaClass->superclass = Oop::fromObjectPtr(superClass.getClass());
     else
         metaClass->superclass = staticClassObjectFor<Class> (); // Short circuit
 
+    clazz->name = Oop::internSymbol(T::__className__);
+    clazz->addMethodBindings(T::__instanceMethods__());
+    metaClass->addMethodBindings(T::__classMethods__());
+
     return oop;
+}
+
+/**
+ * I am a direct native method.
+ */
+struct NativeMethod : Subclass<Object, NativeMethod>
+{
+    static constexpr char const __className__[] = "NativeMethod";
+
+    virtual MethodLookupResult asMethodLookupResult(MessageDispatchTrampolineSet trampolineSet) const override;
+
+    Oop selector;
+    void *entryPoint;
+};
+
+template<typename FT>
+MethodBinding makeRawNativeMethodBinding(const std::string &selector, const FT &function)
+{
+    auto selectorOop = Oop::internSymbol(selector);
+    auto nativeMethod = basicNewInstance<NativeMethod> ();
+    nativeMethod->selector = selectorOop;
+    nativeMethod->entryPoint = reinterpret_cast<void*> (function);
+    return MethodBinding{selectorOop, Oop::fromObjectPtr(nativeMethod)};
 }
 
 } // End of namespace nyast

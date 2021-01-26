@@ -1,5 +1,6 @@
 #include "nyast/BaseClassLibrary.hpp"
 #include <sstream>
+#include <iostream>
 
 namespace nyast
 {
@@ -32,14 +33,14 @@ Oop Oop::fromInt64(int64_t value)
 
     if(value < 0)
     {
-        auto largeInteger = makeInstance<LargeNegativeInteger> (8);
+        auto largeInteger = newInstance<LargeNegativeInteger> (8);
         auto absoluteValue = -value;
         memcpy(largeInteger->variableData(), &absoluteValue, 8);
         return Oop::fromObjectPtr(largeInteger);
     }
     else
     {
-        auto largeInteger = makeInstance<LargePositiveInteger> (8);
+        auto largeInteger = newInstance<LargePositiveInteger> (8);
         memcpy(largeInteger->variableData(), &value, 8);
         return Oop::fromObjectPtr(largeInteger);
     }
@@ -50,21 +51,21 @@ Oop Oop::fromUInt64(uint64_t value)
     if(value <= uint64_t(SmallIntegerMaxValue))
         return Oop{(uintptr_t(value) << SmallIntegerTagShift) | SmallIntegerTagValue};
 
-    auto largeInteger = makeInstance<LargePositiveInteger> (8);
+    auto largeInteger = newInstance<LargePositiveInteger> (8);
     memcpy(largeInteger->variableData(), &value, 8);
     return Oop::fromObjectPtr(largeInteger);
 }
 
 Oop Oop::fromFloat64(double value)
 {
-    auto boxedFloat64 = makeInstance<BoxedFloat64> ();
+    auto boxedFloat64 = newInstance<BoxedFloat64> ();
     boxedFloat64->value = value;
     return Oop::fromObjectPtr(boxedFloat64);
 }
 
 Oop Oop::fromByteArray(const ByteArrayData &data)
 {
-    auto object = makeInstance<ByteArray> (data.size());
+    auto object = newInstance<ByteArray> (data.size());
     if(!data.empty())
         memcpy(object->variableData(), data.data(), data.size());
     return Oop::fromObjectPtr(object);
@@ -72,7 +73,7 @@ Oop Oop::fromByteArray(const ByteArrayData &data)
 
 Oop Oop::fromString(const std::string &string)
 {
-    auto object = makeInstance<String> (string.size());
+    auto object = newInstance<String> (string.size());
     if(!string.empty())
         memcpy(object->variableData(), string.data(), string.size());
     return Oop::fromObjectPtr(object);
@@ -84,7 +85,7 @@ Oop Oop::internSymbol(const std::string &string)
     if(it != internedSymbols.end())
         return it->second;
 
-    auto object = makeInstance<Symbol> (string.size());
+    auto object = newInstance<Symbol> (string.size());
     if(!string.empty())
         memcpy(object->variableData(), string.data(), string.size());
 
@@ -95,7 +96,7 @@ Oop Oop::internSymbol(const std::string &string)
 
 Oop Oop::fromOopList(const std::vector<Oop> &list)
 {
-    auto object = makeInstance<Array> (list.size());
+    auto object = newInstance<Array> (list.size());
     auto dest = object->variableData();
     for(size_t i = 0; i < list.size(); ++i)
         dest[i] = list[i];
@@ -146,6 +147,39 @@ static bool isVowel(char c)
     }
 }
 
+NyastObject::~NyastObject()
+{
+}
+
+ProtoObject::~ProtoObject()
+{
+}
+
+MethodBindings ProtoObject::__instanceMethods__()
+{
+    return MethodBindings{
+        makeRawNativeMethodBinding("doesNotUnderstand:", +[](Oop, Oop message) -> Oop {
+            throw std::runtime_error("Message not understood: " + message.printString());
+        }),
+        makeRawNativeMethodBinding("yourself", +[](Oop self) -> Oop {
+            return self;
+        }),
+        makeRawNativeMethodBinding("initialize", +[](Oop self) -> Oop {
+            return self;
+        })
+    };
+}
+
+MethodBindings ProtoObject::__classMethods__()
+{
+    return MethodBindings{};
+}
+
+void ProtoObject::initialize()
+{
+    // By default do nothing.
+}
+
 bool ProtoObject::identityHash() const
 {
     return std::hash<uintptr_t> ()(reinterpret_cast<uintptr_t> (this));
@@ -174,6 +208,16 @@ Oop ProtoObject::lookupSelector(Oop selector) const
 Oop ProtoObject::scanFor(Oop key) const
 {
     return asOop().perform<Oop> ("scanFor:", key);
+}
+
+void ProtoObject::grow()
+{
+    asOop().perform<void> ("grow");
+}
+
+void ProtoObject::add(Oop value)
+{
+    asOop().perform<void> ("add:", value);
 }
 
 size_t ProtoObject::getBasicSize() const
@@ -229,6 +273,11 @@ Oop ProtoObject::runWithIn(Oop selector, const OopList &arguments, Oop self)
 MethodLookupResult ProtoObject::asMethodLookupResult(MessageDispatchTrampolineSet trampolineSet) const
 {
     return MethodLookupResult{const_cast<ProtoObject*> (this), trampolineSet.objectMethodDispatchTrampoline};
+}
+
+Oop ProtoObject::doesNotUnderstand(Oop message)
+{
+    return asOop().perform<Oop> ("doesNotUnderstand:", message);
 }
 
 std::string ProtoObject::asString() const
@@ -295,21 +344,69 @@ ByteArrayData ProtoObject::asByteArrayData() const
 }
 
 //==============================================================================
+// NativeMethod
+//==============================================================================
+MethodLookupResult NativeMethod::asMethodLookupResult(MessageDispatchTrampolineSet trampolineSet) const
+{
+    return MethodLookupResult{entryPoint, trampolineSet.nativeMethodDispatchTrampoline};
+}
+
+//==============================================================================
 // Behavior
 //==============================================================================
+MethodBindings Behavior::__instanceMethods__()
+{
+    return MethodBindings{
+        makeRawNativeMethodBinding("run:with:in:", +[](Oop self, Oop selector, Oop arguments, Oop receiver) -> Oop {
+            return self->runWithIn(selector, arguments.asOopList(), receiver);
+        })
+    };
+}
+
+void Behavior::initialize()
+{
+    methodDict = Oop::fromObjectPtr(newInstance<MethodDictionary> ());
+}
+
 Oop Behavior::lookupSelector(Oop selector) const
 {
-    (void)selector;
+    auto method = methodDict->atOrNil(selector);
+    if(method.isNotNil())
+        return method;
 
     if(!superclass.isNil())
-        return superclass.asObjectPtr()->lookupSelector(selector);
+        return superclass->lookupSelector(selector);
 
     return Oop::nil();
+}
+
+Oop Behavior::runWithIn(Oop selector, const OopList &marshalledArguments, Oop receiver)
+{
+    auto message = basicNewInstance<Message> ();
+    message->selector = selector;
+    message->args = Oop::fromOopList(marshalledArguments);
+    message->lookupClass = asOop();
+    auto messageOop = Oop::fromObjectPtr(message);
+
+    if(receiver.isPointer())
+        return receiver->doesNotUnderstand(messageOop);
+    return receiver.perform<Oop> ("doesNotUnderstand:", messageOop);
+}
+
+void Behavior::addMethodBindings(const MethodBindings &methods)
+{
+    for(auto &[selector, method] : methods)
+        methodDict->atPut(selector, method);
 }
 
 //==============================================================================
 // Class
 //==============================================================================
+NyastObject *Class::getClass() const
+{
+    return metaClass.asObjectPtr();
+}
+
 std::string Class::asString() const
 {
     return name.asString();
@@ -326,6 +423,22 @@ std::string Metaclass::asString() const
 }
 
 //==============================================================================
+// HashedCollection
+//==============================================================================
+void HashedCollection::initialize()
+{
+    tally = 0;
+    array = Oop::fromObjectPtr(basicNewInstance<Array> (5));
+}
+
+void HashedCollection::fullCheck()
+{
+    auto capacity = array->getBasicSize();
+    if(capacity - tally < std::max(capacity / 4u, size_t(1u)))
+        grow();
+}
+
+//==============================================================================
 // Dictionary
 //==============================================================================
 Oop Dictionary::atOrNil(Oop key) const
@@ -338,13 +451,19 @@ Oop Dictionary::atOrNil(Oop key) const
     if(elementIndex == 0)
         return Oop::nil();
 
-    return array.asObjectPtr()->at(elementIndex)
-        .asObjectPtr()->getValue();
+    return array->basicAt(elementIndex)
+        ->getValue();
 }
 
 //==============================================================================
 // MethodDictionary
 //==============================================================================
+void MethodDictionary::initialize()
+{
+    Super::initialize();
+    methods = Oop::fromObjectPtr(basicNewInstance<Array> (array->getBasicSize()));
+}
+
 Oop MethodDictionary::scanFor(Oop key) const
 {
     auto hash = key.identityHash();
@@ -370,15 +489,37 @@ Oop MethodDictionary::scanFor(Oop key) const
 
 Oop MethodDictionary::atOrNil(Oop key) const
 {
-    auto elementIndexOop = scanFor(key);
-    if(!elementIndexOop.isSmallInteger())
-        return Oop::nil();
-
-    auto elementIndex = elementIndexOop.decodeSmallInteger();
+    auto elementIndex = scanFor(key).decodeSmallInteger();
     if(elementIndex == 0)
         return Oop::nil();
 
-    return methods.asObjectPtr()->at(elementIndex);
+    return methods->basicAt(elementIndex);
+}
+
+Oop MethodDictionary::atPut(Oop key, Oop value)
+{
+    auto elementIndex = scanFor(key).decodeSmallInteger();
+    assert(elementIndex != 0);
+
+    if(array->basicAt(elementIndex).isNil())
+    {
+        array->basicAtPut(elementIndex, key);
+        methods->basicAtPut(elementIndex, value);
+        ++tally;
+        fullCheck();
+    }
+    else
+    {
+        methods->basicAtPut(elementIndex, value);
+    }
+
+    return value;
+}
+
+void MethodDictionary::grow()
+{
+    std::cerr << "TODO: Implement MethodDictionary>>grow\n" << std::endl;
+    abort();
 }
 
 //==============================================================================
@@ -496,6 +637,33 @@ std::string Symbol::printString() const
 }
 
 //==============================================================================
+// Association
+//==============================================================================
+Oop Association::getKey() const
+{
+    return key;
+}
+
+Oop Association::getValue() const
+{
+    return value;
+}
+
+//==============================================================================
+// Message
+//==============================================================================
+
+std::string Message::printString() const
+{
+    std::ostringstream out;
+    out << selector.printString();
+    for(auto &arg : args.asOopList())
+        out << " " << arg.printString();
+    out << std::ends;
+    return out.str();
+}
+
+//==============================================================================
 // LargePositiveInteger
 //==============================================================================
 uint64_t LargePositiveInteger::asUInt64() const
@@ -535,7 +703,7 @@ int64_t LargeNegativeInteger::asInt64() const
     uint64_t decodedValue = 0;
     // FIXME: Support the big endian variant.
     memcpy(&decodedValue, variableData(), size());
-    if(decodedValue > uint64_t(-INT64_MIN))
+    if(decodedValue > -uint64_t(INT64_MIN))
         return Super::asInt64();
 
     return -int64_t(decodedValue);

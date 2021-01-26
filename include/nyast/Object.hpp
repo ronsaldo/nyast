@@ -149,7 +149,7 @@ struct Oop : OopPointerSizeDependentImplementation<uintptr_t>
     static constexpr intptr_t SmallIntegerMaxValue = +( ((intptr_t)1)<<(SmallIntegerUsableBits - 1) ) - 1;
 
     Oop();
-    Oop(uintptr_t cvalue) : OopPointerSizeDependentImplementation{cvalue} {}
+    explicit Oop(uintptr_t cvalue) : OopPointerSizeDependentImplementation{cvalue} {}
 
     static Oop nil();
     static Oop trueValue();
@@ -389,6 +389,22 @@ struct Oop : OopPointerSizeDependentImplementation<uintptr_t>
         return value >= o.value;
     }
 
+    Oop performInSuperclassWithArguments(InlineCache *inlineCache, Oop clazz, Oop selector, const std::vector<Oop> &arguments);
+
+    Oop performInSuperclassWithArguments(Oop clazz, Oop selector, const std::vector<Oop> &arguments)
+    {
+        return performInSuperclassWithArguments(nullptr, clazz, selector, arguments);
+    }
+
+    Oop performWithArguments(InlineCache *inlineCache, Oop selector, const std::vector<Oop> &arguments)
+    {
+        return performInSuperclassWithArguments(inlineCache, Oop::fromObjectPtr(getClass()), selector, arguments);
+    }
+
+    Oop performWithArguments(Oop selector, const std::vector<Oop> &arguments)
+    {
+        return performWithArguments(nullptr, selector, arguments);
+    }
 };
 
 typedef std::vector<Oop> OopList;
@@ -409,10 +425,14 @@ struct TypedOop : Oop
  */
 struct NyastObject
 {
+    virtual ~NyastObject() = 0;
+    virtual void initialize() = 0;
+
     virtual NyastObject *getClass() const = 0;
     virtual Oop lookupSelector(Oop selector) const = 0;
     virtual Oop runWithIn(Oop selector, const OopList &arguments, Oop self) = 0;
     virtual MethodLookupResult asMethodLookupResult(MessageDispatchTrampolineSet trampolineSet) const = 0;
+    virtual Oop doesNotUnderstand(Oop message) = 0;
 
     // Basic operations
     virtual bool identityHash() const = 0;
@@ -421,14 +441,19 @@ struct NyastObject
     virtual bool equals(Oop other) const = 0;
 
     // Common collection methods.
-    virtual Oop scanFor(Oop key) const = 0;
     virtual size_t getBasicSize() const = 0;
     virtual Oop basicAt(size_t index) const = 0;
     virtual Oop basicAtPut(size_t index, Oop value) = 0;
     virtual size_t getSize() const = 0;
     virtual Oop at(Oop key) const = 0;
     virtual Oop atPut(Oop key, Oop value) = 0;
+
     virtual Oop atOrNil(Oop key) const = 0;
+    virtual Oop scanFor(Oop key) const = 0;
+    virtual void grow() = 0;
+    virtual void add(Oop value) = 0;
+
+    // Association.
     virtual Oop getKey() const = 0;
     virtual Oop getValue() const = 0;
 
@@ -469,48 +494,55 @@ struct NyastObject
  */
 struct NyastObjectVTable
 {
+    void (*finalize) (NyastObject *self);
+    void (*initialize) (NyastObject *self);
+
     NyastObject *(getClass) (NyastObject *self);
     Oop (*lookupSelector)(NyastObject *self, Oop selector);
-    Oop (*runWithIn) (Oop selector, const OopList &marshalledArguments, Oop self);
+    Oop (*runWithIn) (NyastObject *self, Oop selector, const OopList &marshalledArguments, Oop receiver);
     MethodLookupResult (*asMethodLookupResult)(NyastObject *self, MessageDispatchTrampolineSet trampolineSet);
+    Oop (*doesNotUnderstand)(NyastObject *self, Oop message);
 
     // Basic operations
-    bool (*identityHash)();
-    bool (*identityEquals)(Oop other);
-    bool (*hash)();
-    bool (*equals)(Oop other);
+    bool (*identityHash)(NyastObject *self);
+    bool (*identityEquals)(NyastObject *self, Oop other);
+    bool (*hash)(NyastObject *self);
+    bool (*equals)(NyastObject *self, Oop other);
 
     // Common collection methods.
-    Oop (*scanFor)(Oop key);
-    Oop (*getBasicSize)();
-    Oop (*basicAt)(Oop key);
-    Oop (*basicAtPut)(Oop key, Oop value);
-    Oop (*getSize)();
-    Oop (*at)(Oop key);
-    Oop (*atPut)(Oop key, Oop value);
-    Oop (*atOrNil)(Oop key);
-    Oop (*getKey)();
-    Oop (*getValue)();
+    Oop (*getBasicSize)(NyastObject *self);
+    Oop (*basicAt)(NyastObject *self, Oop key);
+    Oop (*basicAtPut)(NyastObject *self, Oop key, Oop value);
+    Oop (*getSize)(NyastObject *self);
+    Oop (*at)(NyastObject *self, Oop key);
+    Oop (*atPut)(NyastObject *self, Oop key, Oop value);
 
-    std::string (*asString)();
-    std::string (*printString)();
-    bool (*asBoolean8)();
-    uint32_t (*asUInt32)();
-    int32_t (*asInt32)();
-    uint64_t (*asUInt64)();
-    int64_t (*asInt64)();
-    char32_t (*asChar32)();
-    double (*asFloat64)();
-    std::string (*asStdString)();
-    std::vector<Oop> (*asOopList)();
-    ByteArrayData (*asByteArrayData)();
+    Oop (*atOrNil)(NyastObject *self, Oop key);
+    Oop (*scanFor)(NyastObject *self, Oop key);
+    void (*grow)(NyastObject *self);
+    void (*add)(NyastObject *self, Oop value);
+
+    // Association
+    Oop (*getKey)(NyastObject *self);
+    Oop (*getValue)(NyastObject *self);
+
+    std::string (*asString)(NyastObject *self);
+    std::string (*printString)(NyastObject *self);
+    bool (*asBoolean8)(NyastObject *self);
+    uint32_t (*asUInt32)(NyastObject *self);
+    int32_t (*asInt32)(NyastObject *self);
+    uint64_t (*asUInt64)(NyastObject *self);
+    int64_t (*asInt64)(NyastObject *self);
+    char32_t (*asChar32)(NyastObject *self);
+    double (*asFloat64)(NyastObject *self);
+    std::string (*asStdString)(NyastObject *self);
+    std::vector<Oop> (*asOopList)(NyastObject *self);
+    ByteArrayData (*asByteArrayData)(NyastObject *self);
 };
 
 inline bool Oop::identityEquals(Oop other) const
 {
-    if(isImmediate())
-        return *this == other;
-    return asObjectPtr()->identityEquals(other);
+    return *this == other;
 }
 
 inline std::size_t Oop::identityHash() const
@@ -611,7 +643,6 @@ inline std::vector<Oop> Oop::asOopList() const
 {
     return asObjectPtr()->asOopList();
 }
-
 
 inline ByteArrayData Oop::asByteArrayData() const
 {
@@ -805,9 +836,45 @@ struct OopToCpp<bool>
 template<>
 struct OopToCpp<char32_t>
 {
-    uint32_t operator()(Oop v)
+    char32_t operator()(Oop v)
     {
         return v.asChar32();
+    }
+};
+
+template<>
+struct OopToCpp<char16_t>
+{
+    char16_t operator()(Oop v)
+    {
+        return char16_t(v.asChar32());
+    }
+};
+
+template<>
+struct OopToCpp<char>
+{
+    char operator()(Oop v)
+    {
+        return char(v.asChar32());
+    }
+};
+
+template<>
+struct OopToCpp<uint8_t>
+{
+    uint8_t operator()(Oop v)
+    {
+        return uint8_t(v.asUInt32());
+    }
+};
+
+template<>
+struct OopToCpp<uint16_t>
+{
+    uint16_t operator()(Oop v)
+    {
+        return uint16_t(v.asUInt32());
     }
 };
 
@@ -826,6 +893,33 @@ struct OopToCpp<uint64_t>
     uint64_t operator()(Oop v)
     {
         return v.asUInt64();
+    }
+};
+
+template<>
+struct OopToCpp<int8_t>
+{
+    int8_t operator()(Oop v)
+    {
+        return int8_t(v.asInt32());
+    }
+};
+
+template<>
+struct OopToCpp<int16_t>
+{
+    int16_t operator()(Oop v)
+    {
+        return int16_t(v.asInt32());
+    }
+};
+
+template<>
+struct OopToCpp<int32_t>
+{
+    int32_t operator()(Oop v)
+    {
+        return v.asInt32();
     }
 };
 
@@ -862,6 +956,15 @@ struct OopToCpp<OopList>
     OopList operator()(Oop v)
     {
         return v.asOopList();
+    }
+};
+
+template<>
+struct OopToCpp<void>
+{
+    void operator()(Oop)
+    {
+        // Nothing is required here.
     }
 };
 
