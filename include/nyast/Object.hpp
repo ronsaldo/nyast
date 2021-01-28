@@ -250,13 +250,18 @@ struct Oop : OopPointerSizeDependentImplementation<uintptr_t>
 
     NyastObject *asObjectPtr() const
     {
-        assert(isPointer());
         return reinterpret_cast<NyastObject*> (value);
+    }
+
+    NyastObject *asNonImmediateObjectPtr() const
+    {
+        assert(isPointer());
+        return asObjectPtr();
     }
 
     NyastObject *operator->() const
     {
-        return asObjectPtr();
+        return asNonImmediateObjectPtr();
     }
 
     template<typename T>
@@ -432,7 +437,6 @@ struct NyastObject
     virtual Oop lookupSelector(Oop selector) const = 0;
     virtual Oop runWithIn(Oop selector, const OopList &arguments, Oop self) = 0;
     virtual MethodLookupResult asMethodLookupResult(MessageDispatchTrampolineSet trampolineSet) const = 0;
-    virtual Oop doesNotUnderstand(Oop message) = 0;
 
     // Basic operations
     virtual bool identityHash() const = 0;
@@ -501,7 +505,6 @@ struct NyastObjectVTable
     Oop (*lookupSelector)(NyastObject *self, Oop selector);
     Oop (*runWithIn) (NyastObject *self, Oop selector, const OopList &marshalledArguments, Oop receiver);
     MethodLookupResult (*asMethodLookupResult)(NyastObject *self, MessageDispatchTrampolineSet trampolineSet);
-    Oop (*doesNotUnderstand)(NyastObject *self, Oop message);
 
     // Basic operations
     bool (*identityHash)(NyastObject *self);
@@ -789,7 +792,7 @@ struct CppToOop<std::string>
 };
 
 template<typename T>
-struct OopToCpp<T*, typename std::enable_if<std::is_base_of<NyastObject, T>::value>::type>
+struct CppToOop<T*, typename std::enable_if<std::is_base_of<NyastObject, T>::value>::type>
 {
     Oop operator()(T* v)
     {
@@ -968,8 +971,9 @@ struct OopToCpp<void>
     }
 };
 
+
 template<typename T>
-struct OopToCpp<T, typename std::enable_if<std::is_base_of<NyastObject, T>::value>::type>
+struct OopToCpp<T*, typename std::enable_if<std::is_base_of<NyastObject, T>::value>::type>
 {
     T *operator()(Oop v)
     {
@@ -983,7 +987,7 @@ struct NativeMethodDispatchTrampoline
     static RT value(void *methodFunctionPointer, Oop selector, Oop self, Args... args)
     {
         (void)selector;
-        return reinterpret_cast<RT (*) (void*, Args...)> (methodFunctionPointer) (reinterpret_cast<void*> (self.value), args...);
+        return reinterpret_cast<RT (*) (Oop, Args...)> (methodFunctionPointer) (self, args...);
     }
 };
 

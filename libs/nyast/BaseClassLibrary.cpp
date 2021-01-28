@@ -158,16 +158,28 @@ ProtoObject::~ProtoObject()
 MethodBindings ProtoObject::__instanceMethods__()
 {
     return MethodBindings{
-        makeRawNativeMethodBinding("doesNotUnderstand:", +[](Oop, Oop message) -> Oop {
-            throw std::runtime_error("Message not understood: " + message.printString());
-        }),
-        makeRawNativeMethodBinding("yourself", +[](Oop self) -> Oop {
-            return self;
-        }),
-        makeRawNativeMethodBinding("initialize", +[](Oop self) -> Oop {
-            return self;
-        })
+        // Basic methods.
+        makeMethodBinding("doesNotUnderstand:", &SelfType::doesNotUnderstand),
+        makeMethodBinding("yourself", &SelfType::yourself),
+        makeMethodBinding("initialize", &SelfType::initialize),
+
+        // Comparisons
+        makeMethodBinding("identityHash", &SelfType::identityHash),
+        makeMethodBinding("==", &SelfType::identityEquals),
+
+        makeMethodBinding("hash", &SelfType::hash),
+        makeMethodBinding("=", &SelfType::equals),
     };
+}
+
+Oop ProtoObject::yourself()
+{
+    return asOop();
+}
+
+Oop ProtoObject::doesNotUnderstand(Oop message)
+{
+    throw std::runtime_error("Message not understood: " + message.printString());
 }
 
 MethodBindings ProtoObject::__classMethods__()
@@ -273,11 +285,6 @@ Oop ProtoObject::runWithIn(Oop selector, const OopList &arguments, Oop self)
 MethodLookupResult ProtoObject::asMethodLookupResult(MessageDispatchTrampolineSet trampolineSet) const
 {
     return MethodLookupResult{const_cast<ProtoObject*> (this), trampolineSet.objectMethodDispatchTrampoline};
-}
-
-Oop ProtoObject::doesNotUnderstand(Oop message)
-{
-    return asOop().perform<Oop> ("doesNotUnderstand:", message);
 }
 
 std::string ProtoObject::asString() const
@@ -387,9 +394,6 @@ Oop Behavior::runWithIn(Oop selector, const OopList &marshalledArguments, Oop re
     message->args = Oop::fromOopList(marshalledArguments);
     message->lookupClass = asOop();
     auto messageOop = Oop::fromObjectPtr(message);
-
-    if(receiver.isPointer())
-        return receiver->doesNotUnderstand(messageOop);
     return receiver.perform<Oop> ("doesNotUnderstand:", messageOop);
 }
 
@@ -518,8 +522,23 @@ Oop MethodDictionary::atPut(Oop key, Oop value)
 
 void MethodDictionary::grow()
 {
-    std::cerr << "TODO: Implement MethodDictionary>>grow\n" << std::endl;
-    abort();
+    auto oldArray = array;
+    auto oldMethods = methods;
+    auto oldCapacity = oldArray->getBasicSize();
+    auto newCapacity = oldCapacity*2;
+
+    tally = 0;
+    array = Oop::fromObjectPtr(basicNewInstance<Array> (newCapacity));
+    methods = Oop::fromObjectPtr(basicNewInstance<Array> (newCapacity));
+
+    for(size_t i = 1; i <= oldCapacity; ++i)
+    {
+        auto selector = oldArray->basicAt(i);
+        if(selector.isNotNil())
+        {
+            atPut(selector, oldMethods->basicAt(i));
+        }
+    }
 }
 
 //==============================================================================
