@@ -12,9 +12,20 @@
 
 namespace nyast
 {
+typedef uintptr_t AbiOop;
 struct Oop;
-struct NyastObject;
+
 struct NyastObjectVTable;
+struct NyastObject
+{
+    NyastObject() {}
+
+    const NyastObjectVTable *__vtable;
+
+    Oop self() const;
+};
+
+struct NyastObjectDispatcher;
 
 typedef std::vector<uint8_t> ByteArrayData;
 
@@ -85,6 +96,7 @@ struct OopPointerSizeDependentImplementation<uint32_t>
 
     static constexpr size_t ImmediateClassTableSize = 1<<TagBits;
     static NyastObject *ImmediateClassTable[ImmediateClassTableSize];
+    static const NyastObjectVTable *ImmediateVTableTable[ImmediateClassTableSize];
 
     bool isSmallFloat() const
     {
@@ -125,6 +137,7 @@ struct OopPointerSizeDependentImplementation<uint64_t>
 
     static constexpr size_t ImmediateClassTableSize = 1<<TagBits;
     static NyastObject *ImmediateClassTable[ImmediateClassTableSize];
+    static const NyastObjectVTable *ImmediateVTableTable[ImmediateClassTableSize];
 
     bool isSmallFloat() const
     {
@@ -142,7 +155,7 @@ struct OopPointerSizeDependentImplementation<uint64_t>
 /**
  * I am an ordinary object pointer.
  */
-struct Oop : OopPointerSizeDependentImplementation<uintptr_t>
+struct Oop : OopPointerSizeDependentImplementation<AbiOop>
 {
     static constexpr intptr_t SmallIntegerUsableBits = OopBits - SmallIntegerTagShift;
     static constexpr intptr_t SmallIntegerMinValue = -( ((intptr_t)1)<<(SmallIntegerUsableBits - 1) ) ;
@@ -155,7 +168,7 @@ struct Oop : OopPointerSizeDependentImplementation<uintptr_t>
     static Oop trueValue();
     static Oop falseValue();
 
-    static Oop fromObjectPtr(NyastObject *ptr)
+    static Oop fromObjectPtr(const NyastObject *ptr)
     {
         return Oop{reinterpret_cast<uintptr_t> (ptr)};
     }
@@ -261,20 +274,14 @@ struct Oop : OopPointerSizeDependentImplementation<uintptr_t>
         return (value & CharacterTagMask) == CharacterTagValue;
     }
 
-    NyastObject *asObjectPtr() const
+    NyastObject *asObjectPtr()
     {
         return reinterpret_cast<NyastObject*> (value);
     }
 
-    NyastObject *asNonImmediateObjectPtr() const
+    NyastObjectDispatcher *operator->() const
     {
-        assert(isPointer());
-        return asObjectPtr();
-    }
-
-    NyastObject *operator->() const
-    {
-        return asNonImmediateObjectPtr();
+        return reinterpret_cast<NyastObjectDispatcher*> (value);
     }
 
     template<typename T>
@@ -295,27 +302,8 @@ struct Oop : OopPointerSizeDependentImplementation<uintptr_t>
         return char32_t(value >> CharacterTagShift);
     }
 
-    std::size_t hash() const;
-    bool equals(Oop other) const;
-
-    std::size_t identityHash() const;
-    bool identityEquals(Oop other) const;
-
-    bool asBoolean8() const;
-    uint32_t asUInt32() const;
-    int32_t asInt32() const;
-    uint64_t asUInt64() const;
-    int64_t asInt64() const;
-    char32_t asChar32() const;
-    double asFloat64() const;
-    std::string asString() const;
-    std::string printString() const;
-    std::string asStdString() const;
-    std::vector<Oop> asOopList() const;
-    ByteArrayData asByteArrayData() const;
-
-    NyastObject *getClass() const;
-    std::string getClassName() const;
+    const NyastObjectVTable *getVTable() const;
+    Oop getClass() const;
 
     template<typename ResultType, typename... Args>
     ResultType typedPerformInSuperclass(InlineCache *inlineCache, Oop clazz, Oop typedSelector, Args... args);
@@ -326,13 +314,13 @@ struct Oop : OopPointerSizeDependentImplementation<uintptr_t>
     template<typename ResultType, typename... Args>
     ResultType typedPerform(InlineCache *inlineCache, Oop typedSelector, Args... args)
     {
-        return typedPerformInSuperclass<ResultType> (inlineCache, Oop::fromObjectPtr(getClass()), typedSelector, args...);
+        return typedPerformInSuperclass<ResultType> (inlineCache, getClass(), typedSelector, args...);
     }
 
     template<typename ResultType, typename... Args>
     ResultType perform(InlineCache *inlineCache, Oop selector, Args... args)
     {
-        return performInSuperclass<ResultType> (inlineCache, Oop::fromObjectPtr(getClass()), selector, args...);
+        return performInSuperclass<ResultType> (inlineCache, getClass(), selector, args...);
     }
 
     template<typename ResultType, typename... Args>
@@ -369,12 +357,6 @@ struct Oop : OopPointerSizeDependentImplementation<uintptr_t>
     ResultType perform(const std::string &selector, Args... args)
     {
         return perform<ResultType> (nullptr, selector, args...);
-    }
-
-    friend std::ostream &operator<<(std::ostream &out, const Oop &self)
-    {
-        out << self.asString();
-        return out;
     }
 
     bool operator==(const Oop &o) const
@@ -416,7 +398,7 @@ struct Oop : OopPointerSizeDependentImplementation<uintptr_t>
 
     Oop performWithArguments(InlineCache *inlineCache, Oop selector, const std::vector<Oop> &arguments)
     {
-        return performInSuperclassWithArguments(inlineCache, Oop::fromObjectPtr(getClass()), selector, arguments);
+        return performInSuperclassWithArguments(inlineCache, getClass(), selector, arguments);
     }
 
     Oop performWithArguments(Oop selector, const std::vector<Oop> &arguments)
@@ -424,6 +406,11 @@ struct Oop : OopPointerSizeDependentImplementation<uintptr_t>
         return performWithArguments(nullptr, selector, arguments);
     }
 };
+
+inline Oop NyastObject::self() const
+{
+    return Oop::fromObjectPtr(this);
+}
 
 typedef std::vector<Oop> OopList;
 
@@ -436,241 +423,365 @@ struct TypedOop : Oop
     }
 };
 
-
 /**
- * I am the mandatory interface that must be implemented by each managed non-immediate object.
- * I provide basic interface methods that are used for connecting the Smalltalk and C++ worlds.
- */
-struct NyastObject
-{
-    virtual ~NyastObject() = 0;
-    virtual void initialize() = 0;
-
-    virtual NyastObject *getClass() const = 0;
-    virtual Oop lookupSelector(Oop selector) const = 0;
-    virtual Oop runWithIn(Oop selector, const OopList &arguments, Oop self) = 0;
-    virtual MethodLookupResult asMethodLookupResult(MessageDispatchTrampolineSet trampolineSet) const = 0;
-
-    // Basic operations
-    virtual bool identityHash() const = 0;
-    virtual bool identityEquals(Oop other) const = 0;
-    virtual bool hash() const = 0;
-    virtual bool equals(Oop other) const = 0;
-
-    // Common collection methods.
-    virtual size_t getBasicSize() const = 0;
-    virtual Oop basicAt(size_t index) const = 0;
-    virtual Oop basicAtPut(size_t index, Oop value) = 0;
-    virtual size_t getSize() const = 0;
-    virtual Oop at(Oop key) const = 0;
-    virtual Oop atPut(Oop key, Oop value) = 0;
-
-    virtual Oop atOrNil(Oop key) const = 0;
-    virtual Oop scanFor(Oop key) const = 0;
-    virtual void grow() = 0;
-    virtual void add(Oop value) = 0;
-
-    // Association.
-    virtual Oop getKey() const = 0;
-    virtual Oop getValue() const = 0;
-
-    // Common conversion methods
-    virtual std::string asString() const = 0;
-    virtual std::string printString() const = 0;
-
-    virtual bool asBoolean8() const = 0;
-    virtual uint32_t asUInt32() const = 0;
-    virtual int32_t asInt32() const = 0;
-    virtual uint64_t asUInt64() const = 0;
-    virtual int64_t asInt64() const = 0;
-    virtual char32_t asChar32() const = 0;
-    virtual double asFloat64() const = 0;
-    virtual std::string asStdString() const = 0;
-    virtual std::vector<Oop> asOopList() const = 0;
-    virtual ByteArrayData asByteArrayData() const = 0;
-
-    const NyastObjectVTable *getVTable() const
-    {
-        return reinterpret_cast<const NyastObjectVTable* const*> (this)[0];
-    }
-
-    void setVTable(const NyastObjectVTable *vtable)
-    {
-        reinterpret_cast<const NyastObjectVTable**> (this)[0] = vtable;
-    }
-
-    Oop asOop() const
-    {
-        return Oop::fromObjectPtr(const_cast<NyastObject*> (this));
-    }
-};
-
-/**
- * I am an explicit declaration of a nyast object vtable.
- * I am used to allow creating new subclasses in the smalltalk world.
+ * I am a definition of the nyast object vtable.
  */
 struct NyastObjectVTable
 {
-    void (*finalize) (NyastObject *self);
-    void (*initialize) (NyastObject *self);
+    // Construction / finalization
+    void (*basicInitialize) (AbiOop self);
+    void (*initialize) (AbiOop self);
+    void (*finalize) (AbiOop self);
 
-    NyastObject *(getClass) (NyastObject *self);
-    Oop (*lookupSelector)(NyastObject *self, Oop selector);
-    Oop (*runWithIn) (NyastObject *self, Oop selector, const OopList &marshalledArguments, Oop receiver);
-    MethodLookupResult (*asMethodLookupResult)(NyastObject *self, MessageDispatchTrampolineSet trampolineSet);
+    // Reflection core.
+    Oop (*getClass) (AbiOop self);
+    Oop (*lookupSelector)(AbiOop self, Oop selector);
+    Oop (*runWithIn) (AbiOop self, Oop selector, const OopList &marshalledArguments, Oop receiver);
+    MethodLookupResult (*asMethodLookupResult)(AbiOop self, MessageDispatchTrampolineSet trampolineSet);
 
     // Basic operations
-    bool (*identityHash)(NyastObject *self);
-    bool (*identityEquals)(NyastObject *self, Oop other);
-    bool (*hash)(NyastObject *self);
-    bool (*equals)(NyastObject *self, Oop other);
+    size_t (*identityHash)(AbiOop self);
+    bool (*identityEquals)(AbiOop self, Oop other);
+    size_t (*hash)(AbiOop self);
+    bool (*equals)(AbiOop self, Oop other);
 
     // Common collection methods.
-    Oop (*getBasicSize)(NyastObject *self);
-    Oop (*basicAt)(NyastObject *self, Oop key);
-    Oop (*basicAtPut)(NyastObject *self, Oop key, Oop value);
-    Oop (*getSize)(NyastObject *self);
-    Oop (*at)(NyastObject *self, Oop key);
-    Oop (*atPut)(NyastObject *self, Oop key, Oop value);
+    size_t (*getBasicSize)(AbiOop self);
+    Oop (*basicAt)(AbiOop self, size_t key);
+    Oop (*basicAtPut)(AbiOop self, size_t key, Oop value);
 
-    Oop (*atOrNil)(NyastObject *self, Oop key);
-    Oop (*scanFor)(NyastObject *self, Oop key);
-    void (*grow)(NyastObject *self);
-    void (*add)(NyastObject *self, Oop value);
+    size_t (*getSize)(AbiOop self);
+    Oop (*at)(AbiOop self, Oop key);
+    Oop (*atPut)(AbiOop self, Oop key, Oop value);
+
+    Oop (*atOrNil)(AbiOop self, Oop key);
+    Oop (*scanFor)(AbiOop self, Oop key);
+    void (*grow)(AbiOop self);
+    Oop (*add)(AbiOop self, Oop value);
 
     // Association
-    Oop (*getKey)(NyastObject *self);
-    Oop (*getValue)(NyastObject *self);
+    Oop (*getKey)(AbiOop self);
 
-    std::string (*asString)(NyastObject *self);
-    std::string (*printString)(NyastObject *self);
-    bool (*asBoolean8)(NyastObject *self);
-    uint32_t (*asUInt32)(NyastObject *self);
-    int32_t (*asInt32)(NyastObject *self);
-    uint64_t (*asUInt64)(NyastObject *self);
-    int64_t (*asInt64)(NyastObject *self);
-    char32_t (*asChar32)(NyastObject *self);
-    double (*asFloat64)(NyastObject *self);
-    std::string (*asStdString)(NyastObject *self);
-    std::vector<Oop> (*asOopList)(NyastObject *self);
-    ByteArrayData (*asByteArrayData)(NyastObject *self);
+    // Blocks
+    Oop (*evaluateValue)(AbiOop self);
+
+    // Testing methods
+    bool (*isArray)(AbiOop self);
+    bool (*isAssociation)(AbiOop self);
+    bool (*isBehavior)(AbiOop self);
+    bool (*isBlock)(AbiOop self);
+    bool (*isCharacter)(AbiOop self);
+    bool (*isDictionary)(AbiOop self);
+    bool (*isFloat)(AbiOop self);
+    bool (*isFraction)(AbiOop self);
+    bool (*isInteger)(AbiOop self);
+    bool (*isInterval)(AbiOop self);
+    bool (*isNumber)(AbiOop self);
+    bool (*isString)(AbiOop self);
+    bool (*isSymbol)(AbiOop self);
+
+    // Basic conversions
+    std::string (*asString)(AbiOop self);
+    std::string (*printString)(AbiOop self);
+    bool (*asBoolean8)(AbiOop self);
+    uint32_t (*asUInt32)(AbiOop self);
+    int32_t (*asInt32)(AbiOop self);
+    uint64_t (*asUInt64)(AbiOop self);
+    int64_t (*asInt64)(AbiOop self);
+    char32_t (*asChar32)(AbiOop self);
+    double (*asFloat64)(AbiOop self);
+    std::string (*asStdString)(AbiOop self);
+    std::vector<Oop> (*asOopList)(AbiOop self);
+    ByteArrayData (*asByteArrayData)(AbiOop self);
 };
 
-inline bool Oop::identityEquals(Oop other) const
+struct NyastObjectDispatcher
 {
-    return *this == other;
-}
-
-inline std::size_t Oop::identityHash() const
-{
-    if(isImmediate())
-        return std::hash<uintptr_t> ()(value);
-
-    return asObjectPtr()->identityHash();
-}
-
-inline bool Oop::equals(Oop other) const
-{
-    if(isPointer())
-        return asObjectPtr()->equals(other);
-
-    if(*this == other)
-        return true;
-    else if(other.isPointer())
-        return other.asObjectPtr()->equals(*this);
-
-    // SmallInteger = SmallFloat
-    if(isSmallInteger())
+    Oop self() const
     {
-        if(other.isSmallFloat())
-            return decodeSmallInteger() == other.decodeSmallFloat();
-    }
-    else if(isSmallFloat())
-    {
-        if(other.isSmallInteger())
-            return decodeSmallFloat() == other.decodeSmallInteger();
+        return Oop::fromObjectPtr(reinterpret_cast<const NyastObject*> (this));
     }
 
-    return false;
-}
+    AbiOop abiSelf() const
+    {
+        return self().value;
+    }
 
-inline std::size_t Oop::hash() const
+    const NyastObjectVTable *__vtable() const
+    {
+        return self().getVTable();
+    }
+
+    // Construction / finalization
+    void basicInitialize()
+    {
+        __vtable()->basicInitialize(abiSelf());
+    }
+
+    void initialize()
+    {
+        __vtable()->initialize(abiSelf());
+    }
+
+    void finalize()
+    {
+        __vtable()->finalize(abiSelf());
+    }
+
+    // Reflection core.
+    Oop getClass() const
+    {
+        return __vtable()->getClass(abiSelf());
+    }
+
+    std::string getClassName() const
+    {
+        return getClass()->asString();
+    }
+
+    Oop lookupSelector(Oop selector) const
+    {
+        return __vtable()->lookupSelector(abiSelf(), selector);
+    }
+
+    Oop runWithIn(Oop selector, const OopList &marshalledArguments, Oop receiver)
+    {
+        return __vtable()->runWithIn(abiSelf(), selector, marshalledArguments, receiver);
+    }
+
+    MethodLookupResult asMethodLookupResult(MessageDispatchTrampolineSet trampolineSet) const
+    {
+        return __vtable()->asMethodLookupResult(abiSelf(), trampolineSet);
+    }
+
+    // Basic operations.
+    std::size_t identityHash() const
+    {
+        return __vtable()->identityHash(abiSelf());
+    }
+
+    bool identityEquals(Oop other) const
+    {
+        return __vtable()->identityEquals(abiSelf(), other);
+    }
+
+    std::size_t hash() const
+    {
+        return __vtable()->hash(abiSelf());
+    }
+
+    bool equals(Oop other) const
+    {
+        return __vtable()->equals(abiSelf(), other);
+    }
+
+    bool asBoolean8() const
+    {
+        return __vtable()->asBoolean8(abiSelf());
+    }
+
+    // Common collection methods.
+    size_t getBasicSize() const
+    {
+        return __vtable()->getBasicSize(abiSelf());
+    }
+
+    Oop basicAt(size_t key) const
+    {
+        return __vtable()->basicAt(abiSelf(), key);
+    }
+
+    Oop basicAtPut(size_t key, Oop value)
+    {
+        return __vtable()->basicAtPut(abiSelf(), key, value);
+    }
+
+    size_t getSize() const
+    {
+        return __vtable()->getSize(abiSelf());
+    }
+
+    Oop at(Oop key) const
+    {
+        return __vtable()->at(abiSelf(), key);
+    }
+
+    Oop atPut(Oop key, Oop value)
+    {
+        return __vtable()->atPut(abiSelf(), key, value);
+    }
+
+    Oop atOrNil(Oop key) const
+    {
+        return __vtable()->atOrNil(abiSelf(), key);
+    }
+
+    Oop scanFor(Oop key) const
+    {
+        return __vtable()->scanFor(abiSelf(), key);
+    }
+
+    void grow()
+    {
+        return __vtable()->grow(abiSelf());
+    }
+
+    Oop add(Oop value)
+    {
+        return __vtable()->add(abiSelf(), value);
+    }
+
+    // Association
+    Oop getKey() const
+    {
+        return __vtable()->getKey(abiSelf());
+    }
+
+    Oop evaluateValue() const
+    {
+        return __vtable()->evaluateValue(abiSelf());
+    }
+
+    // Testing methods.
+    bool isArray() const
+    {
+        return __vtable()->isArray(abiSelf());
+    }
+
+    bool isAssociation() const
+    {
+        return __vtable()->isAssociation(abiSelf());
+    }
+
+    bool isBehavior() const
+    {
+        return __vtable()->isBehavior(abiSelf());
+    }
+
+    bool isBlock() const
+    {
+        return __vtable()->isBlock(abiSelf());
+    }
+
+    bool isCharacter() const
+    {
+        return __vtable()->isCharacter(abiSelf());
+    }
+
+    bool isDictionary() const
+    {
+        return __vtable()->isDictionary(abiSelf());
+    }
+
+    bool isFloat() const
+    {
+        return __vtable()->isFloat(abiSelf());
+    }
+
+    bool isFraction() const
+    {
+        return __vtable()->isFraction(abiSelf());
+    }
+
+    bool isInteger() const
+    {
+        return __vtable()->isInteger(abiSelf());
+    }
+
+    bool isInterval() const
+    {
+        return __vtable()->isInterval(abiSelf());
+    }
+
+    bool isNumber() const
+    {
+        return __vtable()->isNumber(abiSelf());
+    }
+
+    bool isString() const
+    {
+        return __vtable()->isString(abiSelf());
+    }
+
+    bool isSymbol() const
+    {
+        return __vtable()->isSymbol(abiSelf());
+    }
+
+    // Basic conversions.
+    uint32_t asUInt32() const
+    {
+        return __vtable()->asUInt32(abiSelf());
+    }
+
+    int32_t asInt32() const
+    {
+        return __vtable()->asInt32(abiSelf());
+    }
+
+    uint64_t asUInt64() const
+    {
+        return __vtable()->asUInt64(abiSelf());
+    }
+
+    int64_t asInt64() const
+    {
+        return __vtable()->asInt64(abiSelf());
+    }
+
+    char32_t asChar32() const
+    {
+        return __vtable()->asChar32(abiSelf());
+    }
+
+    double asFloat64() const
+    {
+        return __vtable()->asFloat64(abiSelf());
+    }
+
+    std::string asString() const
+    {
+        return __vtable()->asString(abiSelf());
+    }
+
+    std::string printString() const
+    {
+        return __vtable()->printString(abiSelf());
+    }
+
+    std::string asStdString() const
+    {
+        return __vtable()->asStdString(abiSelf());
+    }
+
+    std::vector<Oop> asOopList() const
+    {
+        return __vtable()->asOopList(abiSelf());
+    }
+
+    ByteArrayData asByteArrayData() const
+    {
+        return __vtable()->asByteArrayData(abiSelf());
+    }
+};
+
+inline std::ostream &operator<<(std::ostream &out, const Oop &self)
 {
-    if(isImmediate())
-        return std::hash<uintptr_t> ()(value);
-    return asObjectPtr()->hash();
+    out << self->asString();
+    return out;
 }
 
-inline bool Oop::asBoolean8() const
-{
-    return asObjectPtr()->asBoolean8();
-}
-
-inline uint32_t Oop::asUInt32() const
-{
-    if(isSmallInteger())
-        return static_cast<uint32_t> (decodeSmallInteger());
-    return asObjectPtr()->asUInt32();
-}
-
-inline int32_t Oop::asInt32() const
-{
-    if(isSmallInteger())
-        return static_cast<int32_t> (decodeSmallInteger());
-    return asObjectPtr()->asInt32();
-}
-
-inline uint64_t Oop::asUInt64() const
-{
-    if(isSmallInteger())
-        return static_cast<uint64_t> (decodeSmallInteger());
-    return asObjectPtr()->asUInt64();
-}
-
-inline int64_t Oop::asInt64() const
-{
-    if(isSmallInteger())
-        return static_cast<int64_t> (decodeSmallInteger());
-    return asObjectPtr()->asInt64();
-}
-
-inline char32_t Oop::asChar32() const
-{
-    if(isCharacter())
-        return decodeCharacter();
-
-    return asObjectPtr()->asChar32();
-}
-
-inline double Oop::asFloat64() const
-{
-    if(isSmallFloat())
-        return decodeSmallFloat();
-
-    return asObjectPtr()->asFloat64();
-}
-
-inline std::string Oop::asStdString() const
-{
-    return asObjectPtr()->asStdString();
-}
-
-inline std::vector<Oop> Oop::asOopList() const
-{
-    return asObjectPtr()->asOopList();
-}
-
-inline ByteArrayData Oop::asByteArrayData() const
-{
-    return asObjectPtr()->asByteArrayData();
-}
-
-inline NyastObject *Oop::getClass() const
+inline const NyastObjectVTable *Oop::getVTable() const
 {
     if(isPointer())
-        return reinterpret_cast<NyastObject*> (value)->getClass();
+        return reinterpret_cast<NyastObject*> (value)->__vtable;
 
-    return ImmediateClassTable[value & TagMask];
+    return ImmediateVTableTable[value & TagMask];
+}
+
+inline Oop Oop::getClass() const
+{
+    return getVTable()->getClass(value);
 }
 
 inline std::ostream &operator<<(std::ostream &out, const OopList &list)
@@ -813,6 +924,15 @@ struct CppToOop<T*, typename std::enable_if<std::is_base_of<NyastObject, T>::val
     }
 };
 
+template<typename T>
+struct OopToCpp<T*, typename std::enable_if<std::is_base_of<NyastObject, T>::value>::type>
+{
+    T *operator()(Oop v)
+    {
+        return static_cast<T*> (v.asObjectPtr());
+    }
+};
+
 template<>
 struct CppToOop<const char*>
 {
@@ -845,7 +965,7 @@ struct OopToCpp<bool>
 {
     uint32_t operator()(Oop v)
     {
-        return v.asBoolean8();
+        return v->asBoolean8();
     }
 };
 
@@ -854,7 +974,7 @@ struct OopToCpp<char32_t>
 {
     char32_t operator()(Oop v)
     {
-        return v.asChar32();
+        return v->asChar32();
     }
 };
 
@@ -863,7 +983,7 @@ struct OopToCpp<char16_t>
 {
     char16_t operator()(Oop v)
     {
-        return char16_t(v.asChar32());
+        return char16_t(v->asChar32());
     }
 };
 
@@ -872,7 +992,7 @@ struct OopToCpp<char>
 {
     char operator()(Oop v)
     {
-        return char(v.asChar32());
+        return char(v->asChar32());
     }
 };
 
@@ -881,7 +1001,7 @@ struct OopToCpp<uint8_t>
 {
     uint8_t operator()(Oop v)
     {
-        return uint8_t(v.asUInt32());
+        return uint8_t(v->asUInt32());
     }
 };
 
@@ -890,7 +1010,7 @@ struct OopToCpp<uint16_t>
 {
     uint16_t operator()(Oop v)
     {
-        return uint16_t(v.asUInt32());
+        return uint16_t(v->asUInt32());
     }
 };
 
@@ -899,7 +1019,7 @@ struct OopToCpp<uint32_t>
 {
     uint32_t operator()(Oop v)
     {
-        return v.asUInt32();
+        return v->asUInt32();
     }
 };
 
@@ -908,7 +1028,7 @@ struct OopToCpp<uint64_t>
 {
     uint64_t operator()(Oop v)
     {
-        return v.asUInt64();
+        return v->asUInt64();
     }
 };
 
@@ -917,7 +1037,7 @@ struct OopToCpp<int8_t>
 {
     int8_t operator()(Oop v)
     {
-        return int8_t(v.asInt32());
+        return int8_t(v->asInt32());
     }
 };
 
@@ -926,7 +1046,7 @@ struct OopToCpp<int16_t>
 {
     int16_t operator()(Oop v)
     {
-        return int16_t(v.asInt32());
+        return int16_t(v->asInt32());
     }
 };
 
@@ -935,7 +1055,7 @@ struct OopToCpp<int32_t>
 {
     int32_t operator()(Oop v)
     {
-        return v.asInt32();
+        return v->asInt32();
     }
 };
 
@@ -944,7 +1064,7 @@ struct OopToCpp<int64_t>
 {
     int64_t operator()(Oop v)
     {
-        return v.asInt64();
+        return v->asInt64();
     }
 };
 
@@ -953,7 +1073,7 @@ struct OopToCpp<double>
 {
     double operator()(Oop v)
     {
-        return v.asFloat64();
+        return v->asFloat64();
     }
 };
 
@@ -962,7 +1082,7 @@ struct OopToCpp<std::string>
 {
     std::string operator()(Oop v)
     {
-        return v.asStdString();
+        return v->asStdString();
     }
 };
 
@@ -974,7 +1094,7 @@ struct OopToCpp<OopList>
 {
     OopList operator()(Oop v)
     {
-        return v.asOopList();
+        return v->asOopList();
     }
 };
 
@@ -988,16 +1108,6 @@ struct OopToCpp<void>
     void operator()(Oop)
     {
         // Nothing is required here.
-    }
-};
-
-
-template<typename T>
-struct OopToCpp<T*, typename std::enable_if<std::is_base_of<NyastObject, T>::value>::type>
-{
-    T *operator()(Oop v)
-    {
-        return static_cast<T*> (v.asObjectPtr());
     }
 };
 
@@ -1021,9 +1131,7 @@ struct ObjectMethodDispatchTrampoline
             CppToOop<Args> ()(args)...
         };
 
-        if(methodOop.isPointer())
-            return OopToCpp<ResultType>() (methodOop.asObjectPtr()->runWithIn(selector, marshalledArguments, self));
-        return methodOop.perform<ResultType> ("run:with:in:", selector, marshalledArguments, self);
+        return methodOop->runWithIn(selector, marshalledArguments, self);
     }
 };
 
@@ -1040,10 +1148,10 @@ template<typename ResultType, typename... Args>
 ResultType Oop::typedPerformInSuperclass(InlineCache *inlineCache, Oop clazz, Oop typedSelector, Args... args)
 {
     (void)inlineCache;
-    auto foundMethod = clazz.asObjectPtr()->lookupSelector(typedSelector);
+    auto foundMethod = clazz->lookupSelector(typedSelector);
     if(foundMethod.isNil())
         foundMethod = clazz;
-    auto lookupResult = foundMethod.asObjectPtr()->asMethodLookupResult(MessageDispatchTrampolineSet::forSignature<ResultType, Args...> ());
+    auto lookupResult = foundMethod->asMethodLookupResult(MessageDispatchTrampolineSet::forSignature<ResultType, Args...> ());
     return lookupResult.template apply<ResultType> (typedSelector, *this, args...);
 }
 

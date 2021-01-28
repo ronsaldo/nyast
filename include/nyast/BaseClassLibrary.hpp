@@ -17,6 +17,211 @@ struct String;
 typedef std::pair<Oop, Oop> MethodBinding;
 typedef std::vector<MethodBinding> MethodBindings;
 
+template <typename T>
+struct StaticClassVTableFor
+{
+    static const NyastObjectVTable value;
+};
+
+template<typename T>
+const NyastObjectVTable StaticClassVTableFor<T>::value = {
+
+    // Construction / finalization
+    // basicInitialize.
+    +[](AbiOop) {
+        //new (reinterpret_cast<T*> (self)) T;
+    },
+
+    // initialize
+    +[](AbiOop self) {
+        reinterpret_cast<T*> (self)->initialize();
+    },
+
+    // finalize
+    +[](AbiOop self) {
+        reinterpret_cast<T*> (self)->~T();
+    },
+
+    // Reflection core.
+    // class
+    +[](AbiOop self) -> Oop {
+        return reinterpret_cast<T*> (self)->getClass();
+    },
+
+    // lookupSelector:
+    +[](AbiOop self, Oop selector)-> Oop {
+        return reinterpret_cast<T*> (self)->lookupSelector(selector);
+    },
+
+    // run:with:in:
+    +[](AbiOop self, Oop selector, const OopList &marshalledArguments, Oop receiver) -> Oop {
+        return reinterpret_cast<T*> (self)->runWithIn(selector, marshalledArguments, receiver);
+    },
+
+    // asMethodLookupResultFor:
+    +[](AbiOop self, MessageDispatchTrampolineSet trampolineSet) -> MethodLookupResult {
+        return reinterpret_cast<T*> (self)->asMethodLookupResult(trampolineSet);
+    },
+
+    // Basic operations
+    // identityHash
+    +[](AbiOop self) -> size_t {
+        return reinterpret_cast<T*> (self)->identityHash();
+    },
+
+    // ==
+    +[](AbiOop self, Oop other) -> bool {
+        return reinterpret_cast<T*> (self)->identityEquals(other);
+    },
+
+    // hash
+    +[](AbiOop self) -> size_t {
+        return reinterpret_cast<T*> (self)->hash();
+    },
+
+    // =
+    +[](AbiOop self, Oop other) -> bool {
+        return reinterpret_cast<T*> (self)->equals(other);
+    },
+
+    // Common collection methods.
+    // basicSize
+    +[](AbiOop self) -> size_t {
+        return reinterpret_cast<T*> (self)->getBasicSize();
+    },
+    // basicAt:
+    +[](AbiOop self, size_t key) -> Oop {
+        return reinterpret_cast<T*> (self)->basicAt(key);
+    },
+    // basicAt:put:
+    +[](AbiOop self, size_t key, Oop value) -> Oop {
+        return reinterpret_cast<T*> (self)->basicAtPut(key, value);
+    },
+
+    // size
+    +[](AbiOop self) -> size_t {
+        return reinterpret_cast<T*> (self)->getSize();
+    },
+    // at:
+    +[](AbiOop self, Oop key) -> Oop {
+        return reinterpret_cast<T*> (self)->at(key);
+    },
+    // at:put:
+    +[](AbiOop self, Oop key, Oop value) -> Oop {
+        return reinterpret_cast<T*> (self)->atPut(key, value);
+    },
+    // atOrNil:
+    +[](AbiOop self, Oop key) -> Oop {
+        return reinterpret_cast<T*> (self)->atOrNil(key);
+    },
+
+    // scanFor:
+    +[](AbiOop self, Oop key) -> Oop {
+        return reinterpret_cast<T*> (self)->scanFor(key);
+    },
+
+    // grow
+    +[](AbiOop self) -> void {
+        return reinterpret_cast<T*> (self)->grow();
+    },
+
+    // add:
+    +[](AbiOop self, Oop value) -> Oop {
+        return reinterpret_cast<T*> (self)->add(value);
+    },
+
+    // Association
+    // key
+    +[](AbiOop self) -> Oop {
+        return reinterpret_cast<T*> (self)->getKey();
+    },
+
+    // Blocks
+    // value
+    +[](AbiOop self) -> Oop {
+        return reinterpret_cast<T*> (self)->evaluateValue();
+    },
+
+    // Testing methods.
+    +[](AbiOop self) -> bool {
+        return reinterpret_cast<T*> (self)->isArray();
+    },
+    +[](AbiOop self) -> bool {
+        return reinterpret_cast<T*> (self)->isAssociation();
+    },
+    +[](AbiOop self) -> bool {
+        return reinterpret_cast<T*> (self)->isBehavior();
+    },
+    +[](AbiOop self) -> bool {
+        return reinterpret_cast<T*> (self)->isBlock();
+    },
+    +[](AbiOop self) -> bool {
+        return reinterpret_cast<T*> (self)->isCharacter();
+    },
+    +[](AbiOop self) -> bool {
+        return reinterpret_cast<T*> (self)->isDictionary();
+    },
+    +[](AbiOop self) -> bool {
+        return reinterpret_cast<T*> (self)->isFloat();
+    },
+    +[](AbiOop self) -> bool {
+        return reinterpret_cast<T*> (self)->isFraction();
+    },
+    +[](AbiOop self) -> bool {
+        return reinterpret_cast<T*> (self)->isInteger();
+    },
+    +[](AbiOop self) -> bool {
+        return reinterpret_cast<T*> (self)->isInterval();
+    },
+    +[](AbiOop self) -> bool {
+        return reinterpret_cast<T*> (self)->isNumber();
+    },
+    +[](AbiOop self) -> bool {
+        return reinterpret_cast<T*> (self)->isString();
+    },
+    +[](AbiOop self) -> bool {
+        return reinterpret_cast<T*> (self)->isSymbol();
+    },
+
+    // Basic conversions
+    +[](AbiOop self) -> std::string {
+        return reinterpret_cast<T*> (self)->asString();
+    },
+    +[](AbiOop self) -> std::string {
+        return reinterpret_cast<T*> (self)->printString();
+    },
+    +[](AbiOop self) -> bool {
+        return reinterpret_cast<T*> (self)->asBoolean8();
+    },
+    +[](AbiOop self) -> uint32_t {
+        return reinterpret_cast<T*> (self)->asUInt32();
+    },
+    +[](AbiOop self) -> int32_t {
+        return reinterpret_cast<T*> (self)->asInt32();
+    },
+    +[](AbiOop self) -> uint64_t {
+        return reinterpret_cast<T*> (self)->asUInt64();
+    },
+    +[](AbiOop self) -> int64_t {
+        return reinterpret_cast<T*> (self)->asInt64();
+    },
+    +[](AbiOop self) -> char32_t {
+        return reinterpret_cast<T*> (self)->asChar32();
+    },
+    +[](AbiOop self) -> double {
+        return reinterpret_cast<T*> (self)->asFloat64();
+    },
+    +[](AbiOop self) -> std::string {
+        return reinterpret_cast<T*> (self)->asStdString();
+    },
+    +[](AbiOop self) -> OopList {
+        return reinterpret_cast<T*> (self)->asOopList();
+    },
+    +[](AbiOop self) -> ByteArrayData {
+        return reinterpret_cast<T*> (self)->asByteArrayData();
+    },
+};
+
 template<typename T>
 typename T::value_type *variableDataOf(T *self)
 {
@@ -35,9 +240,17 @@ T *basicNewInstance(size_t variableDataSize = 0, Args&&... args)
     size_t allocationSize = sizeof(T) + T::variableDataElementSize * variableDataSize;
     char *allocation = new char[allocationSize] ();
     memset(allocation, 0, allocationSize);
-    auto result = new (allocation) T(args...);
-    result->__variableDataSize = uint32_t(variableDataSize);
 
+    auto result = reinterpret_cast<T*> (allocation);
+
+    // Basic initialize the object.
+    new (result) T(args...);
+
+    // Set the object vtable.
+    reinterpret_cast<NyastObject*> (allocation)->__vtable = &StaticClassVTableFor<T>::value;
+
+    // Initialize the variable data.
+    result->__variableDataSize = uint32_t(variableDataSize);
     if constexpr(T::variableDataElementSize > 0)
         new (variableDataOf(result)) typename T::value_type[variableDataSize];
     return result;
@@ -60,10 +273,17 @@ struct ObjectSingletonInstanceOf
     {
         return Oop::fromObjectPtr(&instance);
     }
+
+    static T makeSingleton()
+    {
+        T result;
+        result.__vtable = &StaticClassVTableFor<T>::value;
+        return result;
+    }
 };
 
 template<typename T>
-T ObjectSingletonInstanceOf<T>::instance;
+T ObjectSingletonInstanceOf<T>::instance = makeSingleton();
 
 template <typename T>
 struct StaticClassObjectFor
@@ -97,9 +317,9 @@ struct Subclass : BT
     typedef BT Super;
     typedef ST SelfType;
 
-    virtual NyastObject *getClass() const override
+    Oop getClass() const
     {
-        return StaticClassObjectFor<SelfType>::value().asObjectPtr();
+        return StaticClassObjectFor<SelfType>::value();
     }
 
     static MethodBindings __instanceMethods__()
@@ -162,12 +382,12 @@ struct SubclassWithVariableDataOfType : Subclass<ST, SelfType>
         return size() == 0;
     }
 
-    virtual size_t getBasicSize() const override
+    size_t getBasicSize() const
     {
         return size();
     }
 
-    virtual Oop basicAt(size_t index) const
+    Oop basicAt(size_t index) const
     {
         if(index < 1 || index > size())
             throw std::runtime_error("Out of bounds.");
@@ -175,7 +395,7 @@ struct SubclassWithVariableDataOfType : Subclass<ST, SelfType>
         return CppToOop<value_type>() (variableData()[index - 1]);
     }
 
-    virtual Oop basicAtPut(size_t index, Oop value)
+    Oop basicAtPut(size_t index, Oop value)
     {
         if(index < 1 || index > size())
             throw std::runtime_error("Out of bounds.");
@@ -191,10 +411,9 @@ struct SubclassWithImmediateRepresentation : Subclass<ST, SelfType>
 
 };
 
-struct ProtoObject : NyastObject
+struct ProtoObject : Subclass<NyastObject, ProtoObject>
 {
     typedef void Super;
-    typedef ProtoObject SelfType;
     typedef void value_type;
 
     static constexpr size_t variableDataElementSize = 0;
@@ -203,51 +422,65 @@ struct ProtoObject : NyastObject
     static MethodBindings __instanceMethods__();
     static MethodBindings __classMethods__();
 
-    virtual ~ProtoObject() override;
-    virtual void initialize() override;
+    ~ProtoObject();
+    void initialize();
 
-    virtual NyastObject *getClass() const override
-    {
-        return StaticClassObjectFor<SelfType>::value().asObjectPtr();
-    }
+    Oop lookupSelector(Oop selector) const;
+    Oop runWithIn(Oop selector, const OopList &marshalledArguments, Oop self);
+    MethodLookupResult asMethodLookupResult(MessageDispatchTrampolineSet trampolineSet) const;
 
-    virtual Oop lookupSelector(Oop selector) const override;
-    virtual Oop runWithIn(Oop selector, const OopList &marshalledArguments, Oop self) override;
-    virtual MethodLookupResult asMethodLookupResult(MessageDispatchTrampolineSet trampolineSet) const override;
+    size_t identityHash() const;
+    bool identityEquals(Oop other) const;
+    size_t hash() const;
+    bool equals(Oop other) const;
 
-    virtual bool identityHash() const override;
-    virtual bool identityEquals(Oop other) const override;
-    virtual bool hash() const override;
-    virtual bool equals(Oop other) const override;
+    size_t getBasicSize() const;
+    Oop basicAt(size_t index) const;
+    Oop basicAtPut(size_t index, Oop value);
+    size_t getSize() const;
+    Oop at(Oop key) const;
+    Oop atPut(Oop key, Oop value);
 
-    virtual size_t getBasicSize() const override;
-    virtual Oop basicAt(size_t index) const override;
-    virtual Oop basicAtPut(size_t index, Oop value) override;
-    virtual size_t getSize() const override;
-    virtual Oop at(Oop key) const override;
-    virtual Oop atPut(Oop key, Oop value) override;
+    Oop atOrNil(Oop key) const;
+    Oop scanFor(Oop key) const;
+    void grow();
+    Oop add(Oop value);
 
-    virtual Oop atOrNil(Oop key) const override;
-    virtual Oop scanFor(Oop key) const override;
-    virtual void grow() override;
-    virtual void add(Oop value) override;
+    // Association
+    Oop getKey() const;
 
-    virtual Oop getKey() const override;
-    virtual Oop getValue() const override;
+    // Blocks
+    Oop evaluateValue() const;
 
-    virtual std::string asString() const override;
-    virtual std::string printString() const override;
+    // Testing methods
+    bool isArray() const;
+    bool isAssociation() const;
+    bool isBehavior() const;
+    bool isBlock() const;
+    bool isCharacter() const;
+    bool isDictionary() const;
+    bool isFloat() const;
+    bool isFraction() const;
+    bool isInteger() const;
+    bool isInterval() const;
+    bool isNumber() const;
+    bool isString() const;
+    bool isSymbol() const;
 
-    virtual bool asBoolean8() const override;
-    virtual uint32_t asUInt32() const override;
-    virtual int32_t asInt32() const override;
-    virtual uint64_t asUInt64() const override;
-    virtual int64_t asInt64() const override;
-    virtual char32_t asChar32() const override;
-    virtual double asFloat64() const override;
-    virtual std::string asStdString() const override;
-    virtual std::vector<Oop> asOopList() const override;
-    virtual ByteArrayData asByteArrayData() const override;
+    std::string asString() const;
+    std::string printString() const;
+
+    // Basic conversions
+    bool asBoolean8() const;
+    uint32_t asUInt32() const;
+    int32_t asInt32() const;
+    uint64_t asUInt64() const;
+    int64_t asInt64() const;
+    char32_t asChar32() const;
+    double asFloat64() const;
+    std::string asStdString() const;
+    std::vector<Oop> asOopList() const;
+    ByteArrayData asByteArrayData() const;
 
     uint32_t __variableDataSize;
 
@@ -261,6 +494,21 @@ struct Object : Subclass<ProtoObject, Object>
     static constexpr char const __className__[] = "Object";
 
     static MethodBindings __instanceMethods__();
+
+    // Testing methods
+    bool isArray() const;
+    bool isAssociation() const;
+    bool isBehavior() const;
+    bool isBlock() const;
+    bool isCharacter() const;
+    bool isDictionary() const;
+    bool isFloat() const;
+    bool isFraction() const;
+    bool isInteger() const;
+    bool isInterval() const;
+    bool isNumber() const;
+    bool isString() const;
+    bool isSymbol() const;
 
     // Errors.
     Oop error();
@@ -276,9 +524,9 @@ struct Behavior : Subclass<Object, Behavior>
     static constexpr char const __className__[] = "Behavior";
     static MethodBindings __instanceMethods__();
 
-    virtual void initialize() override;
-    virtual Oop lookupSelector(Oop selector) const override;
-    virtual Oop runWithIn(Oop selector, const OopList &marshalledArguments, Oop self) override;
+    void initialize();
+    Oop lookupSelector(Oop selector) const;
+    Oop runWithIn(Oop selector, const OopList &marshalledArguments, Oop self);
 
     void addMethodBindings(const MethodBindings &methods);
 
@@ -295,8 +543,8 @@ struct Class : Subclass<ClassDescription, Class>
 {
     static constexpr char const __className__[] = "Class";
 
-    virtual std::string asString() const override;
-    virtual NyastObject *getClass() const override;
+    std::string asString() const;
+    Oop getClass() const;
 
     Oop name;
     Oop metaClass;
@@ -306,7 +554,7 @@ struct Metaclass : Subclass<ClassDescription, Metaclass>
 {
     static constexpr char const __className__[] = "Metaclass";
 
-    virtual std::string asString() const override;
+    std::string asString() const;
 
     Oop thisClass;
 };
@@ -325,7 +573,7 @@ struct True : Subclass<Boolean, True>
         return ObjectSingletonInstanceOf<True>::value();
     }
 
-    virtual std::string asString() const override;
+    std::string asString() const;
 };
 
 struct False : Subclass<Boolean, False>
@@ -337,7 +585,7 @@ struct False : Subclass<Boolean, False>
         return ObjectSingletonInstanceOf<False>::value();
     }
 
-    virtual std::string asString() const override;
+    std::string asString() const;
 };
 
 struct UndefinedObject : Subclass<Object, UndefinedObject>
@@ -349,7 +597,7 @@ struct UndefinedObject : Subclass<Object, UndefinedObject>
         return ObjectSingletonInstanceOf<UndefinedObject>::value();
     }
 
-    virtual std::string asString() const override;
+    std::string asString() const;
 };
 
 struct Collection : Subclass<Object, Collection>
@@ -371,40 +619,40 @@ struct Array : SubclassWithVariableDataOfType<ArrayedCollection, Array, Oop>
 {
     static constexpr char const __className__[] = "Array";
 
-    virtual std::vector<Oop> asOopList() const override;
+    std::vector<Oop> asOopList() const;
 };
 
 struct ByteArray : SubclassWithVariableDataOfType<ArrayedCollection, ByteArray, uint8_t>
 {
     static constexpr char const __className__[] = "ByteArray";
 
-    virtual ByteArrayData asByteArrayData() const override;
-    virtual std::string asString() const override;
-    virtual std::string printString() const override;
+    ByteArrayData asByteArrayData() const;
+    std::string asString() const;
+    std::string printString() const;
 };
 
 struct String : SubclassWithVariableDataOfType<ArrayedCollection, String, char>
 {
     static constexpr char const __className__[] = "String";
 
-    virtual std::string asStdString() const override;
-    virtual std::string asString() const override;
-    virtual std::string printString() const override;
+    std::string asStdString() const;
+    std::string asString() const;
+    std::string printString() const;
 };
 
 struct Symbol : Subclass<String, Symbol>
 {
     static constexpr char const __className__[] = "Symbol";
 
-    virtual std::string printString() const override;
+    std::string printString() const;
 };
 
 struct Association : Subclass<Object, Association>
 {
     static constexpr char const __className__[] = "Association";
 
-    virtual Oop getKey() const override;
-    virtual Oop getValue() const override;
+    Oop getKey() const;
+    Oop evaluateValue() const;
 
     Oop key;
     Oop value;
@@ -414,7 +662,7 @@ struct Message : Subclass<Object, Message>
 {
     static constexpr char const __className__[] = "Message";
 
-    virtual std::string printString() const override;
+    std::string printString() const;
 
     Oop selector;
     Oop args;
@@ -425,7 +673,7 @@ struct HashedCollection : Subclass<Collection, HashedCollection>
 {
     static constexpr char const __className__[] = "HashedCollection";
 
-    virtual void initialize() override;
+    void initialize();
     void fullCheck();
 
     size_t tally = 0;
@@ -436,20 +684,20 @@ struct Dictionary : Subclass<HashedCollection, Dictionary>
 {
     static constexpr char const __className__[] = "Dictionary";
 
-    virtual Oop atOrNil(Oop key) const override;
+    Oop atOrNil(Oop key) const;
 };
 
 struct MethodDictionary : Subclass<Dictionary, MethodDictionary>
 {
     static constexpr char const __className__[] = "MethodDictionary";
 
-    virtual void initialize() override;
+    void initialize();
 
-    virtual Oop scanFor(Oop key) const override;
-    virtual Oop atOrNil(Oop key) const override;
+    Oop scanFor(Oop key) const;
+    Oop atOrNil(Oop key) const;
 
-    virtual Oop atPut(Oop key, Oop value) override;
-    virtual void grow() override;
+    Oop atPut(Oop key, Oop value);
+    void grow();
 
     Oop methods;
 };
@@ -462,6 +710,9 @@ struct Magnitude : Subclass<Object, Magnitude>
 struct Character : SubclassWithImmediateRepresentation<Magnitude, Character>
 {
     static constexpr char const __className__[] = "Character";
+
+    std::string asString() const;
+    char32_t asChar32() const;
 };
 
 struct Number : Subclass<Magnitude, Number>
@@ -470,10 +721,24 @@ struct Number : Subclass<Magnitude, Number>
 
     static MethodBindings __instanceMethods__();
 
+    bool isNumber() const;
+
     Oop additionWith(Oop other);
     Oop subtractionWith(Oop other);
     Oop multiplicationWith(Oop other);
     Oop divisionWith(Oop other);
+};
+
+struct Fraction : Subclass<Number, Fraction>
+{
+    static constexpr char const __className__[] = "Fraction";
+
+    static Oop constructWithNumeratorDenominator(Oop numerator, Oop denominator);
+
+    double asFloat64();
+
+    Oop numerator;
+    Oop denominator;
 };
 
 struct Integer : Subclass<Number, Integer>
@@ -484,23 +749,30 @@ struct Integer : Subclass<Number, Integer>
 struct LargeInteger : SubclassWithVariableDataOfType<Integer, LargeInteger, uint8_t>
 {
     static constexpr char const __className__[] = "LargeInteger";
+
+    static Oop createWithSignAndUnormalizedData(bool isNegative, size_t dataSize, const uint8_t *data);
+
 };
 
 struct LargePositiveInteger : Subclass<LargeInteger, LargePositiveInteger>
 {
     static constexpr char const __className__[] = "LargePositiveInteger";
 
-    virtual uint64_t asUInt64() const override;
-    virtual int64_t asInt64() const override;
-    virtual double asFloat64() const override;
+    static Oop createWithUnormalizedData(size_t dataSize, const uint8_t *data);
+
+    uint64_t asUInt64() const;
+    int64_t asInt64() const;
+    double asFloat64() const;
 };
 
 struct LargeNegativeInteger : Subclass<LargeInteger, LargeNegativeInteger>
 {
     static constexpr char const __className__[] = "LargeNegativeInteger";
 
-    virtual int64_t asInt64() const override;
-    virtual double asFloat64() const override;
+    static Oop createWithUnormalizedData(size_t dataSize, const uint8_t *data);
+
+    int64_t asInt64() const;
+    double asFloat64() const;
 };
 
 struct SmallInteger : SubclassWithImmediateRepresentation<Integer, SmallInteger>
@@ -508,6 +780,14 @@ struct SmallInteger : SubclassWithImmediateRepresentation<Integer, SmallInteger>
     static constexpr char const __className__[] = "SmallInteger";
 
     static MethodBindings __instanceMethods__();
+
+    std::string asString() const;
+
+    uint32_t asUInt32() const;
+    int32_t asInt32() const;
+    uint64_t asUInt64() const;
+    int64_t asInt64() const;
+    double asFloat64() const;
 
     Oop additionWith(Oop other);
     Oop subtractionWith(Oop other);
@@ -518,22 +798,31 @@ struct SmallInteger : SubclassWithImmediateRepresentation<Integer, SmallInteger>
 struct Float : Subclass<Number, Float>
 {
     static constexpr char const __className__[] = "Float";
-
 };
 
 struct SmallFloat64 : SubclassWithImmediateRepresentation<Float, SmallFloat64>
 {
     static constexpr char const __className__[] = "SmallFloat64";
+
 };
 
 struct BoxedFloat64 : Subclass<Float, BoxedFloat64>
 {
     static constexpr char const __className__[] = "BoxedFloat64";
 
-    virtual std::string asString() const override;
-    virtual double asFloat64() const override;
+    static MethodBindings __instanceMethods__();
+
+    std::string asString() const;
+    double asFloat64() const;
+
+    Oop additionWith(Oop other);
+    Oop subtractionWith(Oop other);
+    Oop multiplicationWith(Oop other);
+    Oop divisionWith(Oop other);
 
     double value;
+
+
 };
 
 template <typename T>
@@ -552,7 +841,7 @@ Oop StaticClassObjectFor<T>::value()
     clazz->superclass = superClass;
 
     if(superClass.isNotNil())
-        metaClass->superclass = Oop::fromObjectPtr(superClass.getClass());
+        metaClass->superclass = superClass.getClass();
     else
         metaClass->superclass = staticClassObjectFor<Class> (); // Short circuit
 
@@ -570,7 +859,7 @@ struct NativeMethod : Subclass<Object, NativeMethod>
 {
     static constexpr char const __className__[] = "NativeMethod";
 
-    virtual MethodLookupResult asMethodLookupResult(MessageDispatchTrampolineSet trampolineSet) const override;
+    MethodLookupResult asMethodLookupResult(MessageDispatchTrampolineSet trampolineSet) const;
 
     Oop selector;
     void *entryPoint;
@@ -616,7 +905,7 @@ struct CppMethodBinding<ResultType (Args...), FT> : CppMethodBindingBase
         }
     }
 
-    virtual MethodLookupResult asMethodLookupResult(MessageDispatchTrampolineSet) const override
+    MethodLookupResult asMethodLookupResult(MessageDispatchTrampolineSet) const
     {
         return MethodLookupResult{const_cast<SelfType*> (this), reinterpret_cast<void*> (&trampoline)};
     }

@@ -14,6 +14,13 @@ NyastObject *OopPointerSizeDependentImplementation<uint32_t>::ImmediateClassTabl
     staticClassObjectFor<SmallInteger> ().asObjectPtr(),	 // 2r11
 };
 
+const NyastObjectVTable *OopPointerSizeDependentImplementation<uint32_t>::ImmediateVTableTable[ImmediateClassTableSize] = {
+    &StaticClassVTableFor<UndefinedObject>::value, // 2r00
+    &StaticClassVTableFor<SmallInteger>::value,	 // 2r01
+    &StaticClassVTableFor<Character>::value,	 	 // 2r10
+    &StaticClassVTableFor<SmallInteger>::value,	 // 2r11
+};
+
 NyastObject *OopPointerSizeDependentImplementation<uint64_t>::ImmediateClassTable[ImmediateClassTableSize] = {
     staticClassObjectFor<UndefinedObject> ().asObjectPtr(), // 2r000
     staticClassObjectFor<SmallInteger> ().asObjectPtr(),	 // 2r001
@@ -24,6 +31,18 @@ NyastObject *OopPointerSizeDependentImplementation<uint64_t>::ImmediateClassTabl
     staticClassObjectFor<UndefinedObject> ().asObjectPtr(), // 2r101 (Reserved)
     staticClassObjectFor<UndefinedObject> ().asObjectPtr(), // 2r110 (Reserved)
     staticClassObjectFor<UndefinedObject> ().asObjectPtr(), // 2r111 (Reserved)
+};
+
+const NyastObjectVTable *OopPointerSizeDependentImplementation<uint64_t>::ImmediateVTableTable[ImmediateClassTableSize] = {
+    &StaticClassVTableFor<UndefinedObject> ::value, // 2r000
+    &StaticClassVTableFor<SmallInteger> ::value,	 // 2r001
+    &StaticClassVTableFor<Character> ::value,	 	 // 2r010
+    &StaticClassVTableFor<UndefinedObject> ::value, // 2r011 (Reserved)
+
+    &StaticClassVTableFor<SmallFloat64> ::value, 	 // 2r100
+    &StaticClassVTableFor<UndefinedObject> ::value, // 2r101 (Reserved)
+    &StaticClassVTableFor<UndefinedObject> ::value, // 2r110 (Reserved)
+    &StaticClassVTableFor<UndefinedObject> ::value, // 2r111 (Reserved)
 };
 
 Oop Oop::fromInt64(int64_t value)
@@ -147,10 +166,6 @@ static bool isVowel(char c)
     }
 }
 
-NyastObject::~NyastObject()
-{
-}
-
 ProtoObject::~ProtoObject()
 {
 }
@@ -174,12 +189,12 @@ MethodBindings ProtoObject::__instanceMethods__()
 
 Oop ProtoObject::yourself()
 {
-    return asOop();
+    return self();
 }
 
 Oop ProtoObject::doesNotUnderstand(Oop message)
 {
-    throw std::runtime_error("Message not understood: " + message.printString());
+    throw std::runtime_error("Message not understood: " + message->printString());
 }
 
 MethodBindings ProtoObject::__classMethods__()
@@ -192,17 +207,17 @@ void ProtoObject::initialize()
     // By default do nothing.
 }
 
-bool ProtoObject::identityHash() const
+size_t ProtoObject::identityHash() const
 {
     return std::hash<uintptr_t> ()(reinterpret_cast<uintptr_t> (this));
 }
 
 bool ProtoObject::identityEquals(Oop other) const
 {
-    return asOop() == other;
+    return self() == other;
 }
 
-bool ProtoObject::hash() const
+size_t ProtoObject::hash() const
 {
     return identityHash();
 }
@@ -214,72 +229,137 @@ bool ProtoObject::equals(Oop other) const
 
 Oop ProtoObject::lookupSelector(Oop selector) const
 {
-    return asOop().perform<Oop> ("lookupSelector:", selector);
+    return self().perform<Oop> ("lookupSelector:", selector);
 }
 
 Oop ProtoObject::scanFor(Oop key) const
 {
-    return asOop().perform<Oop> ("scanFor:", key);
+    return self().perform<Oop> ("scanFor:", key);
 }
 
 void ProtoObject::grow()
 {
-    asOop().perform<void> ("grow");
+    self().perform<void> ("grow");
 }
 
-void ProtoObject::add(Oop value)
+Oop ProtoObject::add(Oop value)
 {
-    asOop().perform<void> ("add:", value);
+    return self().perform<Oop> ("add:", value);
 }
 
 size_t ProtoObject::getBasicSize() const
 {
-    return asOop().perform<size_t> ("basicSize");
+    return self().perform<size_t> ("basicSize");
 }
 
 Oop ProtoObject::basicAt(size_t index) const
 {
-    return asOop().perform<Oop> ("basicAt:", index);
+    return self().perform<Oop> ("basicAt:", index);
 }
 
 Oop ProtoObject::basicAtPut(size_t index, Oop value)
 {
-    return asOop().perform<Oop> ("basicAt:put:", index, value);
+    return self().perform<Oop> ("basicAt:put:", index, value);
 }
 
 size_t ProtoObject::getSize() const
 {
-    return asOop().perform<size_t> ("size");
+    return self().perform<size_t> ("size");
 }
 
 Oop ProtoObject::at(Oop key) const
 {
-    return asOop().perform<Oop> ("at:", key);
+    return self().perform<Oop> ("at:", key);
 }
 
 Oop ProtoObject::atPut(Oop key, Oop value)
 {
-    return asOop().perform<Oop> ("at:put:", key, value);
+    return self().perform<Oop> ("at:put:", key, value);
 }
 
 Oop ProtoObject::atOrNil(Oop key) const
 {
-    return asOop().perform<Oop> ("atOrNil:", key);
+    return self().perform<Oop> ("atOrNil:", key);
 }
 
 Oop ProtoObject::getKey() const
 {
-    return asOop().perform<Oop> ("key");
+    return self().perform<Oop> ("key");
 }
 
-Oop ProtoObject::getValue() const
+Oop ProtoObject::evaluateValue() const
 {
-    return asOop().perform<Oop> ("value");
+    return self().perform<Oop> ("value");
 }
 
-Oop ProtoObject::runWithIn(Oop selector, const OopList &arguments, Oop self)
+Oop ProtoObject::runWithIn(Oop selector, const OopList &arguments, Oop receiver)
 {
-    return asOop().perform<Oop> ("run:with:in:", selector, arguments, self);
+    return self().perform<Oop> ("run:with:in:", selector, arguments, receiver);
+}
+
+bool ProtoObject::isArray() const
+{
+    return self().perform<bool> ("isArray");
+}
+
+bool ProtoObject::isAssociation() const
+{
+    return self().perform<bool> ("isAssociation");
+}
+
+bool ProtoObject::isBehavior() const
+{
+    return self().perform<bool> ("isBehavior");
+}
+
+bool ProtoObject::isBlock() const
+{
+    return self().perform<bool> ("isBlock");
+}
+
+bool ProtoObject::isCharacter() const
+{
+    return self().perform<bool> ("isCharacter");
+}
+
+bool ProtoObject::isDictionary() const
+{
+    return self().perform<bool> ("isDictionary");
+}
+
+bool ProtoObject::isFloat() const
+{
+    return self().perform<bool> ("isFloat");
+}
+
+bool ProtoObject::isFraction() const
+{
+    return self().perform<bool> ("isFraction");
+}
+
+bool ProtoObject::isInteger() const
+{
+    return self().perform<bool> ("isInteger");
+}
+
+bool ProtoObject::isInterval() const
+{
+    return self().perform<bool> ("isInterval");
+}
+
+bool ProtoObject::isNumber() const
+{
+    return self().perform<bool> ("isNumber");
+}
+
+bool ProtoObject::isString() const
+{
+    return self().perform<bool> ("isString");
+}
+
+bool ProtoObject::isSymbol() const
+{
+    return self().perform<bool> ("isSymbol");
 }
 
 MethodLookupResult ProtoObject::asMethodLookupResult(MessageDispatchTrampolineSet trampolineSet) const
@@ -297,7 +377,7 @@ std::string ProtoObject::asString() const
 
 std::string ProtoObject::printString() const
 {
-    return asString();
+    return self()->asString();
 }
 
 bool ProtoObject::asBoolean8() const
@@ -395,6 +475,71 @@ Oop Object::shouldNotImplement()
     return error("Should not implemented.");
 }
 
+bool Object::isArray() const
+{
+    return false;
+}
+
+bool Object::isAssociation() const
+{
+    return false;
+}
+
+bool Object::isBehavior() const
+{
+    return false;
+}
+
+bool Object::isBlock() const
+{
+    return false;
+}
+
+bool Object::isCharacter() const
+{
+    return false;
+}
+
+bool Object::isDictionary() const
+{
+    return false;
+}
+
+bool Object::isFloat() const
+{
+    return false;
+}
+
+bool Object::isFraction() const
+{
+    return false;
+}
+
+bool Object::isInteger() const
+{
+    return false;
+}
+
+bool Object::isInterval() const
+{
+    return false;
+}
+
+bool Object::isNumber() const
+{
+    return false;
+}
+
+bool Object::isString() const
+{
+    return false;
+}
+
+bool Object::isSymbol() const
+{
+    return false;
+}
+
 //==============================================================================
 // NativeMethod
 //==============================================================================
@@ -410,7 +555,7 @@ MethodBindings Behavior::__instanceMethods__()
 {
     return MethodBindings{
         makeRawNativeMethodBinding("run:with:in:", +[](Oop self, Oop selector, Oop arguments, Oop receiver) -> Oop {
-            return self->runWithIn(selector, arguments.asOopList(), receiver);
+            return self->runWithIn(selector, arguments->asOopList(), receiver);
         })
     };
 }
@@ -437,7 +582,7 @@ Oop Behavior::runWithIn(Oop selector, const OopList &marshalledArguments, Oop re
     auto message = basicNewInstance<Message> ();
     message->selector = selector;
     message->args = Oop::fromOopList(marshalledArguments);
-    message->lookupClass = asOop();
+    message->lookupClass = self();
     auto messageOop = Oop::fromObjectPtr(message);
     return receiver.perform<Oop> ("doesNotUnderstand:", messageOop);
 }
@@ -451,14 +596,14 @@ void Behavior::addMethodBindings(const MethodBindings &methods)
 //==============================================================================
 // Class
 //==============================================================================
-NyastObject *Class::getClass() const
+Oop Class::getClass() const
 {
-    return metaClass.asObjectPtr();
+    return metaClass;
 }
 
 std::string Class::asString() const
 {
-    return name.asString();
+    return name->asString();
 }
 
 //==============================================================================
@@ -467,7 +612,7 @@ std::string Class::asString() const
 std::string Metaclass::asString() const
 {
     if(thisClass.isNotNil())
-        return thisClass.asString() + " class";
+        return thisClass->asString() + " class";
     return Super::asString();
 }
 
@@ -484,7 +629,7 @@ void HashedCollection::fullCheck()
 {
     auto capacity = array->getBasicSize();
     if(capacity - tally < std::max(capacity / 4u, size_t(1u)))
-        grow();
+        self()->grow();
 }
 
 //==============================================================================
@@ -492,7 +637,7 @@ void HashedCollection::fullCheck()
 //==============================================================================
 Oop Dictionary::atOrNil(Oop key) const
 {
-    auto elementIndexOop = scanFor(key);
+    auto elementIndexOop = self()->scanFor(key);
     if(!elementIndexOop.isSmallInteger())
         return Oop::nil();
 
@@ -501,7 +646,7 @@ Oop Dictionary::atOrNil(Oop key) const
         return Oop::nil();
 
     return array->basicAt(elementIndex)
-        ->getValue();
+        ->evaluateValue();
 }
 
 //==============================================================================
@@ -515,21 +660,21 @@ void MethodDictionary::initialize()
 
 Oop MethodDictionary::scanFor(Oop key) const
 {
-    auto hash = key.identityHash();
+    auto hash = key->identityHash();
     auto finish = array->getBasicSize();
     auto start = (hash % finish) + 1;
 
     for(size_t i = start; i <= finish; ++i)
     {
         auto element = array->basicAt(i);
-        if(element.isNil() || element.identityEquals(key))
+        if(element.isNil() || element->identityEquals(key))
             return Oop::fromSize(i);
     }
 
     for(size_t i = 1; i < start; ++i)
     {
         auto element = array->basicAt(i);
-        if(element.isNil() || element.identityEquals(key))
+        if(element.isNil() || element->identityEquals(key))
             return Oop::fromSize(i);
     }
 
@@ -538,7 +683,7 @@ Oop MethodDictionary::scanFor(Oop key) const
 
 Oop MethodDictionary::atOrNil(Oop key) const
 {
-    auto elementIndex = scanFor(key).decodeSmallInteger();
+    auto elementIndex = self()->scanFor(key).decodeSmallInteger();
     if(elementIndex == 0)
         return Oop::nil();
 
@@ -547,7 +692,7 @@ Oop MethodDictionary::atOrNil(Oop key) const
 
 Oop MethodDictionary::atPut(Oop key, Oop value)
 {
-    auto elementIndex = scanFor(key).decodeSmallInteger();
+    auto elementIndex = self()->scanFor(key).decodeSmallInteger();
     assert(elementIndex != 0);
 
     if(array->basicAt(elementIndex).isNil())
@@ -708,7 +853,7 @@ Oop Association::getKey() const
     return key;
 }
 
-Oop Association::getValue() const
+Oop Association::evaluateValue() const
 {
     return value;
 }
@@ -720,16 +865,246 @@ Oop Association::getValue() const
 std::string Message::printString() const
 {
     std::ostringstream out;
-    out << selector.printString();
-    for(auto &arg : args.asOopList())
-        out << " " << arg.printString();
+    out << selector->printString();
+    for(auto &arg : args->asOopList())
+        out << " " << arg->printString();
     out << std::ends;
     return out.str();
 }
 
 //==============================================================================
+// Number
+//==============================================================================
+MethodBindings Number::__instanceMethods__()
+{
+    return MethodBindings{
+        makeMethodBinding("+", &SelfType::additionWith),
+        makeMethodBinding("-", &SelfType::subtractionWith),
+        makeMethodBinding("*", &SelfType::multiplicationWith),
+        makeMethodBinding("/", &SelfType::divisionWith),
+
+        makeMethodBinding("isNumber", &SelfType::isNumber),
+    };
+}
+
+bool Number::isNumber() const
+{
+    return true;
+}
+
+Oop Number::additionWith(Oop)
+{
+    return subclassResponsibility();
+}
+
+Oop Number::subtractionWith(Oop)
+{
+    return subclassResponsibility();
+}
+
+Oop Number::multiplicationWith(Oop)
+{
+    return subclassResponsibility();
+}
+
+Oop Number::divisionWith(Oop)
+{
+    return subclassResponsibility();
+}
+//==============================================================================
+// Character
+//==============================================================================
+std::string Character::asString() const
+{
+    std::string result;
+    result.push_back(self().decodeCharacter());
+    return result;
+}
+
+char32_t Character::asChar32() const
+{
+    return self().decodeCharacter();
+}
+
+
+//==============================================================================
+// Fraction
+//==============================================================================
+Oop Fraction::constructWithNumeratorDenominator(Oop numerator, Oop denominator)
+{
+    auto result = basicNewInstance<SelfType> ();
+    result->numerator = numerator;
+    result->denominator = denominator;
+    return Oop::fromObjectPtr(result);
+}
+
+double Fraction::asFloat64()
+{
+    return numerator->asFloat64() / denominator->asFloat64();
+}
+
+//==============================================================================
+// SmallInteger
+//==============================================================================
+MethodBindings SmallInteger::__instanceMethods__()
+{
+    return MethodBindings{
+        makeMethodBinding("+", &SelfType::additionWith),
+        makeMethodBinding("-", &SelfType::subtractionWith),
+        makeMethodBinding("*", &SelfType::multiplicationWith),
+        makeMethodBinding("/", &SelfType::divisionWith),
+    };
+}
+
+std::string SmallInteger::asString() const
+{
+    std::ostringstream out;
+    out << self().decodeSmallInteger() << std::ends;
+    return out.str();
+}
+
+uint32_t SmallInteger::asUInt32() const
+{
+    static_assert(sizeof(uint32_t) <= sizeof(intptr_t));
+    auto value = self().decodeSmallInteger();
+    if(0 <= value && value <= intptr_t(UINT32_MAX))
+        return uint32_t(value);
+
+    return Super::asUInt32();
+}
+
+int32_t SmallInteger::asInt32() const
+{
+    static_assert(sizeof(int32_t) <= sizeof(intptr_t));
+    auto value = self().decodeSmallInteger();
+    if(INT32_MIN <= value && value <= INT32_MAX)
+        return int32_t(value);
+
+    return Super::asInt32();
+}
+
+uint64_t SmallInteger::asUInt64() const
+{
+    static_assert(sizeof(intptr_t) <= sizeof(uint64_t));
+    auto value = self().decodeSmallInteger();
+    if(value >= 0)
+        return uint64_t(value);
+
+    return Super::asUInt64();
+}
+
+int64_t SmallInteger::asInt64() const
+{
+    static_assert(sizeof(intptr_t) <= sizeof(int64_t));
+    return self().decodeSmallInteger();
+}
+
+double SmallInteger::asFloat64() const
+{
+    return self().decodeSmallInteger();
+}
+
+Oop SmallInteger::additionWith(Oop other)
+{
+    if(other.isSmallInteger())
+        return Oop::fromIntPtr(self().decodeSmallInteger() + other.decodeSmallInteger());
+    else if(other.isSmallFloat())
+        return Oop::fromFloat64(self().decodeSmallInteger() + other.decodeSmallFloat());
+    else if(other->isFloat())
+        return Oop::fromFloat64(self().decodeSmallInteger() + other->asFloat64());
+
+    return Super::additionWith(other);
+}
+
+Oop SmallInteger::subtractionWith(Oop other)
+{
+    if(other.isSmallInteger())
+        return Oop::fromIntPtr(self().decodeSmallInteger() - other.decodeSmallInteger());
+    else if(other.isSmallFloat())
+        return Oop::fromFloat64(self().decodeSmallInteger() - other.decodeSmallFloat());
+    else if(other->isFloat())
+        return Oop::fromFloat64(self().decodeSmallInteger() - other->asFloat64());
+
+    return Super::subtractionWith(other);
+}
+
+Oop SmallInteger::multiplicationWith(Oop other)
+{
+    if(other.isSmallInteger())
+    {
+        auto selfValue = self().decodeSmallInteger();
+        auto otherValue = other.decodeSmallInteger();
+
+        auto directResult = selfValue * otherValue;
+        if(selfValue == 0 || directResult / selfValue == otherValue)
+            return Oop::fromIntPtr(directResult);
+
+        uintptr_t selfAbs = selfValue >= 0 ? uintptr_t(selfValue) : uintptr_t(-selfValue);
+        uintptr_t otherAbs = otherValue >= 0 ? uintptr_t(otherValue) : uintptr_t(-otherValue);
+        bool resultIsNegative = (selfValue < 0) ^ (otherValue < 0);
+
+        constexpr uintptr_t ShiftAmount = sizeof(uintptr_t)*4;
+        constexpr uintptr_t LowMask = (uintptr_t(1)<<ShiftAmount) - 1;
+        auto selfHigh = selfAbs >> ShiftAmount;
+        auto selfLow = selfAbs & LowMask;
+
+        auto otherHigh = otherAbs >> ShiftAmount;
+        auto otherLow = otherAbs & LowMask;
+
+        uintptr_t resultContent[2] = {
+            selfLow*otherLow + ((selfLow*otherHigh + otherHigh*selfLow) << ShiftAmount),
+            selfHigh*otherHigh
+        };
+
+        return LargeInteger::createWithSignAndUnormalizedData(resultIsNegative, sizeof(resultContent), reinterpret_cast<uint8_t*> (resultContent));
+    }
+    else if(other.isSmallFloat())
+        return Oop::fromFloat64(self().decodeSmallInteger() * other.decodeSmallFloat());
+    else if(other->isFloat())
+        return Oop::fromFloat64(self().decodeSmallInteger() * other->asFloat64());
+
+    return Super::multiplicationWith(other);
+}
+
+Oop SmallInteger::divisionWith(Oop other)
+{
+    if(other.isSmallInteger())
+    {
+        auto dividend = self().decodeSmallInteger();
+        auto divisor = other.decodeSmallInteger();
+        if(divisor == 0)
+            return error("Division by zero");
+        else if(dividend % divisor == 0)
+            return Oop::fromIntPtr(dividend / divisor);
+        else
+            return Fraction::constructWithNumeratorDenominator(self(), other);
+    }
+    else if(other.isSmallFloat())
+        return Oop::fromFloat64(self().decodeSmallInteger() / other.decodeSmallFloat());
+    else if(other->isFloat())
+        return Oop::fromFloat64(self().decodeSmallInteger() / other->asFloat64());
+
+    return Super::divisionWith(other);
+}
+
+//==============================================================================
+// LargeInteger
+//==============================================================================
+Oop LargeInteger::createWithSignAndUnormalizedData(bool isNegative, size_t dataSize, const uint8_t *data)
+{
+    return isNegative ? LargeNegativeInteger::createWithUnormalizedData(dataSize, data) : LargePositiveInteger::createWithUnormalizedData(dataSize, data);
+}
+
+//==============================================================================
 // LargePositiveInteger
 //==============================================================================
+Oop LargePositiveInteger::createWithUnormalizedData(size_t dataSize, const uint8_t *data)
+{
+    (void)dataSize;
+    (void)data;
+    return Oop::nil();
+}
+
 uint64_t LargePositiveInteger::asUInt64() const
 {
     if(size() > sizeof(uint64_t))
@@ -756,88 +1131,16 @@ double LargePositiveInteger::asFloat64() const
     return double(asUInt64());
 }
 
-
-//==============================================================================
-// Number
-//==============================================================================
-MethodBindings Number::__instanceMethods__()
-{
-    return MethodBindings{
-        makeMethodBinding("+", &SelfType::additionWith),
-        makeMethodBinding("-", &SelfType::subtractionWith),
-        makeMethodBinding("*", &SelfType::multiplicationWith),
-        makeMethodBinding("/", &SelfType::divisionWith),
-    };
-}
-
-Oop Number::additionWith(Oop)
-{
-    return subclassResponsibility();
-}
-
-Oop Number::subtractionWith(Oop)
-{
-    return subclassResponsibility();
-}
-
-Oop Number::multiplicationWith(Oop)
-{
-    return subclassResponsibility();
-}
-
-Oop Number::divisionWith(Oop)
-{
-    return subclassResponsibility();
-}
-
-//==============================================================================
-// SmallInteger
-//==============================================================================
-MethodBindings SmallInteger::__instanceMethods__()
-{
-    return MethodBindings{
-        makeMethodBinding("+", &SelfType::additionWith),
-        makeMethodBinding("-", &SelfType::subtractionWith),
-        makeMethodBinding("*", &SelfType::multiplicationWith),
-        makeMethodBinding("/", &SelfType::divisionWith),
-    };
-}
-
-Oop SmallInteger::additionWith(Oop other)
-{
-    if(other.isSmallInteger())
-    {
-        // We always have enough bits for performing direct addition.
-        return Oop::fromIntPtr(asOop().decodeSmallInteger() + other.decodeSmallInteger());
-    }
-
-    return Super::additionWith(other);
-}
-
-Oop SmallInteger::subtractionWith(Oop other)
-{
-    if(other.isSmallInteger())
-    {
-        // We always have enough bits for performing direct subtraction.
-        return Oop::fromIntPtr(asOop().decodeSmallInteger() - other.decodeSmallInteger());
-    }
-
-    return Super::subtractionWith(other);
-}
-
-Oop SmallInteger::multiplicationWith(Oop other)
-{
-    return Super::multiplicationWith(other);
-}
-
-Oop SmallInteger::divisionWith(Oop other)
-{
-    return Super::divisionWith(other);
-}
-
 //==============================================================================
 // LargeNegativeInteger
 //==============================================================================
+Oop LargeNegativeInteger::createWithUnormalizedData(size_t dataSize, const uint8_t *data)
+{
+    (void)dataSize;
+    (void)data;
+    return Oop::nil();
+}
+
 int64_t LargeNegativeInteger::asInt64() const
 {
     if(size() > sizeof(uint64_t))
@@ -861,6 +1164,64 @@ double LargeNegativeInteger::asFloat64() const
 //==============================================================================
 // BoxedFloat64
 //==============================================================================
+MethodBindings BoxedFloat64::__instanceMethods__()
+{
+    return MethodBindings{
+        makeMethodBinding("+", &SelfType::additionWith),
+        makeMethodBinding("-", &SelfType::subtractionWith),
+        makeMethodBinding("*", &SelfType::multiplicationWith),
+        makeMethodBinding("/", &SelfType::divisionWith),
+    };
+}
+
+Oop BoxedFloat64::additionWith(Oop other)
+{
+    if(other.isSmallInteger())
+        return Oop::fromFloat64(value + other.decodeSmallInteger());
+    else if(other.isSmallFloat())
+        return Oop::fromFloat64(value + other.decodeSmallFloat());
+    else if(other->isNumber())
+        return Oop::fromFloat64(value + other->asFloat64());
+
+    return Super::additionWith(other);
+}
+
+Oop BoxedFloat64::subtractionWith(Oop other)
+{
+    if(other.isSmallInteger())
+        return Oop::fromFloat64(value - other.decodeSmallInteger());
+    else if(other.isSmallFloat())
+        return Oop::fromFloat64(value - other.decodeSmallFloat());
+    else if(other->isNumber())
+        return Oop::fromFloat64(value - other->asFloat64());
+
+    return Super::subtractionWith(other);
+}
+
+Oop BoxedFloat64::multiplicationWith(Oop other)
+{
+    if(other.isSmallInteger())
+        return Oop::fromFloat64(value * other.decodeSmallInteger());
+    else if(other.isSmallFloat())
+        return Oop::fromFloat64(value * other.decodeSmallFloat());
+    else if(other->isNumber())
+        return Oop::fromFloat64(value * other->asFloat64());
+
+    return Super::multiplicationWith(other);
+}
+
+Oop BoxedFloat64::divisionWith(Oop other)
+{
+    if(other.isSmallInteger())
+        return Oop::fromFloat64(value / other.decodeSmallInteger());
+    else if(other.isSmallFloat())
+        return Oop::fromFloat64(value / other.decodeSmallFloat());
+    else if(other->isNumber())
+        return Oop::fromFloat64(value / other->asFloat64());
+
+    return Super::divisionWith(other);
+}
+
 std::string BoxedFloat64::asString() const
 {
     std::ostringstream out;

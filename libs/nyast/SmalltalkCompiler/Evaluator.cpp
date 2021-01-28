@@ -73,7 +73,7 @@ struct ASTEvaluator : ASTVisitor
         {
             auto value = std::any_cast<Oop> (visitNode(*element));
             if(!value.isSmallInteger() || value.decodeSmallInteger() < 0 || value.decodeSmallInteger() > 255)
-                throw std::runtime_error("Byte array constant must be between 0 and 255 instead of " + value.asString() + ".");
+                throw std::runtime_error("Byte array constant must be between 0 and 255 instead of " + value->asString() + ".");
             byteArrayData.push_back(uint8_t(value.decodeSmallInteger()));
         }
 
