@@ -259,6 +259,16 @@ private:
 struct Object : Subclass<ProtoObject, Object>
 {
     static constexpr char const __className__[] = "Object";
+
+    static MethodBindings __instanceMethods__();
+
+    // Errors.
+    Oop error();
+    Oop error(const std::string &errorMessage);
+    Oop explicitRequirement();
+    Oop subclassResponsibility();
+    Oop shouldBeImplemented();
+    Oop shouldNotImplement();
 };
 
 struct Behavior : Subclass<Object, Behavior>
@@ -457,6 +467,13 @@ struct Character : SubclassWithImmediateRepresentation<Magnitude, Character>
 struct Number : Subclass<Magnitude, Number>
 {
     static constexpr char const __className__[] = "Number";
+
+    static MethodBindings __instanceMethods__();
+
+    Oop additionWith(Oop other);
+    Oop subtractionWith(Oop other);
+    Oop multiplicationWith(Oop other);
+    Oop divisionWith(Oop other);
 };
 
 struct Integer : Subclass<Number, Integer>
@@ -489,6 +506,13 @@ struct LargeNegativeInteger : Subclass<LargeInteger, LargeNegativeInteger>
 struct SmallInteger : SubclassWithImmediateRepresentation<Integer, SmallInteger>
 {
     static constexpr char const __className__[] = "SmallInteger";
+
+    static MethodBindings __instanceMethods__();
+
+    Oop additionWith(Oop other);
+    Oop subtractionWith(Oop other);
+    Oop multiplicationWith(Oop other);
+    Oop divisionWith(Oop other);
 };
 
 struct Float : Subclass<Number, Float>

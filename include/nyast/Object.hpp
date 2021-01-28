@@ -196,12 +196,25 @@ struct Oop : OopPointerSizeDependentImplementation<uintptr_t>
         }
     }
 
-    static Oop fromSize(size_t value)
+    static Oop fromUIntPtr(uintptr_t value)
     {
-        if constexpr(sizeof(uint32_t) == sizeof(size_t))
+        if constexpr(sizeof(uint32_t) == sizeof(uintptr_t))
             return fromUInt32(uint32_t(value));
         else
             return fromUInt64(value);
+    }
+
+    static Oop fromIntPtr(intptr_t value)
+    {
+        if constexpr(sizeof(int32_t) == sizeof(intptr_t))
+            return fromInt32(int32_t(value));
+        else
+            return fromInt64(value);
+    }
+
+    static Oop fromSize(size_t value)
+    {
+        return fromUIntPtr(value);
     }
 
     static Oop fromInt64(int64_t value);
@@ -954,6 +967,9 @@ struct OopToCpp<std::string>
 };
 
 template<>
+struct OopToCpp<const std::string &> : OopToCpp<std::string> {};
+
+template<>
 struct OopToCpp<OopList>
 {
     OopList operator()(Oop v)
@@ -961,6 +977,10 @@ struct OopToCpp<OopList>
         return v.asOopList();
     }
 };
+
+template<>
+struct OopToCpp<const OopList &> : OopToCpp<OopList> {};
+
 
 template<>
 struct OopToCpp<void>

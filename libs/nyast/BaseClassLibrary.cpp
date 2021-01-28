@@ -351,6 +351,51 @@ ByteArrayData ProtoObject::asByteArrayData() const
 }
 
 //==============================================================================
+// Object
+//==============================================================================
+MethodBindings Object::__instanceMethods__()
+{
+    return MethodBindings{
+        makeMethodBinding("error", static_cast<Oop(SelfType::*)()> (&SelfType::error)),
+        makeMethodBinding("error", static_cast<Oop(SelfType::*)(const std::string &)> (&SelfType::error)),
+        makeMethodBinding("explicitRequirement", &SelfType::explicitRequirement),
+        makeMethodBinding("subclassResponsibility", &SelfType::subclassResponsibility),
+        makeMethodBinding("shouldBeImplemented", &SelfType::shouldBeImplemented),
+        makeMethodBinding("shouldNotImplement", &SelfType::shouldNotImplement),
+    };
+}
+
+Oop Object::error(const std::string &errorMessage)
+{
+    throw std::runtime_error(errorMessage);
+}
+
+Oop Object::error()
+{
+    return error("Error!");
+}
+
+Oop Object::explicitRequirement()
+{
+    return error("Explicit requirement.");
+}
+
+Oop Object::subclassResponsibility()
+{
+    return error("Subclass responsibility.");
+}
+
+Oop Object::shouldBeImplemented()
+{
+    return error("Should be implemented.");
+}
+
+Oop Object::shouldNotImplement()
+{
+    return error("Should not implemented.");
+}
+
+//==============================================================================
 // NativeMethod
 //==============================================================================
 MethodLookupResult NativeMethod::asMethodLookupResult(MessageDispatchTrampolineSet trampolineSet) const
@@ -709,6 +754,85 @@ double LargePositiveInteger::asFloat64() const
 {
     // FIXME: Implement this in a much more proper way.
     return double(asUInt64());
+}
+
+
+//==============================================================================
+// Number
+//==============================================================================
+MethodBindings Number::__instanceMethods__()
+{
+    return MethodBindings{
+        makeMethodBinding("+", &SelfType::additionWith),
+        makeMethodBinding("-", &SelfType::subtractionWith),
+        makeMethodBinding("*", &SelfType::multiplicationWith),
+        makeMethodBinding("/", &SelfType::divisionWith),
+    };
+}
+
+Oop Number::additionWith(Oop)
+{
+    return subclassResponsibility();
+}
+
+Oop Number::subtractionWith(Oop)
+{
+    return subclassResponsibility();
+}
+
+Oop Number::multiplicationWith(Oop)
+{
+    return subclassResponsibility();
+}
+
+Oop Number::divisionWith(Oop)
+{
+    return subclassResponsibility();
+}
+
+//==============================================================================
+// SmallInteger
+//==============================================================================
+MethodBindings SmallInteger::__instanceMethods__()
+{
+    return MethodBindings{
+        makeMethodBinding("+", &SelfType::additionWith),
+        makeMethodBinding("-", &SelfType::subtractionWith),
+        makeMethodBinding("*", &SelfType::multiplicationWith),
+        makeMethodBinding("/", &SelfType::divisionWith),
+    };
+}
+
+Oop SmallInteger::additionWith(Oop other)
+{
+    if(other.isSmallInteger())
+    {
+        // We always have enough bits for performing direct addition.
+        return Oop::fromIntPtr(asOop().decodeSmallInteger() + other.decodeSmallInteger());
+    }
+
+    return Super::additionWith(other);
+}
+
+Oop SmallInteger::subtractionWith(Oop other)
+{
+    if(other.isSmallInteger())
+    {
+        // We always have enough bits for performing direct subtraction.
+        return Oop::fromIntPtr(asOop().decodeSmallInteger() - other.decodeSmallInteger());
+    }
+
+    return Super::subtractionWith(other);
+}
+
+Oop SmallInteger::multiplicationWith(Oop other)
+{
+    return Super::multiplicationWith(other);
+}
+
+Oop SmallInteger::divisionWith(Oop other)
+{
+    return Super::divisionWith(other);
 }
 
 //==============================================================================
