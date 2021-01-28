@@ -120,14 +120,11 @@ SUITE(SmalltalkScanner)
         CHECK_EQUAL(TokenType::Integer, scanSingleTokenType("0123456789"));
         CHECK_EQUAL("0123456789", scanSingleTokenText("0123456789"));
 
-        CHECK_EQUAL(TokenType::Integer, scanSingleTokenType("+0123456789"));
-        CHECK_EQUAL("+0123456789", scanSingleTokenText("+0123456789"));
-
         CHECK_EQUAL(TokenType::Integer, scanSingleTokenType("-0123456789"));
         CHECK_EQUAL("-0123456789", scanSingleTokenText("-0123456789"));
 
-        CHECK_EQUAL(TokenType::Integer, scanSingleTokenType("+32rHELLO012364WORLD"));
-        CHECK_EQUAL("+32rHELLO012364WORLD", scanSingleTokenText("+32rHELLO012364WORLD"));
+        CHECK_EQUAL(TokenType::Integer, scanSingleTokenType("32rHELLO012364WORLD"));
+        CHECK_EQUAL("32rHELLO012364WORLD", scanSingleTokenText("32rHELLO012364WORLD"));
     }
 
     TEST(Floats)
@@ -138,26 +135,20 @@ SUITE(SmalltalkScanner)
         CHECK_EQUAL(TokenType::Float, scanSingleTokenType("-0.0"));
         CHECK_EQUAL("-0.0", scanSingleTokenText("-0.0"));
 
-        CHECK_EQUAL(TokenType::Float, scanSingleTokenType("+0.0"));
-        CHECK_EQUAL("+0.0", scanSingleTokenText("+0.0"));
-
         CHECK_EQUAL(TokenType::Float, scanSingleTokenType("-0e-53"));
         CHECK_EQUAL("-0e-53", scanSingleTokenText("-0e-53"));
 
-        CHECK_EQUAL(TokenType::Float, scanSingleTokenType("+0e+53"));
-        CHECK_EQUAL("+0e+53", scanSingleTokenText("+0e+53"));
+        CHECK_EQUAL(TokenType::Float, scanSingleTokenType("0e53"));
+        CHECK_EQUAL("0e53", scanSingleTokenText("0e53"));
 
         CHECK_EQUAL(TokenType::Float, scanSingleTokenType("0123456789.14565"));
         CHECK_EQUAL("0123456789.14565", scanSingleTokenText("0123456789.14565"));
 
-        CHECK_EQUAL(TokenType::Float, scanSingleTokenType("+0123456789.14565"));
-        CHECK_EQUAL("+0123456789.14565", scanSingleTokenText("+0123456789.14565"));
-
         CHECK_EQUAL(TokenType::Float, scanSingleTokenType("-0123456789.14565"));
         CHECK_EQUAL("-0123456789.14565", scanSingleTokenText("-0123456789.14565"));
 
-        CHECK_EQUAL(TokenType::Float, scanSingleTokenType("+0123456789.14565e+53"));
-        CHECK_EQUAL("+0123456789.14565e+53", scanSingleTokenText("+0123456789.14565e+53"));
+        CHECK_EQUAL(TokenType::Float, scanSingleTokenType("0123456789.14565e53"));
+        CHECK_EQUAL("0123456789.14565e53", scanSingleTokenText("0123456789.14565e53"));
 
         CHECK_EQUAL(TokenType::Float, scanSingleTokenType("-0123456789.14565e-53"));
         CHECK_EQUAL("-0123456789.14565e-53", scanSingleTokenText("-0123456789.14565e-53"));

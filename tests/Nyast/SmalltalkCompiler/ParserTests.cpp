@@ -60,7 +60,7 @@ SUITE(SmalltalkParser)
         CHECK(literal->isLiteralFloatNode());
         CHECK_EQUAL(42.5, literal->as<ASTLiteralFloatNode> ().value);
 
-        literal = parseSingleExpression("+42.5e2");
+        literal = parseSingleExpression("42.5e2");
         CHECK(literal->isLiteralFloatNode());
         CHECK_EQUAL(+42.5e2, literal->as<ASTLiteralFloatNode> ().value);
 
@@ -68,7 +68,7 @@ SUITE(SmalltalkParser)
         CHECK(literal->isLiteralFloatNode());
         CHECK_EQUAL(-1.5e-6, literal->as<ASTLiteralFloatNode> ().value);
 
-        literal = parseSingleExpression("+42.5e+2");
+        literal = parseSingleExpression("42.5e2");
         CHECK(literal->isLiteralFloatNode());
         CHECK_EQUAL(+42.5e+2, literal->as<ASTLiteralFloatNode> ().value);
     }

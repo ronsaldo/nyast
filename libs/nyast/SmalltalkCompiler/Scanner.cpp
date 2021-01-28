@@ -59,7 +59,7 @@ static inline bool isDigit(int c)
 
 static inline bool isSign(int c)
 {
-    return '+' == c || '-' == c;
+    return '-' == c;
 }
 
 static inline bool isExponent(int c)
