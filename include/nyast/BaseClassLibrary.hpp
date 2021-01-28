@@ -804,6 +804,15 @@ struct SmallFloat64 : SubclassWithImmediateRepresentation<Float, SmallFloat64>
 {
     static constexpr char const __className__[] = "SmallFloat64";
 
+    static MethodBindings __instanceMethods__();
+
+    std::string asString() const;
+    double asFloat64() const;
+
+    Oop additionWith(Oop other);
+    Oop subtractionWith(Oop other);
+    Oop multiplicationWith(Oop other);
+    Oop divisionWith(Oop other);
 };
 
 struct BoxedFloat64 : Subclass<Float, BoxedFloat64>

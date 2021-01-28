@@ -98,6 +98,11 @@ struct OopPointerSizeDependentImplementation<uint32_t>
     static NyastObject *ImmediateClassTable[ImmediateClassTableSize];
     static const NyastObjectVTable *ImmediateVTableTable[ImmediateClassTableSize];
 
+    static bool isFloatInSmallFloatRange(double)
+    {
+        return false;
+    }
+
     bool isSmallFloat() const
     {
         return false;
@@ -135,9 +140,40 @@ struct OopPointerSizeDependentImplementation<uint64_t>
     static constexpr uint64_t SmallFloatTagValue = 4;
     static constexpr uint64_t SmallFloatTagShift = TagBits;
 
+    static constexpr uint64_t SmallFloatExponentOffset = 896;
+
     static constexpr size_t ImmediateClassTableSize = 1<<TagBits;
     static NyastObject *ImmediateClassTable[ImmediateClassTableSize];
     static const NyastObjectVTable *ImmediateVTableTable[ImmediateClassTableSize];
+
+    static bool isFloatInSmallFloatRange(double v)
+    {
+        uint64_t bits;
+        memcpy(&bits, &v, 8);
+
+        // Rotate left.
+        bits = (bits << 1) | (bits >> 63);
+
+        auto subtractedExponent = SmallFloatExponentOffset << uint64_t(53);
+        return bits >= subtractedExponent;
+    }
+
+    static uint64_t encodeSmallFloatValue(double v)
+    {
+        uint64_t bits;
+        memcpy(&bits, &v, 8);
+
+        // Rotate left.
+        bits = (bits << 1) | (bits >> 63);
+
+        // Subtract the exponent offset.
+        auto subtractedExponent = SmallFloatExponentOffset << uint64_t(53);
+        assert(bits >= subtractedExponent);
+        bits -= subtractedExponent;
+
+        // Add the tag
+        return (bits << SmallFloatTagShift) | SmallFloatTagValue;
+    }
 
     bool isSmallFloat() const
     {
@@ -146,7 +182,20 @@ struct OopPointerSizeDependentImplementation<uint64_t>
 
     double decodeSmallFloat() const
     {
-        return 0.0;
+        // Shift out the tag.
+        auto bits = value >> SmallFloatTagShift;
+
+        // Add back the exponent offset.
+        auto subtractedExponent = SmallFloatExponentOffset << uint64_t(53);
+        bits += subtractedExponent;
+
+        // Rotate right the sign back into its places.
+        bits = (bits >> 1) | (bits & 1) << uint64_t(63);
+
+        double floatValue;
+        memcpy(&floatValue, &bits, 8);
+
+        return floatValue;
     }
 
     uint64_t value;
@@ -230,9 +279,18 @@ struct Oop : OopPointerSizeDependentImplementation<AbiOop>
         return fromUIntPtr(value);
     }
 
+    static Oop fromFloat64(double value)
+    {
+        if(isFloatInSmallFloatRange(value))
+            return Oop{encodeSmallFloatValue(value)};
+        else
+            return makeBoxedFloat(value);
+    }
+
+    static Oop makeBoxedFloat(double value);
+
     static Oop fromInt64(int64_t value);
     static Oop fromUInt64(uint64_t value);
-    static Oop fromFloat64(double value);
     static Oop fromOopList(const std::vector<Oop> &value);
     static Oop fromByteArray(const ByteArrayData &value);
 
