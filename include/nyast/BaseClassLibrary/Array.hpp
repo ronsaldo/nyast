@@ -13,6 +13,8 @@ struct Array : SubclassWithVariableDataOfType<ArrayedCollection, Array, Oop>
     static constexpr char const __className__[] = "Array";
 
     std::vector<Oop> asOopList() const;
+    std::string asString() const;
+    std::string printString() const;
 };
 
 } // End of namespace namespace nyast

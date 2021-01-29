@@ -224,7 +224,7 @@ MethodLookupResult ProtoObject::asMethodLookupResult(MessageDispatchTrampolineSe
 
 std::string ProtoObject::asString() const
 {
-    auto className = getClass()->asString();
+    auto className = self().getClass()->asString();
     if(!className.empty() && isVowel(className.front()))
         return "an " + className;
     return "a " + className;
