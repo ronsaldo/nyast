@@ -1,0 +1,8 @@
+#ifndef NYAST_BASE_CLASS_LIBRARY_OBJECT_HPP
+#define NYAST_BASE_CLASS_LIBRARY_OBJECT_HPP
+
+#pragma once
+
+#include "ProtoObject.hpp"
+
+#endif //NYAST_BASE_CLASS_LIBRARY_OBJECT_HPP

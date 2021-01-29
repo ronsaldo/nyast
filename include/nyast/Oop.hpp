@@ -1,6 +1,8 @@
 #ifndef NYAST_OBJECT_HPP
 #define NYAST_OBJECT_HPP
 
+#pragma once
+
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
@@ -95,7 +97,6 @@ struct OopPointerSizeDependentImplementation<uint32_t>
     static constexpr uint32_t CharacterTagShift = TagBits;
 
     static constexpr size_t ImmediateClassTableSize = 1<<TagBits;
-    static NyastObject *ImmediateClassTable[ImmediateClassTableSize];
     static const NyastObjectVTable *ImmediateVTableTable[ImmediateClassTableSize];
 
     static bool isFloatInSmallFloatRange(double)
@@ -143,7 +144,6 @@ struct OopPointerSizeDependentImplementation<uint64_t>
     static constexpr uint64_t SmallFloatExponentOffset = 896;
 
     static constexpr size_t ImmediateClassTableSize = 1<<TagBits;
-    static NyastObject *ImmediateClassTable[ImmediateClassTableSize];
     static const NyastObjectVTable *ImmediateVTableTable[ImmediateClassTableSize];
 
     static bool isFloatInSmallFloatRange(double v)

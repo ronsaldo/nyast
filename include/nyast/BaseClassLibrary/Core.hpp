@@ -1,18 +1,17 @@
-#ifndef NYAST_BASE_CLASS_LIBRARY_HPP
-#define NYAST_BASE_CLASS_LIBRARY_HPP
+#ifndef NYAST_BASE_CLASS_LIBRARY_CORE_HPP
+#define NYAST_BASE_CLASS_LIBRARY_CORE_HPP
 
-#include "Object.hpp"
-#include <unordered_map>
+#pragma once
+
+#include "../Oop.hpp"
 
 namespace nyast
 {
-
 struct ProtoObject;
 struct Behavior;
 struct ClassDescription;
 struct Class;
 struct Metaclass;
-struct String;
 
 typedef std::pair<Oop, Oop> MethodBinding;
 typedef std::vector<MethodBinding> MethodBindings;
@@ -559,281 +558,6 @@ struct Metaclass : Subclass<ClassDescription, Metaclass>
     Oop thisClass;
 };
 
-struct Boolean : Subclass<Object, Boolean>
-{
-    static constexpr char const __className__[] = "Boolean";
-};
-
-struct True : Subclass<Boolean, True>
-{
-    static constexpr char const __className__[] = "True";
-
-    static Oop uniqueInstance()
-    {
-        return ObjectSingletonInstanceOf<True>::value();
-    }
-
-    std::string asString() const;
-};
-
-struct False : Subclass<Boolean, False>
-{
-    static constexpr char const __className__[] = "False";
-
-    static Oop uniqueInstance()
-    {
-        return ObjectSingletonInstanceOf<False>::value();
-    }
-
-    std::string asString() const;
-};
-
-struct UndefinedObject : Subclass<Object, UndefinedObject>
-{
-    static constexpr char const __className__[] = "UndefinedObject";
-
-    static Oop uniqueInstance()
-    {
-        return ObjectSingletonInstanceOf<UndefinedObject>::value();
-    }
-
-    std::string asString() const;
-};
-
-struct Collection : Subclass<Object, Collection>
-{
-    static constexpr char const __className__[] = "Collection";
-};
-
-struct SequenceableCollection : Subclass<Collection, SequenceableCollection>
-{
-    static constexpr char const __className__[] = "SequenceableCollection";
-};
-
-struct ArrayedCollection : Subclass<SequenceableCollection, ArrayedCollection>
-{
-    static constexpr char const __className__[] = "ArrayedCollection";
-};
-
-struct Array : SubclassWithVariableDataOfType<ArrayedCollection, Array, Oop>
-{
-    static constexpr char const __className__[] = "Array";
-
-    std::vector<Oop> asOopList() const;
-};
-
-struct ByteArray : SubclassWithVariableDataOfType<ArrayedCollection, ByteArray, uint8_t>
-{
-    static constexpr char const __className__[] = "ByteArray";
-
-    ByteArrayData asByteArrayData() const;
-    std::string asString() const;
-    std::string printString() const;
-};
-
-struct String : SubclassWithVariableDataOfType<ArrayedCollection, String, char>
-{
-    static constexpr char const __className__[] = "String";
-
-    std::string asStdString() const;
-    std::string asString() const;
-    std::string printString() const;
-};
-
-struct Symbol : Subclass<String, Symbol>
-{
-    static constexpr char const __className__[] = "Symbol";
-
-    std::string printString() const;
-};
-
-struct Association : Subclass<Object, Association>
-{
-    static constexpr char const __className__[] = "Association";
-
-    Oop getKey() const;
-    Oop evaluateValue() const;
-
-    Oop key;
-    Oop value;
-};
-
-struct Message : Subclass<Object, Message>
-{
-    static constexpr char const __className__[] = "Message";
-
-    std::string printString() const;
-
-    Oop selector;
-    Oop args;
-    Oop lookupClass;
-};
-
-struct HashedCollection : Subclass<Collection, HashedCollection>
-{
-    static constexpr char const __className__[] = "HashedCollection";
-
-    void initialize();
-    void fullCheck();
-
-    size_t tally = 0;
-    Oop array;
-};
-
-struct Dictionary : Subclass<HashedCollection, Dictionary>
-{
-    static constexpr char const __className__[] = "Dictionary";
-
-    Oop atOrNil(Oop key) const;
-};
-
-struct MethodDictionary : Subclass<Dictionary, MethodDictionary>
-{
-    static constexpr char const __className__[] = "MethodDictionary";
-
-    void initialize();
-
-    Oop scanFor(Oop key) const;
-    Oop atOrNil(Oop key) const;
-
-    Oop atPut(Oop key, Oop value);
-    void grow();
-
-    Oop methods;
-};
-
-struct Magnitude : Subclass<Object, Magnitude>
-{
-    static constexpr char const __className__[] = "Magnitude";
-};
-
-struct Character : SubclassWithImmediateRepresentation<Magnitude, Character>
-{
-    static constexpr char const __className__[] = "Character";
-
-    std::string asString() const;
-    char32_t asChar32() const;
-};
-
-struct Number : Subclass<Magnitude, Number>
-{
-    static constexpr char const __className__[] = "Number";
-
-    static MethodBindings __instanceMethods__();
-
-    bool isNumber() const;
-
-    Oop additionWith(Oop other);
-    Oop subtractionWith(Oop other);
-    Oop multiplicationWith(Oop other);
-    Oop divisionWith(Oop other);
-};
-
-struct Fraction : Subclass<Number, Fraction>
-{
-    static constexpr char const __className__[] = "Fraction";
-
-    static Oop constructWithNumeratorDenominator(Oop numerator, Oop denominator);
-
-    double asFloat64();
-
-    Oop numerator;
-    Oop denominator;
-};
-
-struct Integer : Subclass<Number, Integer>
-{
-    static constexpr char const __className__[] = "Integer";
-};
-
-struct LargeInteger : SubclassWithVariableDataOfType<Integer, LargeInteger, uint8_t>
-{
-    static constexpr char const __className__[] = "LargeInteger";
-
-    static Oop createWithSignAndUnormalizedData(bool isNegative, size_t dataSize, const uint8_t *data);
-
-};
-
-struct LargePositiveInteger : Subclass<LargeInteger, LargePositiveInteger>
-{
-    static constexpr char const __className__[] = "LargePositiveInteger";
-
-    static Oop createWithUnormalizedData(size_t dataSize, const uint8_t *data);
-
-    uint64_t asUInt64() const;
-    int64_t asInt64() const;
-    double asFloat64() const;
-};
-
-struct LargeNegativeInteger : Subclass<LargeInteger, LargeNegativeInteger>
-{
-    static constexpr char const __className__[] = "LargeNegativeInteger";
-
-    static Oop createWithUnormalizedData(size_t dataSize, const uint8_t *data);
-
-    int64_t asInt64() const;
-    double asFloat64() const;
-};
-
-struct SmallInteger : SubclassWithImmediateRepresentation<Integer, SmallInteger>
-{
-    static constexpr char const __className__[] = "SmallInteger";
-
-    static MethodBindings __instanceMethods__();
-
-    std::string asString() const;
-
-    uint32_t asUInt32() const;
-    int32_t asInt32() const;
-    uint64_t asUInt64() const;
-    int64_t asInt64() const;
-    double asFloat64() const;
-
-    Oop additionWith(Oop other);
-    Oop subtractionWith(Oop other);
-    Oop multiplicationWith(Oop other);
-    Oop divisionWith(Oop other);
-};
-
-struct Float : Subclass<Number, Float>
-{
-    static constexpr char const __className__[] = "Float";
-};
-
-struct SmallFloat64 : SubclassWithImmediateRepresentation<Float, SmallFloat64>
-{
-    static constexpr char const __className__[] = "SmallFloat64";
-
-    static MethodBindings __instanceMethods__();
-
-    std::string asString() const;
-    double asFloat64() const;
-
-    Oop additionWith(Oop other);
-    Oop subtractionWith(Oop other);
-    Oop multiplicationWith(Oop other);
-    Oop divisionWith(Oop other);
-};
-
-struct BoxedFloat64 : Subclass<Float, BoxedFloat64>
-{
-    static constexpr char const __className__[] = "BoxedFloat64";
-
-    static MethodBindings __instanceMethods__();
-
-    std::string asString() const;
-    double asFloat64() const;
-
-    Oop additionWith(Oop other);
-    Oop subtractionWith(Oop other);
-    Oop multiplicationWith(Oop other);
-    Oop divisionWith(Oop other);
-
-    double value;
-
-
-};
-
 template <typename T>
 Oop StaticClassObjectFor<T>::value()
 {
@@ -922,7 +646,6 @@ struct CppMethodBinding<ResultType (Args...), FT> : CppMethodBindingBase
     FT functor;
 };
 
-
 template<typename FT>
 MethodBinding makeRawNativeMethodBinding(const std::string &selector, const FT &function)
 {
@@ -956,6 +679,7 @@ MethodBinding makeMethodBinding(const std::string &selector, ResultType (SelfTyp
         return (self->*memberFunction)(args...);
     });
 }
+
 } // End of namespace nyast
 
-#endif //NYAST_BASE_CLASS_LIBRARY_HPP
+#endif //NYAST_BASE_CLASS_LIBRARY_CORE_HPP

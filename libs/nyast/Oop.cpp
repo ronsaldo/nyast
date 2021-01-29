@@ -1,4 +1,4 @@
-#include "nyast/Object.hpp"
+#include "nyast/Oop.hpp"
 #include <sstream>
 
 namespace nyast

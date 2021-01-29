@@ -1,9 +1,9 @@
-#include "nyast/Object.hpp"
+#include "nyast/Oop.hpp"
 #include "UnitTest++/UnitTest++.h"
 
 using namespace nyast;
 
-SUITE(Object)
+SUITE(Oop)
 {
     TEST(Nil)
     {

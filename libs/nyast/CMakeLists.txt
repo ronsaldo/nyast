@@ -1,6 +1,34 @@
 set(Nyast_Sources
-    Object.cpp
-    BaseClassLibrary.cpp
+    Oop.cpp
+
+    BaseClassLibrary/Array.cpp
+    BaseClassLibrary/Association.cpp
+    BaseClassLibrary/Behavior.cpp
+    BaseClassLibrary/BoxedFloat64.cpp
+    BaseClassLibrary/ByteArray.cpp
+    BaseClassLibrary/Character.cpp
+    BaseClassLibrary/Class.cpp
+    BaseClassLibrary/Core.cpp
+    BaseClassLibrary/Dictionary.cpp
+    BaseClassLibrary/False.cpp
+    BaseClassLibrary/Fraction.cpp
+    BaseClassLibrary/HashedCollection.cpp
+    BaseClassLibrary/LargeInteger.cpp
+    BaseClassLibrary/LargeNegativeInteger.cpp
+    BaseClassLibrary/LargePositiveInteger.cpp
+    BaseClassLibrary/Message.cpp
+    BaseClassLibrary/Metaclass.cpp
+    BaseClassLibrary/MethodDictionary.cpp
+    BaseClassLibrary/NativeMethod.cpp
+    BaseClassLibrary/Number.cpp
+    BaseClassLibrary/Object.cpp
+    BaseClassLibrary/ProtoObject.cpp
+    BaseClassLibrary/SmallFloat64.cpp
+    BaseClassLibrary/SmallInteger.cpp
+    BaseClassLibrary/String.cpp
+    BaseClassLibrary/Symbol.cpp
+    BaseClassLibrary/True.cpp
+    BaseClassLibrary/UndefinedObject.cpp
 )
 
 set(Nyast_SmalltalkCompiler_Sources

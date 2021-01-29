@@ -1,0 +1,18 @@
+#ifndef NYAST_BASE_CLASS_LIBRARY_ARRAYED_COLLECTION_HPP
+#define NYAST_BASE_CLASS_LIBRARY_ARRAYED_COLLECTION_HPP
+
+#pragma once
+
+#include "SequenceableCollection.hpp"
+
+namespace nyast
+{
+
+struct ArrayedCollection : Subclass<SequenceableCollection, ArrayedCollection>
+{
+    static constexpr char const __className__[] = "ArrayedCollection";
+};
+
+} // End of namespace namespace nyast
+
+#endif //NYAST_BASE_CLASS_LIBRARY_ARRAYED_COLLECTION_HPP

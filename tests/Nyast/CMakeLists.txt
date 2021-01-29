@@ -1,6 +1,6 @@
 set(NyastTests_Sources
     Main.cpp
-    Object.cpp
+    Oop.cpp
     SmalltalkCompiler/ScannerTests.cpp
     SmalltalkCompiler/ParserTests.cpp
     SmalltalkCompiler/EvaluatorTests.cpp

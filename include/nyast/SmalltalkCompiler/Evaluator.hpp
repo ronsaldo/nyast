@@ -2,7 +2,7 @@
 #define NYAST_SMALLTAK_COMPILER_EVALUATOR_HPP
 #pragma once
 
-#include "nyast/Object.hpp"
+#include "nyast/Oop.hpp"
 #include "AST.hpp"
 
 namespace nyast
