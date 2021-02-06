@@ -243,7 +243,7 @@ T *basicNewInstance(size_t variableDataSize = 0, Args&&... args)
     auto result = reinterpret_cast<T*> (allocation);
 
     // Basic initialize the object.
-    new (result) T(args...);
+    new (result) T(std::forward<Args> (args)...);
 
     // Set the object vtable.
     reinterpret_cast<NyastObject*> (allocation)->__vtable = &StaticClassVTableFor<T>::value;
@@ -258,7 +258,7 @@ T *basicNewInstance(size_t variableDataSize = 0, Args&&... args)
 template<typename T, typename... Args>
 T *newInstance(size_t variableDataSize = 0, Args&&... args)
 {
-    auto result = basicNewInstance<T> (variableDataSize, args...);
+    auto result = basicNewInstance<T> (variableDataSize, std::forward<Args> (args)...);
     result->initialize();
     return result;
 }
@@ -529,8 +529,8 @@ struct Behavior : Subclass<Object, Behavior>
 
     void addMethodBindings(const MethodBindings &methods);
 
-    Oop superclass;
-    Oop methodDict;
+    MemberOop superclass;
+    MemberOop methodDict;
 };
 
 struct ClassDescription : Subclass<Behavior, ClassDescription>
@@ -545,8 +545,8 @@ struct Class : Subclass<ClassDescription, Class>
     std::string asString() const;
     Oop getClass() const;
 
-    Oop name;
-    Oop metaClass;
+    MemberOop name;
+    MemberOop metaClass;
 };
 
 struct Metaclass : Subclass<ClassDescription, Metaclass>
@@ -555,7 +555,7 @@ struct Metaclass : Subclass<ClassDescription, Metaclass>
 
     std::string asString() const;
 
-    Oop thisClass;
+    MemberOop thisClass;
 };
 
 template <typename T>
@@ -594,7 +594,7 @@ struct NativeMethod : Subclass<Object, NativeMethod>
 
     MethodLookupResult asMethodLookupResult(MessageDispatchTrampolineSet trampolineSet) const;
 
-    Oop selector;
+    MemberOop selector;
     void *entryPoint;
 };
 
@@ -608,7 +608,7 @@ struct CppMethodBindingBase : Subclass<Object, CppMethodBindingBase>
     CppMethodBindingBase(Oop cselector)
         : selector(cselector) {}
 
-    Oop selector;
+    MemberOop selector;
 };
 
 template<typename MethodSignature, typename FT>
@@ -625,16 +625,22 @@ struct CppMethodBinding<ResultType (Args...), FT> : CppMethodBindingBase
     CppMethodBinding(Oop cselector, FT cfunctor)
         : CppMethodBindingBase(cselector), functor(cfunctor) {}
 
-    static Oop trampoline(SelfType *methodBinding, Oop, CppTypeToOopType<Args>... args)
+    static Oop trampoline(SelfType *methodBinding, Oop, typename CppToOopAbi<CppTypeToOopType<Args>>::type... args)
     {
         if constexpr(std::is_same<ResultType, void>::value)
         {
-            methodBinding->functor(OopToCpp<Args> ()(args)...);
+            methodBinding->functor(OopToCpp<Args> ()(
+                OopAbiToCpp<CppTypeToOopType<Args>>()(args)
+            )...);
             return Oop::nil();
         }
         else
         {
-            return CppToOop<ResultType>() (methodBinding->functor(OopToCpp<Args> ()(args)...));
+            return CppToOop<ResultType>() (
+                methodBinding->functor(OopToCpp<Args> ()(
+                    OopAbiToCpp<CppTypeToOopType<Args>>()(args)
+                )...)
+            );
         }
     }
 
@@ -668,7 +674,7 @@ template<typename SelfType, typename ResultType, typename... Args>
 MethodBinding makeMethodBinding(const std::string &selector, ResultType (SelfType::*memberFunction)(Args...))
 {
     return makeMethodBinding<ResultType (SelfType*, Args...)> (selector, [=](SelfType* self, Args&&... args){
-        return (self->*memberFunction)(args...);
+        return (self->*memberFunction)(std::forward<Args> (args)...);
     });
 }
 
@@ -676,7 +682,7 @@ template<typename SelfType, typename ResultType, typename... Args>
 MethodBinding makeMethodBinding(const std::string &selector, ResultType (SelfType::*memberFunction)(Args...) const)
 {
     return makeMethodBinding<ResultType (const SelfType*, Args...)> (selector, [=](const SelfType* self, Args&&... args){
-        return (self->*memberFunction)(args...);
+        return (self->*memberFunction)(std::forward<Args> (args)...);
     });
 }
 

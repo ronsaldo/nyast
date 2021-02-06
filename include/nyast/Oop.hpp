@@ -37,6 +37,28 @@ struct CppToOop;
 template<typename T, typename Enable=void>
 struct OopToCpp;
 
+template<typename T>
+struct CppToOopAbi
+{
+    typedef T type;
+
+    T operator()(T value)
+    {
+        return value;
+    }
+};
+
+template<typename T>
+struct OopAbiToCpp
+{
+    typedef T type;
+
+    T operator()(T value)
+    {
+        return value;
+    }
+};
+
 /**
  * I am the result for a method lookup,
  */
@@ -48,7 +70,7 @@ struct MethodLookupResult
     template<typename ResultType, typename...Args>
     ResultType apply(Args... args)
     {
-        return reinterpret_cast<ResultType (*) (void*, Args...)> (dispatchTrampoline) (methodObjectOrEntryPoint, args...);
+        return reinterpret_cast<ResultType (*) (void*, typename CppToOopAbi<Args>::type...)> (dispatchTrampoline) (methodObjectOrEntryPoint, CppToOopAbi<Args>()(args)...);
     }
 };
 
@@ -332,6 +354,11 @@ struct Oop : OopPointerSizeDependentImplementation<AbiOop>
         return (value & CharacterTagMask) == CharacterTagValue;
     }
 
+    Oop asOop() const
+    {
+        return *this;
+    }
+
     NyastObject *asObjectPtr()
     {
         return reinterpret_cast<NyastObject*> (value);
@@ -364,57 +391,57 @@ struct Oop : OopPointerSizeDependentImplementation<AbiOop>
     Oop getClass() const;
 
     template<typename ResultType, typename... Args>
-    ResultType typedPerformInSuperclass(InlineCache *inlineCache, Oop clazz, Oop typedSelector, Args... args);
+    ResultType typedPerformInSuperclass(InlineCache *inlineCache, Oop clazz, Oop typedSelector, Args&&... args);
 
     template<typename ResultType, typename... Args>
-    ResultType performInSuperclass(InlineCache *inlineCache, Oop clazz, Oop selector, Args... args);
+    ResultType performInSuperclass(InlineCache *inlineCache, Oop clazz, Oop selector, Args&&... args);
 
     template<typename ResultType, typename... Args>
-    ResultType typedPerform(InlineCache *inlineCache, Oop typedSelector, Args... args)
+    ResultType typedPerform(InlineCache *inlineCache, Oop typedSelector, Args&&... args)
     {
-        return typedPerformInSuperclass<ResultType> (inlineCache, getClass(), typedSelector, args...);
+        return typedPerformInSuperclass<ResultType> (inlineCache, getClass(), typedSelector, std::forward<Args> (args)...);
     }
 
     template<typename ResultType, typename... Args>
-    ResultType perform(InlineCache *inlineCache, Oop selector, Args... args)
+    ResultType perform(InlineCache *inlineCache, Oop selector, Args&&... args)
     {
-        return performInSuperclass<ResultType> (inlineCache, getClass(), selector, args...);
+        return performInSuperclass<ResultType> (inlineCache, getClass(), selector, std::forward<Args> (args)...);
     }
 
     template<typename ResultType, typename... Args>
-    ResultType typedPerform(InlineCache *inlineCache, const std::string &typedSelector, Args... args)
+    ResultType typedPerform(InlineCache *inlineCache, const std::string &typedSelector, Args&&... args)
     {
-        return typedPerform<ResultType> (inlineCache, internSymbol(typedSelector), args...);
+        return typedPerform<ResultType> (inlineCache, internSymbol(typedSelector), std::forward<Args> (args)...);
     }
 
     template<typename ResultType, typename... Args>
-    ResultType typedPerform(Oop typedSelector, Args... args)
+    ResultType typedPerform(Oop typedSelector, Args&&... args)
     {
-        return typedPerform<ResultType> (nullptr, typedSelector, args...);
+        return typedPerform<ResultType> (nullptr, typedSelector, std::forward<Args> (args)...);
     }
 
     template<typename ResultType, typename... Args>
-    ResultType typedPerform(const std::string &typedSelector, Args... args)
+    ResultType typedPerform(const std::string &typedSelector, Args&&... args)
     {
-        return typedPerform<ResultType> (nullptr, typedSelector, args...);
+        return typedPerform<ResultType> (nullptr, typedSelector, std::forward<Args> (args)...);
     }
 
     template<typename ResultType, typename... Args>
-    ResultType perform(InlineCache *inlineCache, const std::string &selector, Args... args)
+    ResultType perform(InlineCache *inlineCache, const std::string &selector, Args&&... args)
     {
-        return perform<ResultType> (inlineCache, internSymbol(selector), args...);
+        return perform<ResultType> (inlineCache, internSymbol(selector), std::forward<Args> (args)...);
     }
 
     template<typename ResultType, typename... Args>
-    ResultType perform(Oop selector, Args... args)
+    ResultType perform(Oop selector, Args&&... args)
     {
-        return perform<ResultType> (nullptr, selector, args...);
+        return perform<ResultType> (nullptr, selector, std::forward<Args> (args)...);
     }
 
     template<typename ResultType, typename... Args>
-    ResultType perform(const std::string &selector, Args... args)
+    ResultType perform(const std::string &selector, Args&&... args)
     {
-        return perform<ResultType> (nullptr, selector, args...);
+        return perform<ResultType> (nullptr, selector, std::forward<Args> (args)...);
     }
 
     bool operator==(const Oop &o) const
@@ -472,14 +499,71 @@ inline Oop NyastObject::self() const
 
 typedef std::vector<Oop> OopList;
 
-template<typename T>
-struct TypedOop : Oop
+/**
+ * I am an oop that is present in a member function.
+ */
+struct MemberOop : Oop
 {
-    T *operator*()
+    MemberOop() {}
+    MemberOop(const Oop &other)
+        : Oop(other)
     {
-        return as<T> ();
+    }
+
+    MemberOop(const MemberOop &other)
+        : Oop(other)
+    {
+    }
+
+    MemberOop(const MemberOop &&other)
+        : Oop(other)
+    {
+    }
+
+    const MemberOop &operator=(const Oop &o)
+    {
+        value = o.value;
+        return *this;
+    }
+
+    const MemberOop &operator=(const MemberOop &o)
+    {
+        value = o.value;
+        return *this;
+    }
+
+    const MemberOop &operator=(const MemberOop &&o)
+    {
+        value = o.value;
+        return *this;
     }
 };
+
+template<>
+struct CppToOopAbi<Oop>
+{
+    typedef uintptr_t type;
+
+    uintptr_t operator()(const Oop &oop)
+    {
+        return oop.value;
+    }
+};
+
+template<>
+struct CppToOopAbi<MemberOop> : CppToOopAbi<Oop> {};
+
+template<>
+struct OopAbiToCpp<Oop>
+{
+    Oop operator()(uintptr_t value)
+    {
+        return Oop(value);
+    }
+};
+
+template<>
+struct OopAbiToCpp<MemberOop> : OopAbiToCpp<Oop> {};
 
 /**
  * I am a definition of the nyast object vtable.
@@ -862,12 +946,27 @@ inline std::ostream &operator<<(std::ostream &out, const OopList &list)
 template<typename T>
 struct CppToOop<const T&> : CppToOop<T> {};
 
+template<typename T>
+struct CppToOop<T&> : CppToOop<T> {};
+
+template<typename T>
+struct CppToOop<T&&> : CppToOop<T> {};
+
 template<>
 struct CppToOop<Oop>
 {
     Oop operator()(Oop v)
     {
         return v;
+    }
+};
+
+template<>
+struct CppToOop<MemberOop>
+{
+    Oop operator()(MemberOop v)
+    {
+        return v.asOop();
     }
 };
 
@@ -1017,6 +1116,9 @@ struct OopToCpp<Oop>
         return v;
     }
 };
+
+template<>
+struct OopToCpp<MemberOop> : OopToCpp<Oop> {};
 
 template<>
 struct OopToCpp<bool>
@@ -1172,21 +1274,21 @@ struct OopToCpp<void>
 template<typename RT, typename...Args>
 struct NativeMethodDispatchTrampoline
 {
-    static RT value(void *methodFunctionPointer, Oop selector, Oop self, Args... args)
+    static RT value(void *methodFunctionPointer, Oop selector, Oop self, typename CppToOopAbi<Args>::type... args)
     {
         (void)selector;
-        return reinterpret_cast<RT (*) (Oop, Args...)> (methodFunctionPointer) (self, args...);
+        return reinterpret_cast<RT (*) (Oop, typename CppToOopAbi<Args>::type...)> (methodFunctionPointer) (self, args...);
     }
 };
 
 template<typename ResultType, typename...Args>
 struct ObjectMethodDispatchTrampoline
 {
-    static ResultType value(void *methodObject, Oop selector, Oop self, Args... args)
+    static ResultType value(void *methodObject, Oop selector, Oop self, typename CppToOopAbi<Args>::type... args)
     {
         auto methodOop = Oop::fromObjectPtr(reinterpret_cast<NyastObject*> (methodObject));
         OopList marshalledArguments{
-            CppToOop<Args> ()(args)...
+            CppToOop<Args> ()(OopAbiToCpp<Args>()(args))...
         };
 
         return methodOop->runWithIn(selector, marshalledArguments, self);
@@ -1203,22 +1305,22 @@ inline MessageDispatchTrampolineSet MessageDispatchTrampolineSet::forSignature()
 }
 
 template<typename ResultType, typename... Args>
-ResultType Oop::typedPerformInSuperclass(InlineCache *inlineCache, Oop clazz, Oop typedSelector, Args... args)
+ResultType Oop::typedPerformInSuperclass(InlineCache *inlineCache, Oop clazz, Oop typedSelector, Args&&... args)
 {
     (void)inlineCache;
     auto foundMethod = clazz->lookupSelector(typedSelector);
     if(foundMethod.isNil())
         foundMethod = clazz;
     auto lookupResult = foundMethod->asMethodLookupResult(MessageDispatchTrampolineSet::forSignature<ResultType, Args...> ());
-    return lookupResult.template apply<ResultType> (typedSelector, *this, args...);
+    return lookupResult.template apply<ResultType> (typedSelector, *this, std::forward<Args> (args)...);
 }
 
 template<typename ResultType, typename... Args>
-ResultType Oop::performInSuperclass(InlineCache *inlineCache, Oop clazz, Oop selector, Args... args)
+ResultType Oop::performInSuperclass(InlineCache *inlineCache, Oop clazz, Oop selector, Args&&... args)
 {
     return OopToCpp<ResultType> ()(
         typedPerformInSuperclass<Oop> (inlineCache, clazz, selector,
-            CppToOop<Args> ()(args)...
+            CppToOop<Args> ()(std::forward<Args> (args))...
         )
     );
 }

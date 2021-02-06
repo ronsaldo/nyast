@@ -15,8 +15,8 @@ struct Association : Subclass<Object, Association>
     Oop getKey() const;
     Oop evaluateValue() const;
 
-    Oop key;
-    Oop value;
+    MemberOop key;
+    MemberOop value;
 };
 
 } // End of namespace namespace nyast
