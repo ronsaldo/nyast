@@ -32,6 +32,9 @@ MethodBindings ProtoObject::__instanceMethods__()
         makeMethodBinding("doesNotUnderstand:", &SelfType::doesNotUnderstand),
         makeMethodBinding("yourself", &SelfType::yourself),
         makeMethodBinding("initialize", &SelfType::initialize),
+        makeMethodBinding("class", +[](Oop self) -> Oop {
+            return self->getClass();
+        }),
 
         // Comparisons
         makeMethodBinding("identityHash", &SelfType::identityHash),

@@ -6,6 +6,23 @@ namespace nyast
 MethodBindings Object::__instanceMethods__()
 {
     return MethodBindings{
+
+        // Testing methods.
+        makeMethodBinding("isArray", &SelfType::isArray),
+        makeMethodBinding("isAssociation", &SelfType::isAssociation),
+        makeMethodBinding("isBehavior", &SelfType::isBehavior),
+        makeMethodBinding("isBlock", &SelfType::isBlock),
+        makeMethodBinding("isCharacter", &SelfType::isCharacter),
+        makeMethodBinding("isDictionary", &SelfType::isDictionary),
+        makeMethodBinding("isFloat", &SelfType::isFloat),
+        makeMethodBinding("isFraction", &SelfType::isFraction),
+        makeMethodBinding("isInteger", &SelfType::isInteger),
+        makeMethodBinding("isInterval", &SelfType::isInterval),
+        makeMethodBinding("isNumber", &SelfType::isNumber),
+        makeMethodBinding("isString", &SelfType::isString),
+        makeMethodBinding("isSymbol", &SelfType::isSymbol),
+
+        // Errors
         makeMethodBinding("error", static_cast<Oop(SelfType::*)()> (&SelfType::error)),
         makeMethodBinding("error", static_cast<Oop(SelfType::*)(const std::string &)> (&SelfType::error)),
         makeMethodBinding("explicitRequirement", &SelfType::explicitRequirement),

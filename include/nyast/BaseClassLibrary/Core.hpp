@@ -16,6 +16,9 @@ struct Metaclass;
 typedef std::pair<Oop, Oop> MethodBinding;
 typedef std::vector<MethodBinding> MethodBindings;
 
+typedef Oop SlotDefinition;
+typedef OopList SlotDefinitions;
+
 template <typename T>
 struct StaticClassVTableFor
 {
@@ -27,8 +30,11 @@ const NyastObjectVTable StaticClassVTableFor<T>::value = {
 
     // Construction / finalization
     // basicInitialize.
-    +[](AbiOop) {
-        //new (reinterpret_cast<T*> (self)) T;
+    +[](AbiOop self) {
+        if constexpr(std::is_default_constructible<T>::value)
+            new (reinterpret_cast<T*> (self)) T;
+        else
+            throw std::runtime_error("Cannot basic initialize non-default constructible type.");
     },
 
     // initialize
@@ -236,7 +242,7 @@ const typename T::value_type *variableDataOf(const T *self)
 template<typename T, typename... Args>
 T *basicNewInstance(size_t variableDataSize = 0, Args&&... args)
 {
-    size_t allocationSize = sizeof(T) + T::variableDataElementSize * variableDataSize;
+    size_t allocationSize = sizeof(T) + T::__variableDataElementSize__ * variableDataSize;
     char *allocation = new char[allocationSize] ();
     memset(allocation, 0, allocationSize);
 
@@ -250,7 +256,7 @@ T *basicNewInstance(size_t variableDataSize = 0, Args&&... args)
 
     // Initialize the variable data.
     result->__variableDataSize = uint32_t(variableDataSize);
-    if constexpr(T::variableDataElementSize > 0)
+    if constexpr(T::__variableDataElementSize__ > 0)
         new (variableDataOf(result)) typename T::value_type[variableDataSize];
     return result;
 }
@@ -316,6 +322,10 @@ struct Subclass : BT
     typedef BT Super;
     typedef ST SelfType;
 
+    static constexpr bool __isImmediate__ = false;
+    static constexpr size_t __instanceSize__ = sizeof(SelfType);
+    static constexpr size_t __instanceAlignment__ = alignof(SelfType);
+
     Oop getClass() const
     {
         return StaticClassObjectFor<SelfType>::value();
@@ -326,9 +336,19 @@ struct Subclass : BT
         return MethodBindings{};
     }
 
+    static SlotDefinitions __slots__(SelfType*)
+    {
+        return SlotDefinitions{};
+    }
+
     static MethodBindings __classMethods__()
     {
         return MethodBindings{};
+    }
+
+    static SlotDefinitions __classSlots__(void*)
+    {
+        return SlotDefinitions{};
     }
 };
 
@@ -339,7 +359,8 @@ struct SubclassWithVariableDataOfType : Subclass<ST, SelfType>
     typedef value_type *iterator;
     typedef const value_type *const_iterator;
 
-    static constexpr size_t variableDataElementSize = sizeof(value_type);
+    static constexpr size_t __variableDataElementSize__ = sizeof(value_type);
+    static constexpr size_t __variableDataElementAlignment__ = alignof(value_type);
 
     value_type *variableData()
     {
@@ -407,7 +428,10 @@ struct SubclassWithVariableDataOfType : Subclass<ST, SelfType>
 template<typename ST, typename SelfType>
 struct SubclassWithImmediateRepresentation : Subclass<ST, SelfType>
 {
+    static constexpr bool __isImmediate__ = true;
 
+    static constexpr size_t __instanceSize__ = 0;
+    static constexpr size_t __instanceAlignment__ = 0;
 };
 
 struct ProtoObject : Subclass<NyastObject, ProtoObject>
@@ -415,7 +439,9 @@ struct ProtoObject : Subclass<NyastObject, ProtoObject>
     typedef void Super;
     typedef void value_type;
 
-    static constexpr size_t variableDataElementSize = 0;
+    static constexpr size_t __variableDataElementSize__ = 0;
+    static constexpr size_t __variableDataElementAlignment__ = 0;
+
     static constexpr char const __className__[] = "ProtoObject";
 
     static MethodBindings __instanceMethods__();
@@ -523,14 +549,24 @@ struct Behavior : Subclass<Object, Behavior>
     static constexpr char const __className__[] = "Behavior";
     static MethodBindings __instanceMethods__();
 
+    bool isBehavior() const;
+
     void initialize();
     Oop lookupSelector(Oop selector) const;
     Oop runWithIn(Oop selector, const OopList &marshalledArguments, Oop self);
 
     void addMethodBindings(const MethodBindings &methods);
+    void addSlotDefinitions(const SlotDefinitions &slotDefinitions);
 
     MemberOop superclass;
     MemberOop methodDict;
+    MemberOop layout;
+
+    size_t instanceSize;
+    size_t instanceAlignment;
+
+    size_t variableDataElementSize;
+    size_t variableDataElementAlignment;
 };
 
 struct ClassDescription : Subclass<Behavior, ClassDescription>
@@ -578,9 +614,18 @@ Oop StaticClassObjectFor<T>::value()
     else
         metaClass->superclass = staticClassObjectFor<Class> (); // Short circuit
 
+    clazz->instanceSize = T::__instanceSize__;
+    clazz->instanceAlignment = T::__instanceAlignment__;
+
+    clazz->variableDataElementSize = T::__variableDataElementSize__;
+    clazz->variableDataElementAlignment = T::__variableDataElementAlignment__;
+
     clazz->name = Oop::internSymbol(T::__className__);
     clazz->addMethodBindings(T::__instanceMethods__());
+    clazz->addSlotDefinitions(T::__slots__(nullptr));
+
     metaClass->addMethodBindings(T::__classMethods__());
+    metaClass->addSlotDefinitions(T::__classSlots__(nullptr));
 
     return oop;
 }
@@ -683,6 +728,32 @@ MethodBinding makeMethodBinding(const std::string &selector, ResultType (SelfTyp
 {
     return makeMethodBinding<ResultType (const SelfType*, Args...)> (selector, [=](const SelfType* self, Args&&... args){
         return (self->*memberFunction)(std::forward<Args> (args)...);
+    });
+}
+
+template<typename ResultType, typename... Args>
+MethodBinding makeMethodBinding(const std::string &selector, ResultType (*function)(Args...))
+{
+    return makeMethodBinding<ResultType (Args...)> (selector, [=](Args&&... args){
+        return function(std::forward<Args> (args)...);
+    });
+}
+
+template<typename MemberType, typename SelfType>
+MethodBinding makeGetterMethodBinding(const std::string &selector, MemberType SelfType::*member )
+{
+    return makeMethodBinding<MemberType (const SelfType*)> (selector, [=](const SelfType *self){
+        return self->*member;
+    });
+}
+
+template<typename MemberType, typename SelfType>
+MethodBinding makeSetterMethodBinding(const std::string &selector, MemberType SelfType::*member)
+{
+    typedef typename CppMemberToAccessorArgumentType<MemberType>::type ArgumentType;
+
+    return makeMethodBinding<void (SelfType*, const ArgumentType &)> (selector, [=](SelfType *self, const ArgumentType &value){
+        self->*member = value;
     });
 }
 

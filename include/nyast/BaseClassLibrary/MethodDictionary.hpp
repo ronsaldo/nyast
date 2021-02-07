@@ -20,7 +20,7 @@ struct MethodDictionary : Subclass<Dictionary, MethodDictionary>
     Oop atPut(Oop key, Oop value);
     void grow();
 
-    Oop methods;
+    MemberOop methods;
 };
 
 } // End of namespace namespace nyast

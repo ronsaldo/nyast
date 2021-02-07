@@ -16,8 +16,8 @@ struct Fraction : Subclass<Number, Fraction>
 
     double asFloat64();
 
-    Oop numerator;
-    Oop denominator;
+    MemberOop numerator;
+    MemberOop denominator;
 };
 
 } // End of namespace namespace nyast

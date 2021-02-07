@@ -8,10 +8,41 @@ namespace nyast
 MethodBindings Behavior::__instanceMethods__()
 {
     return MethodBindings{
-        makeRawNativeMethodBinding("run:with:in:", +[](Oop self, Oop selector, Oop arguments, Oop receiver) -> Oop {
+        // Runtime required method.
+        makeMethodBinding("run:with:in:", +[](Oop self, Oop selector, Oop arguments, Oop receiver) -> Oop {
             return self->runWithIn(selector, arguments->asOopList(), receiver);
-        })
+        }),
+
+        // Accessing
+        makeGetterMethodBinding("superclass", &SelfType::superclass),
+        makeSetterMethodBinding("superclass:", &SelfType::superclass),
+
+        makeGetterMethodBinding("instSize", &SelfType::instanceSize),
+        makeGetterMethodBinding("instAlignment", &SelfType::instanceAlignment),
+
+        makeGetterMethodBinding("variableDataElementSize", &SelfType::variableDataElementSize),
+        makeGetterMethodBinding("variableDataElementAlignment", &SelfType::variableDataElementAlignment),
+
+        makeGetterMethodBinding("classLayout", &SelfType::layout),
+        makeSetterMethodBinding("classLayout", &SelfType::layout),
+
+        // Initialization
+        makeMethodBinding("initialize", &SelfType::initialize),
+
+        // Testing methods
+        makeMethodBinding("isBehavior", &SelfType::isBehavior),
+
+        // Method dictionary
+        makeGetterMethodBinding("methodDict", &SelfType::methodDict),
+        makeSetterMethodBinding("methodDict:", &SelfType::methodDict),
+
+        makeMethodBinding("lookupSelector:", &SelfType::lookupSelector),
     };
+}
+
+bool Behavior::isBehavior() const
+{
+    return true;
 }
 
 void Behavior::initialize()
@@ -45,6 +76,11 @@ void Behavior::addMethodBindings(const MethodBindings &methods)
 {
     for(auto &[selector, method] : methods)
         methodDict->atPut(selector, method);
+}
+
+void Behavior::addSlotDefinitions(const SlotDefinitions &slotDefinitions)
+{
+    (void)slotDefinitions;
 }
 
 } // End of namespace nyast

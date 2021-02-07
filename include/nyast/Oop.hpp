@@ -542,9 +542,9 @@ struct MemberOop : Oop
 template<>
 struct CppToOopAbi<Oop>
 {
-    typedef uintptr_t type;
+    typedef AbiOop type;
 
-    uintptr_t operator()(const Oop &oop)
+    AbiOop operator()(const Oop &oop)
     {
         return oop.value;
     }
@@ -556,7 +556,7 @@ struct CppToOopAbi<MemberOop> : CppToOopAbi<Oop> {};
 template<>
 struct OopAbiToCpp<Oop>
 {
-    Oop operator()(uintptr_t value)
+    Oop operator()(AbiOop value)
     {
         return Oop(value);
     }
@@ -1246,8 +1246,8 @@ struct OopToCpp<std::string>
     }
 };
 
-template<>
-struct OopToCpp<const std::string &> : OopToCpp<std::string> {};
+template<typename T>
+struct OopToCpp<const T &> : OopToCpp<T> {};
 
 template<>
 struct OopToCpp<OopList>
@@ -1269,6 +1269,18 @@ struct OopToCpp<void>
     {
         // Nothing is required here.
     }
+};
+
+template<typename T>
+struct CppMemberToAccessorArgumentType
+{
+    typedef T type;
+};
+
+template<>
+struct CppMemberToAccessorArgumentType<MemberOop>
+{
+    typedef Oop type;
 };
 
 template<typename RT, typename...Args>

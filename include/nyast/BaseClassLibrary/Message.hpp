@@ -14,9 +14,9 @@ struct Message : Subclass<Object, Message>
 
     std::string printString() const;
 
-    Oop selector;
-    Oop args;
-    Oop lookupClass;
+    MemberOop selector;
+    MemberOop args;
+    MemberOop lookupClass;
 };
 
 } // End of namespace namespace nyast

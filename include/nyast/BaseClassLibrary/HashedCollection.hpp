@@ -16,7 +16,7 @@ struct HashedCollection : Subclass<Collection, HashedCollection>
     void fullCheck();
 
     size_t tally = 0;
-    Oop array;
+    MemberOop array;
 };
 
 } // End of namespace namespace nyast
