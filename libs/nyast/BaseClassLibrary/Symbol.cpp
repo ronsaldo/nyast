@@ -1,4 +1,5 @@
 #include "nyast/BaseClassLibrary/Symbol.hpp"
+#include "nyast/BaseClassLibrary/CppMethodBinding.hpp"
 
 namespace nyast
 {
@@ -17,6 +18,13 @@ Oop Oop::internSymbol(const std::string &string)
     auto oop = Oop::fromObjectPtr(object);
     internedSymbols.insert(std::make_pair(string, oop));
     return oop;
+}
+
+MethodBindings Symbol::__instanceMethods__()
+{
+    return MethodBindings{
+        makeMethodBinding("printString", &SelfType::printString),
+    };
 }
 
 std::string Symbol::printString() const

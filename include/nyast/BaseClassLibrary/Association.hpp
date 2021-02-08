@@ -15,6 +15,10 @@ struct Association : Subclass<Object, Association>
     static MethodBindings __instanceMethods__();
     static SlotDefinitions __slots__();
 
+    Association() = default;
+    Association(Oop ckey, Oop cvalue)
+        : key(ckey), value(cvalue) {}
+
     bool isAssociation() const;
 
     Oop getKey() const;

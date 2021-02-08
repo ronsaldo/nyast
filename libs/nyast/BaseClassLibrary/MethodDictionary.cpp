@@ -33,6 +33,11 @@ Oop MethodDictionary::scanFor(Oop key) const
     return Oop::fromSize(0);
 }
 
+Oop MethodDictionary::add(Oop anAssociation)
+{
+    return atPut(anAssociation->getKey(), anAssociation->getValue());
+}
+
 Oop MethodDictionary::atOrNil(Oop key) const
 {
     auto elementIndex = self()->scanFor(key).decodeSmallInteger();

@@ -85,7 +85,7 @@ const NyastObjectVTable StaticClassVTableFor<T>::value = {
 
     // Basic operations
     // identityHash
-    +[](AbiOop self) -> size_t {
+    +[](AbiOop self) -> OopHash {
         return reinterpret_cast<T*> (self)->identityHash();
     },
 
@@ -95,7 +95,7 @@ const NyastObjectVTable StaticClassVTableFor<T>::value = {
     },
 
     // hash
-    +[](AbiOop self) -> size_t {
+    +[](AbiOop self) -> OopHash {
         return reinterpret_cast<T*> (self)->hash();
     },
 
@@ -160,6 +160,10 @@ const NyastObjectVTable StaticClassVTableFor<T>::value = {
     // value
     +[](AbiOop self) -> Oop {
         return reinterpret_cast<T*> (self)->evaluateValue();
+    },
+    // value:
+    +[](AbiOop self, Oop arg) -> Oop {
+        return reinterpret_cast<T*> (self)->evaluateValueWithArg(arg);
     },
 
     // Testing methods.
@@ -341,9 +345,14 @@ struct Subclass : BT
     static constexpr size_t __instanceSize__ = sizeof(SelfType);
     static constexpr size_t __instanceAlignment__ = alignof(SelfType);
 
-    Oop getClass() const
+    static Oop __class__()
     {
         return StaticClassObjectFor<SelfType>::value();
+    }
+
+    Oop getClass() const
+    {
+        return __class__();
     }
 
     static MethodBindings __instanceMethods__()
@@ -472,9 +481,9 @@ struct ProtoObject : Subclass<NyastObject, ProtoObject>
     Oop read(Oop receiver);
     Oop writeTo(Oop value, Oop receiver);
 
-    size_t identityHash() const;
+    OopHash identityHash() const;
     bool identityEquals(Oop other) const;
-    size_t hash() const;
+    OopHash hash() const;
     bool equals(Oop other) const;
 
     size_t getBasicSize() const;
@@ -494,6 +503,7 @@ struct ProtoObject : Subclass<NyastObject, ProtoObject>
 
     // Blocks
     Oop evaluateValue() const;
+    Oop evaluateValueWithArg(Oop arg) const;
 
     // Testing methods
     bool isArray() const;

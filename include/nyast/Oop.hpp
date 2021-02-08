@@ -93,6 +93,15 @@ struct InlineCache
 {
 };
 
+typedef uintptr_t OopHash;
+constexpr OopHash OopHashModulo = 0xFFFFFFF;
+constexpr OopHash OopHashFactor = 1664525;
+
+inline OopHash hashMultiply(OopHash hash)
+{
+    return (hash * OopHashFactor) & OopHashModulo;
+}
+
 template<typename T>
 struct OopPointerSizeDependentImplementation;
 
@@ -588,9 +597,9 @@ struct NyastObjectVTable
     Oop (*writeTo) (AbiOop self, Oop value, Oop receiver);
 
     // Basic operations
-    size_t (*identityHash)(AbiOop self);
+    OopHash (*identityHash)(AbiOop self);
     bool (*identityEquals)(AbiOop self, Oop other);
-    size_t (*hash)(AbiOop self);
+    OopHash (*hash)(AbiOop self);
     bool (*equals)(AbiOop self, Oop other);
 
     // Common collection methods.
@@ -612,6 +621,7 @@ struct NyastObjectVTable
 
     // Blocks
     Oop (*evaluateValue)(AbiOop self);
+    Oop (*evaluateValueWithArg)(AbiOop self, Oop value);
 
     // Testing methods
     bool (*isArray)(AbiOop self);
@@ -718,7 +728,7 @@ struct NyastObjectDispatcher
     }
 
     // Basic operations.
-    std::size_t identityHash() const
+    OopHash identityHash() const
     {
         return __vtable()->identityHash(abiSelf());
     }
@@ -728,7 +738,7 @@ struct NyastObjectDispatcher
         return __vtable()->identityEquals(abiSelf(), other);
     }
 
-    std::size_t hash() const
+    OopHash hash() const
     {
         return __vtable()->hash(abiSelf());
     }
@@ -800,9 +810,24 @@ struct NyastObjectDispatcher
         return __vtable()->getKey(abiSelf());
     }
 
+    Oop getValue() const
+    {
+        return evaluateValue();
+    }
+
+    void setValue(Oop value) const
+    {
+        evaluateValueWithArg(value);
+    }
+
     Oop evaluateValue() const
     {
         return __vtable()->evaluateValue(abiSelf());
+    }
+
+    Oop evaluateValueWithArg(Oop arg) const
+    {
+        return __vtable()->evaluateValueWithArg(abiSelf(), arg);
     }
 
     // Testing methods.
@@ -1110,6 +1135,9 @@ struct OopToCpp<T*, typename std::enable_if<std::is_base_of<NyastObject, T>::val
         return static_cast<T*> (v.asObjectPtr());
     }
 };
+
+template<typename T>
+struct OopToCpp<T, typename std::enable_if<std::is_base_of<NyastObject, T>::value>::type> : OopToCpp<T*> {};
 
 template<>
 struct CppToOop<const char*>

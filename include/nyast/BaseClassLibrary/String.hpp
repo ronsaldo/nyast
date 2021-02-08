@@ -12,6 +12,11 @@ struct String : SubclassWithVariableDataOfType<ArrayedCollection, String, char>
 {
     static constexpr char const __className__[] = "String";
 
+    static MethodBindings __instanceMethods__();
+
+    OopHash hash() const;
+    bool equals(Oop other) const;
+
     std::string asStdString() const;
     std::string asString() const;
     std::string printString() const;

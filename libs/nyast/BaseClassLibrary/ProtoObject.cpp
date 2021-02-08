@@ -22,9 +22,15 @@ MethodBindings ProtoObject::__instanceMethods__()
         // Comparisons
         makeMethodBinding("identityHash", &SelfType::identityHash),
         makeMethodBinding("==", &SelfType::identityEquals),
+        makeMethodBinding("~~", +[](Oop self, Oop other) -> bool {
+            return !self->identityEquals(other);
+        }),
 
         makeMethodBinding("hash", &SelfType::hash),
         makeMethodBinding("=", &SelfType::equals),
+        makeMethodBinding("~=", +[](Oop self, Oop other) -> bool {
+            return !self->equals(other);
+        }),
     };
 }
 
@@ -48,9 +54,9 @@ void ProtoObject::initialize()
     // By default do nothing.
 }
 
-size_t ProtoObject::identityHash() const
+OopHash ProtoObject::identityHash() const
 {
-    return std::hash<uintptr_t> ()(reinterpret_cast<uintptr_t> (this));
+    return hashMultiply(reinterpret_cast<OopHash> (this));
 }
 
 bool ProtoObject::identityEquals(Oop other) const
@@ -58,7 +64,7 @@ bool ProtoObject::identityEquals(Oop other) const
     return self() == other;
 }
 
-size_t ProtoObject::hash() const
+OopHash ProtoObject::hash() const
 {
     return identityHash();
 }
@@ -131,6 +137,11 @@ Oop ProtoObject::getKey() const
 Oop ProtoObject::evaluateValue() const
 {
     return self().perform<Oop> ("value");
+}
+
+Oop ProtoObject::evaluateValueWithArg(Oop arg) const
+{
+    return self().perform<Oop> ("value:", arg);
 }
 
 Oop ProtoObject::runWithIn(Oop selector, const OopList &arguments, Oop receiver)

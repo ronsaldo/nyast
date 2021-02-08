@@ -4,6 +4,8 @@ set(NyastTests_Sources
     SmalltalkCompiler/ScannerTests.cpp
     SmalltalkCompiler/ParserTests.cpp
     SmalltalkCompiler/EvaluatorTests.cpp
+    KernelTests/ArithmeticTests.cpp
+    KernelTests/StringTests.cpp
 )
 
 add_executable(NyastTests ${NyastTests_Sources})

@@ -4,6 +4,7 @@
 
 namespace nyast
 {
+
 SlotDefinitions Association::__slots__()
 {
     return SlotDefinitions{

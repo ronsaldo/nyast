@@ -12,10 +12,15 @@ struct True : Subclass<Boolean, True>
 {
     static constexpr char const __className__[] = "True";
 
+    static MethodBindings __instanceMethods__();
+    
     static Oop uniqueInstance()
     {
         return ObjectSingletonInstanceOf<True>::value();
     }
+
+
+    bool asBoolean8() const;
 
     std::string asString() const;
 };

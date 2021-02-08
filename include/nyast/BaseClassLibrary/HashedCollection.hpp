@@ -14,8 +14,9 @@ struct HashedCollection : Subclass<Collection, HashedCollection>
 
     void initialize();
     void fullCheck();
+    void grow();
 
-    size_t tally = 0;
+    size_t tally;
     MemberOop array;
 };
 

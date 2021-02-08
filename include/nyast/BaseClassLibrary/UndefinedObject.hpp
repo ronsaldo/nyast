@@ -12,6 +12,8 @@ struct UndefinedObject : Subclass<Object, UndefinedObject>
 {
     static constexpr char const __className__[] = "UndefinedObject";
 
+    static MethodBindings __instanceMethods__();
+    
     static Oop uniqueInstance()
     {
         return ObjectSingletonInstanceOf<UndefinedObject>::value();

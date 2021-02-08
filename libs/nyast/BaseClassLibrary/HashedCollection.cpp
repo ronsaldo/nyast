@@ -16,4 +16,23 @@ void HashedCollection::fullCheck()
         self()->grow();
 }
 
+void HashedCollection::grow()
+{
+    auto oldArray = array;
+    auto oldCapacity = oldArray->getBasicSize();
+    auto newCapacity = oldCapacity*2;
+
+    tally = 0;
+    array = Oop::fromObjectPtr(basicNewInstance<Array> (newCapacity));
+
+    for(size_t i = 1; i <= oldCapacity; ++i)
+    {
+        auto element = oldArray->basicAt(i);
+        if(element.isNotNil())
+        {
+            add(element);
+        }
+    }
+}
+
 } // End of namespace nyast

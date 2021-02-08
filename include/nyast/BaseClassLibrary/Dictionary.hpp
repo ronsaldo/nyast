@@ -12,7 +12,12 @@ struct Dictionary : Subclass<HashedCollection, Dictionary>
 {
     static constexpr char const __className__[] = "Dictionary";
 
+    Oop scanFor(Oop key) const;
+
+    Oop add(Oop anAssociation);
     Oop atOrNil(Oop key) const;
+
+    Oop atPut(Oop key, Oop value);
 };
 
 } // End of namespace namespace nyast

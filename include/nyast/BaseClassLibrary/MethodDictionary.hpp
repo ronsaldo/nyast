@@ -14,6 +14,7 @@ struct MethodDictionary : Subclass<Dictionary, MethodDictionary>
 
     void initialize();
 
+    Oop add(Oop anAssociation);
     Oop scanFor(Oop key) const;
     Oop atOrNil(Oop key) const;
 
