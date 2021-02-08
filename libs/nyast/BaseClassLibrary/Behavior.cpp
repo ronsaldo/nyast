@@ -1,9 +1,27 @@
 #include "nyast/BaseClassLibrary/Behavior.hpp"
 #include "nyast/BaseClassLibrary/Message.hpp"
 #include "nyast/BaseClassLibrary/MethodDictionary.hpp"
+#include "nyast/BaseClassLibrary/CppMethodBinding.hpp"
+#include "nyast/BaseClassLibrary/CppMemberSlot.hpp"
+#include <iostream>
 
 namespace nyast
 {
+
+SlotDefinitions Behavior::__slots__()
+{
+    return SlotDefinitions{
+        makeMemberSlot("superclass", &SelfType::superclass),
+        makeMemberSlot("methodDict", &SelfType::methodDict),
+        makeMemberSlot("layout", &SelfType::layout),
+
+        makeMemberSlot("instanceSize", &SelfType::instanceSize),
+        makeMemberSlot("instanceAlignment", &SelfType::instanceAlignment),
+
+        makeMemberSlot("variableDataElementSize", &SelfType::variableDataElementSize),
+        makeMemberSlot("variableDataElementAlignment", &SelfType::variableDataElementAlignment),
+    };
+}
 
 MethodBindings Behavior::__instanceMethods__()
 {
@@ -24,7 +42,7 @@ MethodBindings Behavior::__instanceMethods__()
         makeGetterMethodBinding("variableDataElementAlignment", &SelfType::variableDataElementAlignment),
 
         makeGetterMethodBinding("classLayout", &SelfType::layout),
-        makeSetterMethodBinding("classLayout", &SelfType::layout),
+        makeSetterMethodBinding("classLayout:", &SelfType::layout),
 
         // Initialization
         makeMethodBinding("initialize", &SelfType::initialize),
@@ -78,7 +96,7 @@ void Behavior::addMethodBindings(const MethodBindings &methods)
         methodDict->atPut(selector, method);
 }
 
-void Behavior::addSlotDefinitions(const SlotDefinitions &slotDefinitions)
+void Behavior::setSlotDefinitions(const SlotDefinitions &slotDefinitions)
 {
     (void)slotDefinitions;
 }

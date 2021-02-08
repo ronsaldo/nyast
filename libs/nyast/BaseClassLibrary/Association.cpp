@@ -1,7 +1,17 @@
 #include "nyast/BaseClassLibrary/Association.hpp"
+#include "nyast/BaseClassLibrary/CppMethodBinding.hpp"
+#include "nyast/BaseClassLibrary/CppMemberSlot.hpp"
 
 namespace nyast
 {
+SlotDefinitions Association::__slots__()
+{
+    return SlotDefinitions{
+        makeMemberSlot("key", &SelfType::key),
+        makeMemberSlot("value", &SelfType::value),
+    };
+}
+
 MethodBindings Association::__instanceMethods__()
 {
     return MethodBindings{

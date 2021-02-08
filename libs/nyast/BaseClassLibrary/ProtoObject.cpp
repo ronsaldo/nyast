@@ -1,25 +1,8 @@
 #include "nyast/BaseClassLibrary/ProtoObject.hpp"
+#include "nyast/BaseClassLibrary/CppMethodBinding.hpp"
 
 namespace nyast
 {
-
-static bool isVowel(char c)
-{
-    switch(c)
-    {
-    case 'a': return true;
-    case 'A': return true;
-    case 'e': return true;
-    case 'E': return true;
-    case 'i': return true;
-    case 'I': return true;
-    case 'o': return true;
-    case 'O': return true;
-    case 'u': return true;
-    case 'U': return true;
-    default: return false;
-    }
-}
 
 ProtoObject::~ProtoObject()
 {
@@ -225,17 +208,29 @@ MethodLookupResult ProtoObject::asMethodLookupResult(MessageDispatchTrampolineSe
     return MethodLookupResult{const_cast<ProtoObject*> (this), trampolineSet.objectMethodDispatchTrampoline};
 }
 
+void ProtoObject::addSubclass(Oop subclass)
+{
+    self().perform<void> ("addSubclass:", subclass);
+}
+
+Oop ProtoObject::read(Oop receiver)
+{
+    return self().perform<Oop> ("read:", receiver);
+}
+
+Oop ProtoObject::writeTo(Oop value, Oop receiver)
+{
+    return self().perform<Oop> ("write:to:", receiver, value);
+}
+
 std::string ProtoObject::asString() const
 {
-    auto className = self().getClass()->asString();
-    if(!className.empty() && isVowel(className.front()))
-        return "an " + className;
-    return "a " + className;
+    return self()->asString();
 }
 
 std::string ProtoObject::printString() const
 {
-    return self()->asString();
+    return self()->printString();
 }
 
 bool ProtoObject::asBoolean8() const

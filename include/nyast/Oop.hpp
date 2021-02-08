@@ -581,6 +581,12 @@ struct NyastObjectVTable
     Oop (*runWithIn) (AbiOop self, Oop selector, const OopList &marshalledArguments, Oop receiver);
     MethodLookupResult (*asMethodLookupResult)(AbiOop self, MessageDispatchTrampolineSet trampolineSet);
 
+    void (*addSubclass) (AbiOop self, Oop subclass);
+
+    // Slots.
+    Oop (*read) (AbiOop self, Oop receiver);
+    Oop (*writeTo) (AbiOop self, Oop value, Oop receiver);
+
     // Basic operations
     size_t (*identityHash)(AbiOop self);
     bool (*identityEquals)(AbiOop self, Oop other);
@@ -694,6 +700,21 @@ struct NyastObjectDispatcher
     MethodLookupResult asMethodLookupResult(MessageDispatchTrampolineSet trampolineSet) const
     {
         return __vtable()->asMethodLookupResult(abiSelf(), trampolineSet);
+    }
+
+    void addSubclass(Oop subclass)
+    {
+        return __vtable()->addSubclass(abiSelf(), subclass);
+    }
+
+    Oop read(Oop receiver)
+    {
+        return __vtable()->read(abiSelf(), receiver);
+    }
+
+    Oop writeTo(Oop value, Oop receiver)
+    {
+        return __vtable()->writeTo(abiSelf(), value, receiver);
     }
 
     // Basic operations.

@@ -1,4 +1,5 @@
 #include "nyast/BaseClassLibrary/Number.hpp"
+#include "nyast/BaseClassLibrary/CppMethodBinding.hpp"
 
 namespace nyast
 {

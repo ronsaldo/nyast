@@ -68,6 +68,21 @@ const NyastObjectVTable StaticClassVTableFor<T>::value = {
         return reinterpret_cast<T*> (self)->asMethodLookupResult(trampolineSet);
     },
 
+    // addSubclass:
+    +[](AbiOop self, Oop subclass) -> void {
+        return reinterpret_cast<T*> (self)->addSubclass(subclass);
+    },
+
+    // read:
+    +[](AbiOop self, Oop receiver) -> Oop {
+        return reinterpret_cast<T*> (self)->read(receiver);
+    },
+
+    // write:to:
+    +[](AbiOop self, Oop value, Oop receiver) -> Oop {
+        return reinterpret_cast<T*> (self)->writeTo(value, receiver);
+    },
+
     // Basic operations
     // identityHash
     +[](AbiOop self) -> size_t {
@@ -336,7 +351,7 @@ struct Subclass : BT
         return MethodBindings{};
     }
 
-    static SlotDefinitions __slots__(SelfType*)
+    static SlotDefinitions __slots__()
     {
         return SlotDefinitions{};
     }
@@ -346,7 +361,7 @@ struct Subclass : BT
         return MethodBindings{};
     }
 
-    static SlotDefinitions __classSlots__(void*)
+    static SlotDefinitions __classSlots__()
     {
         return SlotDefinitions{};
     }
@@ -453,6 +468,9 @@ struct ProtoObject : Subclass<NyastObject, ProtoObject>
     Oop lookupSelector(Oop selector) const;
     Oop runWithIn(Oop selector, const OopList &marshalledArguments, Oop self);
     MethodLookupResult asMethodLookupResult(MessageDispatchTrampolineSet trampolineSet) const;
+    void addSubclass(Oop subclass);
+    Oop read(Oop receiver);
+    Oop writeTo(Oop value, Oop receiver);
 
     size_t identityHash() const;
     bool identityEquals(Oop other) const;
@@ -535,6 +553,9 @@ struct Object : Subclass<ProtoObject, Object>
     bool isString() const;
     bool isSymbol() const;
 
+    std::string asString() const;
+    std::string printString() const;
+
     // Errors.
     Oop error();
     Oop error(const std::string &errorMessage);
@@ -547,6 +568,7 @@ struct Object : Subclass<ProtoObject, Object>
 struct Behavior : Subclass<Object, Behavior>
 {
     static constexpr char const __className__[] = "Behavior";
+    static SlotDefinitions __slots__();
     static MethodBindings __instanceMethods__();
 
     bool isBehavior() const;
@@ -556,7 +578,7 @@ struct Behavior : Subclass<Object, Behavior>
     Oop runWithIn(Oop selector, const OopList &marshalledArguments, Oop self);
 
     void addMethodBindings(const MethodBindings &methods);
-    void addSlotDefinitions(const SlotDefinitions &slotDefinitions);
+    void setSlotDefinitions(const SlotDefinitions &slotDefinitions);
 
     MemberOop superclass;
     MemberOop methodDict;
@@ -578,9 +600,15 @@ struct Class : Subclass<ClassDescription, Class>
 {
     static constexpr char const __className__[] = "Class";
 
+    static MethodBindings __instanceMethods__();
+
     std::string asString() const;
     Oop getClass() const;
 
+    Oop getSubclasses();
+    void addSubclass(Oop subclass);
+
+    MemberOop subclasses;
     MemberOop name;
     MemberOop metaClass;
 };
@@ -588,6 +616,8 @@ struct Class : Subclass<ClassDescription, Class>
 struct Metaclass : Subclass<ClassDescription, Metaclass>
 {
     static constexpr char const __className__[] = "Metaclass";
+
+    static MethodBindings __instanceMethods__();
 
     std::string asString() const;
 
@@ -610,9 +640,14 @@ Oop StaticClassObjectFor<T>::value()
     clazz->superclass = superClass;
 
     if(superClass.isNotNil())
+    {
         metaClass->superclass = superClass.getClass();
+        superClass->addSubclass(oop);
+    }
     else
+    {
         metaClass->superclass = staticClassObjectFor<Class> (); // Short circuit
+    }
 
     clazz->instanceSize = T::__instanceSize__;
     clazz->instanceAlignment = T::__instanceAlignment__;
@@ -622,139 +657,12 @@ Oop StaticClassObjectFor<T>::value()
 
     clazz->name = Oop::internSymbol(T::__className__);
     clazz->addMethodBindings(T::__instanceMethods__());
-    clazz->addSlotDefinitions(T::__slots__(nullptr));
+    clazz->setSlotDefinitions(T::__slots__());
 
     metaClass->addMethodBindings(T::__classMethods__());
-    metaClass->addSlotDefinitions(T::__classSlots__(nullptr));
+    metaClass->setSlotDefinitions(T::__classSlots__());
 
     return oop;
-}
-
-/**
- * I am a direct native method.
- */
-struct NativeMethod : Subclass<Object, NativeMethod>
-{
-    static constexpr char const __className__[] = "NativeMethod";
-
-    MethodLookupResult asMethodLookupResult(MessageDispatchTrampolineSet trampolineSet) const;
-
-    MemberOop selector;
-    void *entryPoint;
-};
-
-/**
- * I am the base class for a cpp functional method.
- */
-struct CppMethodBindingBase : Subclass<Object, CppMethodBindingBase>
-{
-    static constexpr char const __className__[] = "CppMethodBinding";
-
-    CppMethodBindingBase(Oop cselector)
-        : selector(cselector) {}
-
-    MemberOop selector;
-};
-
-template<typename MethodSignature, typename FT>
-struct CppMethodBinding;
-
-template<typename T>
-using CppTypeToOopType = Oop;
-
-template<typename ResultType, typename... Args, typename FT>
-struct CppMethodBinding<ResultType (Args...), FT> : CppMethodBindingBase
-{
-    typedef CppMethodBinding<ResultType (Args...), FT> SelfType;
-
-    CppMethodBinding(Oop cselector, FT cfunctor)
-        : CppMethodBindingBase(cselector), functor(cfunctor) {}
-
-    static Oop trampoline(SelfType *methodBinding, Oop, typename CppToOopAbi<CppTypeToOopType<Args>>::type... args)
-    {
-        if constexpr(std::is_same<ResultType, void>::value)
-        {
-            methodBinding->functor(OopToCpp<Args> ()(
-                OopAbiToCpp<CppTypeToOopType<Args>>()(args)
-            )...);
-            return Oop::nil();
-        }
-        else
-        {
-            return CppToOop<ResultType>() (
-                methodBinding->functor(OopToCpp<Args> ()(
-                    OopAbiToCpp<CppTypeToOopType<Args>>()(args)
-                )...)
-            );
-        }
-    }
-
-    MethodLookupResult asMethodLookupResult(MessageDispatchTrampolineSet) const
-    {
-        return MethodLookupResult{const_cast<SelfType*> (this), reinterpret_cast<void*> (&trampoline)};
-    }
-
-    FT functor;
-};
-
-template<typename FT>
-MethodBinding makeRawNativeMethodBinding(const std::string &selector, const FT &function)
-{
-    auto selectorOop = Oop::internSymbol(selector);
-    auto nativeMethod = basicNewInstance<NativeMethod> ();
-    nativeMethod->selector = selectorOop;
-    nativeMethod->entryPoint = reinterpret_cast<void*> (function);
-    return MethodBinding{selectorOop, Oop::fromObjectPtr(nativeMethod)};
-}
-
-template<typename MethodSignature, typename FT>
-MethodBinding makeMethodBinding(const std::string &selector, FT &&functor)
-{
-    auto selectorOop = Oop::internSymbol(selector);
-    auto methodBinding = basicNewInstance<CppMethodBinding<MethodSignature, FT> > (0, selectorOop, functor);
-    return MethodBinding{selectorOop, Oop::fromObjectPtr(methodBinding)};
-}
-
-template<typename SelfType, typename ResultType, typename... Args>
-MethodBinding makeMethodBinding(const std::string &selector, ResultType (SelfType::*memberFunction)(Args...))
-{
-    return makeMethodBinding<ResultType (SelfType*, Args...)> (selector, [=](SelfType* self, Args&&... args){
-        return (self->*memberFunction)(std::forward<Args> (args)...);
-    });
-}
-
-template<typename SelfType, typename ResultType, typename... Args>
-MethodBinding makeMethodBinding(const std::string &selector, ResultType (SelfType::*memberFunction)(Args...) const)
-{
-    return makeMethodBinding<ResultType (const SelfType*, Args...)> (selector, [=](const SelfType* self, Args&&... args){
-        return (self->*memberFunction)(std::forward<Args> (args)...);
-    });
-}
-
-template<typename ResultType, typename... Args>
-MethodBinding makeMethodBinding(const std::string &selector, ResultType (*function)(Args...))
-{
-    return makeMethodBinding<ResultType (Args...)> (selector, [=](Args&&... args){
-        return function(std::forward<Args> (args)...);
-    });
-}
-
-template<typename MemberType, typename SelfType>
-MethodBinding makeGetterMethodBinding(const std::string &selector, MemberType SelfType::*member )
-{
-    return makeMethodBinding<MemberType (const SelfType*)> (selector, [=](const SelfType *self){
-        return self->*member;
-    });
-}
-
-template<typename MemberType, typename SelfType>
-MethodBinding makeSetterMethodBinding(const std::string &selector, MemberType SelfType::*member)
-{
-    typedef typename CppMemberToAccessorArgumentType<MemberType>::type ArgumentType;
-
-    return makeMethodBinding<void (SelfType*, const ArgumentType &)> (selector, [=](SelfType *self, const ArgumentType &value){
-        self->*member = value;
-    });
 }
 
 } // End of namespace nyast

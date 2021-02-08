@@ -1,4 +1,5 @@
 #include "nyast/BaseClassLibrary/Array.hpp"
+#include "nyast/BaseClassLibrary/CppMethodBinding.hpp"
 #include <sstream>
 
 namespace nyast

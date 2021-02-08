@@ -1,4 +1,5 @@
 #include "nyast/BaseClassLibrary/Object.hpp"
+#include "nyast/BaseClassLibrary/CppMethodBinding.hpp"
 
 namespace nyast
 {
@@ -6,6 +7,10 @@ namespace nyast
 MethodBindings Object::__instanceMethods__()
 {
     return MethodBindings{
+
+        // Converting methods.
+        makeMethodBinding("asString", &SelfType::asString),
+        makeMethodBinding("printString", &SelfType::printString),
 
         // Testing methods.
         makeMethodBinding("isArray", &SelfType::isArray),
@@ -125,6 +130,38 @@ bool Object::isString() const
 bool Object::isSymbol() const
 {
     return false;
+}
+
+// Converting methods.
+static bool isVowel(char c)
+{
+    switch(c)
+    {
+    case 'a': return true;
+    case 'A': return true;
+    case 'e': return true;
+    case 'E': return true;
+    case 'i': return true;
+    case 'I': return true;
+    case 'o': return true;
+    case 'O': return true;
+    case 'u': return true;
+    case 'U': return true;
+    default: return false;
+    }
+}
+
+std::string Object::asString() const
+{
+    auto className = self().getClass()->asString();
+    if(!className.empty() && isVowel(className.front()))
+        return "an " + className;
+    return "a " + className;
+}
+
+std::string Object::printString() const
+{
+    return self()->asString();
 }
 
 } // End of namespace nyast

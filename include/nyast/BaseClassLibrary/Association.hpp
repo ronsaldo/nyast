@@ -13,6 +13,7 @@ struct Association : Subclass<Object, Association>
     static constexpr char const __className__[] = "Association";
 
     static MethodBindings __instanceMethods__();
+    static SlotDefinitions __slots__();
 
     bool isAssociation() const;
 

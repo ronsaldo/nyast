@@ -1,6 +1,7 @@
 #include "nyast/BaseClassLibrary/SmallInteger.hpp"
 #include "nyast/BaseClassLibrary/LargeInteger.hpp"
 #include "nyast/BaseClassLibrary/Fraction.hpp"
+#include "nyast/BaseClassLibrary/CppMethodBinding.hpp"
 #include <sstream>
 
 namespace nyast

@@ -23,12 +23,14 @@ set(Nyast_Sources
     BaseClassLibrary/Number.cpp
     BaseClassLibrary/Object.cpp
     BaseClassLibrary/ProtoObject.cpp
+    BaseClassLibrary/Slot.cpp
     BaseClassLibrary/SmallFloat64.cpp
     BaseClassLibrary/SmallInteger.cpp
     BaseClassLibrary/String.cpp
     BaseClassLibrary/Symbol.cpp
     BaseClassLibrary/True.cpp
     BaseClassLibrary/UndefinedObject.cpp
+    BaseClassLibrary/Variable.cpp
 )
 
 set(Nyast_SmalltalkCompiler_Sources
