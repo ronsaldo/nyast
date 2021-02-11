@@ -1,8 +1,13 @@
 #include "nyast/BaseClassLibrary/HashedCollection.hpp"
 #include "nyast/BaseClassLibrary/Array.hpp"
 
+#include "nyast/BaseClassLibrary/NativeClassRegistration.hpp"
+
 namespace nyast
 {
+
+static NativeClassRegistration<HashedCollection> hashedCollectionClassRegistration;
+
 void HashedCollection::initialize()
 {
     tally = 0;

@@ -1,7 +1,11 @@
 #include "nyast/BaseClassLibrary/Fraction.hpp"
 
+#include "nyast/BaseClassLibrary/NativeClassRegistration.hpp"
+
 namespace nyast
 {
+
+static NativeClassRegistration<Fraction> fractionClassRegistration;
 
 Oop Fraction::constructWithNumeratorDenominator(Oop numerator, Oop denominator)
 {

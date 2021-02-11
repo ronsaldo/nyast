@@ -1,4 +1,6 @@
 #include "nyast/BaseClassLibrary/True.hpp"
+
+#include "nyast/BaseClassLibrary/NativeClassRegistration.hpp"
 #include "nyast/BaseClassLibrary/CppMethodBinding.hpp"
 
 namespace nyast
@@ -15,6 +17,8 @@ MethodBindings True::__instanceMethods__()
         makeMethodBinding("asString", &SelfType::asString),
     };
 }
+
+static NativeClassRegistration<True> trueClassRegistration;
 
 std::string True::asString() const
 {

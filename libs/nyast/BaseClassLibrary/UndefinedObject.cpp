@@ -1,4 +1,6 @@
 #include "nyast/BaseClassLibrary/UndefinedObject.hpp"
+
+#include "nyast/BaseClassLibrary/NativeClassRegistration.hpp"
 #include "nyast/BaseClassLibrary/CppMethodBinding.hpp"
 
 namespace nyast
@@ -13,6 +15,8 @@ Oop Oop::nil()
 {
     return UndefinedObject::uniqueInstance();
 }
+
+static NativeClassRegistration<UndefinedObject> undefinedObjectClassRegistration;
 
 MethodBindings UndefinedObject::__instanceMethods__()
 {

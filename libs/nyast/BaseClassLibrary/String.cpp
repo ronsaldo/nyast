@@ -1,5 +1,7 @@
 #include "nyast/BaseClassLibrary/String.hpp"
 #include "nyast/BaseClassLibrary/Symbol.hpp"
+
+#include "nyast/BaseClassLibrary/NativeClassRegistration.hpp"
 #include "nyast/BaseClassLibrary/CppMethodBinding.hpp"
 
 namespace nyast
@@ -12,6 +14,8 @@ Oop Oop::fromString(const std::string &string)
         memcpy(object->variableData(), string.data(), string.size());
     return Oop::fromObjectPtr(object);
 }
+
+static NativeClassRegistration<String> stringClassRegistration;
 
 MethodBindings String::__instanceMethods__()
 {

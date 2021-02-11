@@ -1,6 +1,7 @@
 #include "nyast/SmalltalkCompiler/Parser.hpp"
 #include "nyast/SmalltalkCompiler/Visitors.hpp"
 #include "nyast/SmalltalkCompiler/Evaluator.hpp"
+#include "nyast/BaseClassLibrary/NativeClassRegistry.hpp"
 #include <sstream>
 
 namespace nyast
@@ -88,6 +89,13 @@ struct ASTEvaluator : ASTVisitor
             return Oop::trueValue();
         else if(node.identifier == "false")
             return Oop::falseValue();
+
+        // HACK: Replace for a proper system dictionary.
+        {
+            auto classRegistration = NativeClassRegistry::get().findClassRegistrationByName(node.identifier);
+            if(classRegistration)
+                return classRegistration->getClass();
+        }
         throw std::runtime_error("Failed to solve identifier reference " + node.identifier);
     }
 

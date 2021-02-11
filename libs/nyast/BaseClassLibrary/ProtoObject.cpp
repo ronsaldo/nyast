@@ -1,8 +1,11 @@
 #include "nyast/BaseClassLibrary/ProtoObject.hpp"
+
+#include "nyast/BaseClassLibrary/NativeClassRegistration.hpp"
 #include "nyast/BaseClassLibrary/CppMethodBinding.hpp"
 
 namespace nyast
 {
+static NativeClassRegistration<ProtoObject> protoObjectClassRegistration;
 
 ProtoObject::~ProtoObject()
 {

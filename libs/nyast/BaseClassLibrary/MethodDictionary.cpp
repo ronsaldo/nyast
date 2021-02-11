@@ -1,8 +1,11 @@
 #include "nyast/BaseClassLibrary/MethodDictionary.hpp"
 #include "nyast/BaseClassLibrary/Array.hpp"
 
+#include "nyast/BaseClassLibrary/NativeClassRegistration.hpp"
+
 namespace nyast
 {
+static NativeClassRegistration<MethodDictionary> methodDictionaryClassRegistration;
 
 void MethodDictionary::initialize()
 {

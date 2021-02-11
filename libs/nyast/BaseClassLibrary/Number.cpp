@@ -1,8 +1,11 @@
 #include "nyast/BaseClassLibrary/Number.hpp"
+
+#include "nyast/BaseClassLibrary/NativeClassRegistration.hpp"
 #include "nyast/BaseClassLibrary/CppMethodBinding.hpp"
 
 namespace nyast
 {
+static NativeClassRegistration<Number> numberClassRegistration;
 
 MethodBindings Number::__instanceMethods__()
 {

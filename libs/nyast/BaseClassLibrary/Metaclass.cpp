@@ -1,8 +1,12 @@
 #include "nyast/BaseClassLibrary/Metaclass.hpp"
+
+#include "nyast/BaseClassLibrary/NativeClassRegistration.hpp"
 #include "nyast/BaseClassLibrary/CppMethodBinding.hpp"
 
 namespace nyast
 {
+static NativeClassRegistration<Metaclass> metaclassClassRegistration;
+
 MethodBindings Metaclass::__instanceMethods__()
 {
     return MethodBindings{

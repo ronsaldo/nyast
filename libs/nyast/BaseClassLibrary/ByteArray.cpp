@@ -1,8 +1,12 @@
 #include "nyast/BaseClassLibrary/ByteArray.hpp"
+
+#include "nyast/BaseClassLibrary/NativeClassRegistration.hpp"
 #include <sstream>
 
 namespace nyast
 {
+
+static NativeClassRegistration<ByteArray> byteArrayClassRegistration;
 
 Oop Oop::fromByteArray(const ByteArrayData &data)
 {

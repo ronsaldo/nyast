@@ -19,6 +19,7 @@ set(Nyast_Sources
     BaseClassLibrary/Message.cpp
     BaseClassLibrary/Metaclass.cpp
     BaseClassLibrary/MethodDictionary.cpp
+    BaseClassLibrary/NativeClassRegistry.cpp
     BaseClassLibrary/NativeMethod.cpp
     BaseClassLibrary/Number.cpp
     BaseClassLibrary/Object.cpp
@@ -39,4 +40,4 @@ set(Nyast_SmalltalkCompiler_Sources
     SmalltalkCompiler/Evaluator.cpp
 )
 
-add_library(nyast STATIC ${Nyast_Sources} ${Nyast_SmalltalkCompiler_Sources})
+add_library(nyast SHARED ${Nyast_Sources} ${Nyast_SmalltalkCompiler_Sources})

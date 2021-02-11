@@ -1,4 +1,6 @@
 #include "nyast/BaseClassLibrary/False.hpp"
+
+#include "nyast/BaseClassLibrary/NativeClassRegistration.hpp"
 #include "nyast/BaseClassLibrary/CppMethodBinding.hpp"
 
 namespace nyast
@@ -8,6 +10,8 @@ Oop Oop::falseValue()
 {
     return False::uniqueInstance();
 }
+
+static NativeClassRegistration<False> falseClassRegistration;
 
 MethodBindings False::__instanceMethods__()
 {

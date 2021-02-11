@@ -291,23 +291,20 @@ T *newInstance(size_t variableDataSize = 0, Args&&... args)
 template <typename T>
 struct ObjectSingletonInstanceOf
 {
-    static T instance;
-
-    static Oop value()
-    {
-        return Oop::fromObjectPtr(&instance);
-    }
-
     static T makeSingleton()
     {
         T result;
         result.__vtable = &StaticClassVTableFor<T>::value;
         return result;
     }
-};
 
-template<typename T>
-T ObjectSingletonInstanceOf<T>::instance = makeSingleton();
+    static inline T instance = makeSingleton();
+
+    static Oop value()
+    {
+        return Oop::fromObjectPtr(&instance);
+    }
+};
 
 template <typename T>
 struct StaticClassObjectFor

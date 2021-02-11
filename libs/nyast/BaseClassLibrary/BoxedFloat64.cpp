@@ -1,9 +1,14 @@
 #include "nyast/BaseClassLibrary/BoxedFloat64.hpp"
+
+#include "nyast/BaseClassLibrary/NativeClassRegistration.hpp"
 #include "nyast/BaseClassLibrary/CppMethodBinding.hpp"
 #include <sstream>
 
 namespace nyast
 {
+
+static NativeClassRegistration<BoxedFloat64> boxedFloat64ClassRegistration;
+
 Oop Oop::makeBoxedFloat(double value)
 {
     auto boxedFloat64 = newInstance<BoxedFloat64> ();

@@ -1,9 +1,12 @@
 #include "nyast/BaseClassLibrary/SmallFloat64.hpp"
+
+#include "nyast/BaseClassLibrary/NativeClassRegistration.hpp"
 #include "nyast/BaseClassLibrary/CppMethodBinding.hpp"
 #include <sstream>
 
 namespace nyast
 {
+static NativeClassRegistration<SmallFloat64> smallFloat64ClassRegistration;
 
 MethodBindings SmallFloat64::__instanceMethods__()
 {

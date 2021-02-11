@@ -3,6 +3,8 @@
 #include "nyast/BaseClassLibrary/Character.hpp"
 #include "nyast/BaseClassLibrary/SmallFloat64.hpp"
 
+#include "nyast/BaseClassLibrary/NativeClassRegistration.hpp"
+
 namespace nyast
 {
 

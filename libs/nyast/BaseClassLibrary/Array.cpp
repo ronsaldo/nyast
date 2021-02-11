@@ -1,9 +1,13 @@
 #include "nyast/BaseClassLibrary/Array.hpp"
+
+#include "nyast/BaseClassLibrary/NativeClassRegistration.hpp"
 #include "nyast/BaseClassLibrary/CppMethodBinding.hpp"
 #include <sstream>
 
 namespace nyast
 {
+
+static NativeClassRegistration<Array> arrayClassRegistration;
 
 MethodBindings Array::__instanceMethods__()
 {

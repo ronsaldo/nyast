@@ -2,8 +2,12 @@
 #include "nyast/BaseClassLibrary/LargePositiveInteger.hpp"
 #include "nyast/BaseClassLibrary/LargeNegativeInteger.hpp"
 
+#include "nyast/BaseClassLibrary/NativeClassRegistration.hpp"
+
 namespace nyast
 {
+
+static NativeClassRegistration<LargeInteger> largeIntegerClassRegistration;
 
 Oop Oop::fromInt64(int64_t value)
 {

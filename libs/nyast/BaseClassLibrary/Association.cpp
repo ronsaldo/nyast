@@ -1,9 +1,13 @@
 #include "nyast/BaseClassLibrary/Association.hpp"
+
+#include "nyast/BaseClassLibrary/NativeClassRegistration.hpp"
 #include "nyast/BaseClassLibrary/CppMethodBinding.hpp"
 #include "nyast/BaseClassLibrary/CppMemberSlot.hpp"
 
 namespace nyast
 {
+
+static NativeClassRegistration<Association> associationClassRegistration;
 
 SlotDefinitions Association::__slots__()
 {

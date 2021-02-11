@@ -1,7 +1,11 @@
 #include "nyast/BaseClassLibrary/LargeNegativeInteger.hpp"
 
+#include "nyast/BaseClassLibrary/NativeClassRegistration.hpp"
+
 namespace nyast
 {
+
+static NativeClassRegistration<LargeNegativeInteger> largeNegativeIntegerClassRegistration;
 
 Oop LargeNegativeInteger::createWithUnormalizedData(size_t dataSize, const uint8_t *data)
 {

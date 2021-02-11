@@ -1,12 +1,16 @@
 #include "nyast/BaseClassLibrary/Behavior.hpp"
 #include "nyast/BaseClassLibrary/Message.hpp"
 #include "nyast/BaseClassLibrary/MethodDictionary.hpp"
+
+#include "nyast/BaseClassLibrary/NativeClassRegistration.hpp"
 #include "nyast/BaseClassLibrary/CppMethodBinding.hpp"
 #include "nyast/BaseClassLibrary/CppMemberSlot.hpp"
 #include <iostream>
 
 namespace nyast
 {
+
+static NativeClassRegistration<Behavior> behaviorClassRegistration;
 
 SlotDefinitions Behavior::__slots__()
 {

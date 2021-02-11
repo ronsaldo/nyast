@@ -1,4 +1,6 @@
 #include "nyast/BaseClassLibrary/Symbol.hpp"
+
+#include "nyast/BaseClassLibrary/NativeClassRegistration.hpp"
 #include "nyast/BaseClassLibrary/CppMethodBinding.hpp"
 
 namespace nyast
@@ -19,6 +21,8 @@ Oop Oop::internSymbol(const std::string &string)
     internedSymbols.insert(std::make_pair(string, oop));
     return oop;
 }
+
+static NativeClassRegistration<Symbol> symbolClassRegistration;
 
 MethodBindings Symbol::__instanceMethods__()
 {

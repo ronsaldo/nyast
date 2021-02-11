@@ -1,8 +1,12 @@
 #include "nyast/BaseClassLibrary/Class.hpp"
+
+#include "nyast/BaseClassLibrary/NativeClassRegistration.hpp"
 #include "nyast/BaseClassLibrary/CppMethodBinding.hpp"
 
 namespace nyast
 {
+
+static NativeClassRegistration<Class> classClassRegistration;
 
 MethodBindings Class::__instanceMethods__()
 {

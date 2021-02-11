@@ -1,7 +1,11 @@
 #include "nyast/BaseClassLibrary/LargePositiveInteger.hpp"
 
+#include "nyast/BaseClassLibrary/NativeClassRegistration.hpp"
+
 namespace nyast
 {
+
+static NativeClassRegistration<LargePositiveInteger> largePositiveIntegerClassRegistration;
 
 Oop LargePositiveInteger::createWithUnormalizedData(size_t dataSize, const uint8_t *data)
 {

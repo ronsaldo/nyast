@@ -1,7 +1,10 @@
 #include "nyast/BaseClassLibrary/Character.hpp"
+#include "nyast/BaseClassLibrary/NativeClassRegistration.hpp"
 
 namespace nyast
 {
+
+static NativeClassRegistration<Character> characterClassRegistration;
 
 std::string Character::asString() const
 {

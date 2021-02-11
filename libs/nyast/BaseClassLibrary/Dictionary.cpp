@@ -2,8 +2,12 @@
 #include "nyast/BaseClassLibrary/Array.hpp"
 #include "nyast/BaseClassLibrary/Association.hpp"
 
+#include "nyast/BaseClassLibrary/NativeClassRegistration.hpp"
+
 namespace nyast
 {
+
+static NativeClassRegistration<Dictionary> dictionaryClassRegistration;
 
 Oop Dictionary::scanFor(Oop key) const
 {

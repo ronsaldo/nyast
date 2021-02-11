@@ -1,9 +1,13 @@
 #include "nyast/BaseClassLibrary/Variable.hpp"
+
+#include "nyast/BaseClassLibrary/NativeClassRegistration.hpp"
 #include "nyast/BaseClassLibrary/CppMethodBinding.hpp"
 #include "nyast/BaseClassLibrary/CppMemberSlot.hpp"
 
 namespace nyast
 {
+static NativeClassRegistration<Variable> variableClassRegistration;
+
 SlotDefinitions Variable::__slots__()
 {
     return SlotDefinitions{
