@@ -11,6 +11,8 @@ namespace nyast
 struct ArrayedCollection : Subclass<SequenceableCollection, ArrayedCollection>
 {
     static constexpr char const __className__[] = "ArrayedCollection";
+
+    static MethodBindings __instanceMethods__();
 };
 
 } // End of namespace namespace nyast

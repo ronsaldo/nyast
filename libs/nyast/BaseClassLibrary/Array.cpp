@@ -9,9 +9,27 @@ namespace nyast
 
 static NativeClassRegistration<Array> arrayClassRegistration;
 
+Oop Oop::fromOopList(const std::vector<Oop> &list)
+{
+    auto object = staticNewInstance<Array> (list.size());
+    auto dest = object->variableData();
+    for(size_t i = 0; i < list.size(); ++i)
+        dest[i] = list[i];
+
+    return Oop::fromObjectPtr(object);
+}
+
 MethodBindings Array::__instanceMethods__()
 {
     return MethodBindings{
+        makeMethodBinding("basicSize", &SelfType::size),
+        makeMethodBinding("basicAt:", &SelfType::basicAt),
+        makeMethodBinding("basicAt:put:", &SelfType::basicAtPut),
+
+        makeMethodBinding("size", &SelfType::getSize),
+        makeMethodBinding("at:", &SelfType::at),
+        makeMethodBinding("at:put:", &SelfType::atPut),
+
         makeMethodBinding("isArray", &SelfType::isArray),
         makeMethodBinding("asString", &SelfType::asString),
         makeMethodBinding("printString", &SelfType::printString),
@@ -23,14 +41,19 @@ bool Array::isArray() const
     return true;
 }
 
-Oop Oop::fromOopList(const std::vector<Oop> &list)
+size_t Array::getSize() const
 {
-    auto object = staticNewInstance<Array> (list.size());
-    auto dest = object->variableData();
-    for(size_t i = 0; i < list.size(); ++i)
-        dest[i] = list[i];
+    return size();
+}
 
-    return Oop::fromObjectPtr(object);
+Oop Array::at(Oop key) const
+{
+    return basicAt(key.as<size_t> ());
+}
+
+Oop Array::atPut(Oop key, Oop value)
+{
+    return basicAtPut(key.as<size_t> (), value);
 }
 
 OopList Array::asOopList() const

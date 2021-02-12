@@ -2,12 +2,14 @@ set(Nyast_Sources
     Oop.cpp
 
     BaseClassLibrary/Array.cpp
+    BaseClassLibrary/ArrayedCollection.cpp
     BaseClassLibrary/Association.cpp
     BaseClassLibrary/Behavior.cpp
     BaseClassLibrary/BoxedFloat64.cpp
     BaseClassLibrary/ByteArray.cpp
     BaseClassLibrary/Character.cpp
     BaseClassLibrary/Class.cpp
+    BaseClassLibrary/Collection.cpp
     BaseClassLibrary/Core.cpp
     BaseClassLibrary/Dictionary.cpp
     BaseClassLibrary/False.cpp
@@ -25,6 +27,7 @@ set(Nyast_Sources
     BaseClassLibrary/Number.cpp
     BaseClassLibrary/Object.cpp
     BaseClassLibrary/ProtoObject.cpp
+    BaseClassLibrary/SequenceableCollection.cpp
     BaseClassLibrary/Slot.cpp
     BaseClassLibrary/SmallFloat64.cpp
     BaseClassLibrary/SmallInteger.cpp

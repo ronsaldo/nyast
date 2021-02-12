@@ -11,6 +11,18 @@ namespace nyast
 struct SequenceableCollection : Subclass<Collection, SequenceableCollection>
 {
     static constexpr char const __className__[] = "SequenceableCollection";
+
+    static MethodBindings __instanceMethods__();
+
+    Oop first() const;
+    Oop second() const;
+    Oop third() const;
+    Oop fourth() const;
+    Oop fifth() const;
+    Oop sixth() const;
+    Oop seventh() const;
+    Oop eighth() const;
+    Oop ninth() const;
 };
 
 } // End of namespace namespace nyast
