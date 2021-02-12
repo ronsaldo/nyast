@@ -25,7 +25,7 @@ bool Array::isArray() const
 
 Oop Oop::fromOopList(const std::vector<Oop> &list)
 {
-    auto object = newInstance<Array> (list.size());
+    auto object = staticNewInstance<Array> (list.size());
     auto dest = object->variableData();
     for(size_t i = 0; i < list.size(); ++i)
         dest[i] = list[i];
@@ -40,7 +40,7 @@ OopList Array::asOopList() const
 
 std::string Array::asString() const
 {
-    return printString();
+    return self()->printString();
 }
 
 std::string Array::printString() const

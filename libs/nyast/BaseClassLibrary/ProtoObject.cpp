@@ -227,6 +227,26 @@ void ProtoObject::addSubclass(Oop subclass)
     self().perform<void> ("addSubclass:", subclass);
 }
 
+Oop ProtoObject::basicNewInstance() const
+{
+    return self().perform<Oop> ("basicNew");
+}
+
+Oop ProtoObject::basicNewInstance(size_t variableDataSize) const
+{
+    return self().perform<Oop> ("basicNew:", variableDataSize);
+}
+
+Oop ProtoObject::newInstance() const
+{
+    return self().perform<Oop> ("new");
+}
+
+Oop ProtoObject::newInstance(size_t variableDataSize) const
+{
+    return self().perform<Oop> ("new:", variableDataSize);
+}
+
 Oop ProtoObject::read(Oop receiver)
 {
     return self().perform<Oop> ("read:", receiver);

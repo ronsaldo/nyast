@@ -5,6 +5,7 @@ set(NyastTests_Sources
     SmalltalkCompiler/ParserTests.cpp
     SmalltalkCompiler/EvaluatorTests.cpp
     KernelTests/ArithmeticTests.cpp
+    KernelTests/AssociationTest.cpp
     KernelTests/StringTests.cpp
 )
 

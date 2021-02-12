@@ -11,7 +11,7 @@ static NativeClassRegistration<BoxedFloat64> boxedFloat64ClassRegistration;
 
 Oop Oop::makeBoxedFloat(double value)
 {
-    auto boxedFloat64 = newInstance<BoxedFloat64> ();
+    auto boxedFloat64 = staticNewInstance<BoxedFloat64> ();
     boxedFloat64->value = value;
     return Oop::fromObjectPtr(boxedFloat64);
 }

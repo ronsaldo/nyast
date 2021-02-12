@@ -9,7 +9,7 @@ static NativeClassRegistration<Fraction> fractionClassRegistration;
 
 Oop Fraction::constructWithNumeratorDenominator(Oop numerator, Oop denominator)
 {
-    auto result = basicNewInstance<SelfType> ();
+    auto result = staticBasicNewInstance<SelfType> ();
     result->numerator = numerator;
     result->denominator = denominator;
     return Oop::fromObjectPtr(result);

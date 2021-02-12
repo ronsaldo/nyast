@@ -1,4 +1,5 @@
 #include "nyast/BaseClassLibrary/Object.hpp"
+#include "nyast/BaseClassLibrary/Association.hpp"
 #include "nyast/BaseClassLibrary/NativeClassRegistration.hpp"
 #include "nyast/BaseClassLibrary/CppMethodBinding.hpp"
 
@@ -10,6 +11,10 @@ static NativeClassRegistration<Object> objectClassRegistration;
 MethodBindings Object::__instanceMethods__()
 {
     return MethodBindings{
+        // Associating
+        makeMethodBinding<Oop (Oop, Oop)> ("->", [](Oop self, Oop value) {
+            return Oop::fromObjectPtr(staticBasicNewInstance<Association> (0, self, value));
+        }),
 
         // Converting methods.
         makeMethodBinding("asString", &SelfType::asString),

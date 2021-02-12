@@ -74,7 +74,7 @@ Oop Dictionary::atPut(Oop key, Oop value)
     auto association = array->basicAt(elementIndex);
     if(association.isNil())
     {
-        association = Oop::fromObjectPtr(basicNewInstance<Association> (0, key, value));
+        association = Oop::fromObjectPtr(staticBasicNewInstance<Association> (0, key, value));
         array->basicAtPut(elementIndex, association);
         ++tally;
         fullCheck();

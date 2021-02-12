@@ -50,7 +50,7 @@ size_t offsetOfMemberPointer(MemberType SelfType::*fieldPointer)
 template<typename SelfType, typename MemberType>
 SlotDefinition makeMemberSlot(const std::string &name, MemberType SelfType::*member)
 {
-    auto slot = basicNewInstance<CppMemberSlot<MemberType>> ();
+    auto slot = staticBasicNewInstance<CppMemberSlot<MemberType>> ();
     slot->name = Oop::internSymbol(name);
     slot->offset = offsetOfMemberPointer(member);
     return Oop::fromObjectPtr(slot);

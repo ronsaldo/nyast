@@ -10,7 +10,7 @@ static NativeClassRegistration<MethodDictionary> methodDictionaryClassRegistrati
 void MethodDictionary::initialize()
 {
     Super::initialize();
-    methods = Oop::fromObjectPtr(basicNewInstance<Array> (array->getBasicSize()));
+    methods = Oop::fromObjectPtr(staticBasicNewInstance<Array> (array->getBasicSize()));
 }
 
 Oop MethodDictionary::scanFor(Oop key) const
@@ -78,8 +78,8 @@ void MethodDictionary::grow()
     auto newCapacity = oldCapacity*2;
 
     tally = 0;
-    array = Oop::fromObjectPtr(basicNewInstance<Array> (newCapacity));
-    methods = Oop::fromObjectPtr(basicNewInstance<Array> (newCapacity));
+    array = Oop::fromObjectPtr(staticBasicNewInstance<Array> (newCapacity));
+    methods = Oop::fromObjectPtr(staticBasicNewInstance<Array> (newCapacity));
 
     for(size_t i = 1; i <= oldCapacity; ++i)
     {

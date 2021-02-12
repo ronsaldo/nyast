@@ -3,7 +3,6 @@
 
 #include "NativeClassRegistration.hpp"
 #include <mutex>
-#include <memory>
 
 namespace nyast
 {
@@ -11,20 +10,15 @@ namespace nyast
 /**
  * I am a global registry for native classes.
  */
-class NativeClassRegistry
+class NativeClassRegistry : public AbstractNativeClassRegistry
 {
 public:
-    static NativeClassRegistry &get();
+    virtual void addClassRegistration(AbstractNativeClassRegistration *registration) override;
+    virtual void removeClassRegistration(AbstractNativeClassRegistration *registration) override;
 
-    void addClassRegistration(AbstractNativeClassRegistration *registration);
-    void removeClassRegistration(AbstractNativeClassRegistration *registration);
-
-    AbstractNativeClassRegistration *findClassRegistrationByName(const std::string &name);
+    virtual AbstractNativeClassRegistration *findClassRegistrationByName(const std::string &name) override;
 
 private:
-    static std::once_flag uniqueInstanceCreationFlag;
-    static std::shared_ptr<NativeClassRegistry> uniqueInstance;
-
     std::mutex mutex;
     std::unordered_map<std::string, AbstractNativeClassRegistration*> nativeClassRegistrations;
 };

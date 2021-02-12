@@ -592,6 +592,11 @@ struct NyastObjectVTable
 
     void (*addSubclass) (AbiOop self, Oop subclass);
 
+    Oop (*basicNewInstance) (AbiOop self);
+    Oop (*basicNewInstanceWithVariableSize) (AbiOop self, size_t variableSize);
+    Oop (*newInstance) (AbiOop self);
+    Oop (*newInstanceWithVariableSize) (AbiOop self, size_t variableSize);
+
     // Slots.
     Oop (*read) (AbiOop self, Oop receiver);
     Oop (*writeTo) (AbiOop self, Oop value, Oop receiver);
@@ -715,6 +720,26 @@ struct NyastObjectDispatcher
     void addSubclass(Oop subclass)
     {
         return __vtable()->addSubclass(abiSelf(), subclass);
+    }
+
+    Oop basicNewInstance()
+    {
+        return __vtable()->basicNewInstance(abiSelf());
+    }
+
+    Oop basicNewInstance(size_t variableDataSize)
+    {
+        return __vtable()->basicNewInstanceWithVariableSize(abiSelf(), variableDataSize);
+    }
+
+    Oop newInstance()
+    {
+        return __vtable()->newInstance(abiSelf());
+    }
+
+    Oop newInstance(size_t variableDataSize)
+    {
+        return __vtable()->newInstanceWithVariableSize(abiSelf(), variableDataSize);
     }
 
     Oop read(Oop receiver)

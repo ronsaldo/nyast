@@ -66,7 +66,7 @@ template<typename MethodSignature, typename FT>
 MethodBinding makeMethodBinding(const std::string &selector, FT &&functor)
 {
     auto selectorOop = Oop::internSymbol(selector);
-    auto methodBinding = basicNewInstance<CppMethodBinding<MethodSignature, FT> > (0, selectorOop, functor);
+    auto methodBinding = staticBasicNewInstance<CppMethodBinding<MethodSignature, FT> > (0, selectorOop, functor);
     return MethodBinding{selectorOop, Oop::fromObjectPtr(methodBinding)};
 }
 

@@ -10,7 +10,7 @@ static NativeClassRegistration<ByteArray> byteArrayClassRegistration;
 
 Oop Oop::fromByteArray(const ByteArrayData &data)
 {
-    auto object = newInstance<ByteArray> (data.size());
+    auto object = staticNewInstance<ByteArray> (data.size());
     if(!data.empty())
         memcpy(object->variableData(), data.data(), data.size());
     return Oop::fromObjectPtr(object);

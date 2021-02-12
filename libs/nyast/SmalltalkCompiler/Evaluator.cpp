@@ -92,7 +92,7 @@ struct ASTEvaluator : ASTVisitor
 
         // HACK: Replace for a proper system dictionary.
         {
-            auto classRegistration = NativeClassRegistry::get().findClassRegistrationByName(node.identifier);
+            auto classRegistration = NativeClassRegistry::get()->findClassRegistrationByName(node.identifier);
             if(classRegistration)
                 return classRegistration->getClass();
         }

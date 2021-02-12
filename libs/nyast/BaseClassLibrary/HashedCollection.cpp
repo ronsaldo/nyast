@@ -11,7 +11,7 @@ static NativeClassRegistration<HashedCollection> hashedCollectionClassRegistrati
 void HashedCollection::initialize()
 {
     tally = 0;
-    array = Oop::fromObjectPtr(basicNewInstance<Array> (5));
+    array = Oop::fromObjectPtr(staticBasicNewInstance<Array> (5));
 }
 
 void HashedCollection::fullCheck()
@@ -28,7 +28,7 @@ void HashedCollection::grow()
     auto newCapacity = oldCapacity*2;
 
     tally = 0;
-    array = Oop::fromObjectPtr(basicNewInstance<Array> (newCapacity));
+    array = Oop::fromObjectPtr(staticBasicNewInstance<Array> (newCapacity));
 
     for(size_t i = 1; i <= oldCapacity; ++i)
     {

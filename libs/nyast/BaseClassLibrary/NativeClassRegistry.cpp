@@ -4,25 +4,15 @@
 namespace nyast
 {
 
-void AbstractNativeClassRegistration::addClassRegistration(AbstractNativeClassRegistration *registration)
-{
-    NativeClassRegistry::get().addClassRegistration(registration);
-}
+static std::once_flag nativeClassRegistryUniqueInstanceCreationFlag;
+static AbstractNativeClassRegistryPtr nativeClassRegistryUniqueInstance;
 
-void AbstractNativeClassRegistration::removeClassRegistration(AbstractNativeClassRegistration *registration)
+AbstractNativeClassRegistryPtr AbstractNativeClassRegistry::get()
 {
-    NativeClassRegistry::get().removeClassRegistration(registration);
-}
-
-std::once_flag NativeClassRegistry::uniqueInstanceCreationFlag;
-std::shared_ptr<NativeClassRegistry> NativeClassRegistry::uniqueInstance;
-
-NativeClassRegistry &NativeClassRegistry::get()
-{
-    std::call_once(uniqueInstanceCreationFlag, []{
-        uniqueInstance = std::make_shared<NativeClassRegistry> ();
+    std::call_once(nativeClassRegistryUniqueInstanceCreationFlag, []{
+        nativeClassRegistryUniqueInstance = std::make_shared<NativeClassRegistry> ();
     });
-    return *uniqueInstance;
+    return nativeClassRegistryUniqueInstance;
 }
 
 void NativeClassRegistry::addClassRegistration(AbstractNativeClassRegistration *registration)

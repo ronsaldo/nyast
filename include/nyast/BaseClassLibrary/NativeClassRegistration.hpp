@@ -3,32 +3,48 @@
 
 #include "../Oop.hpp"
 #include <string>
+#include <memory>
 
 namespace nyast
 {
 
+struct AbstractNativeClassRegistration;
+struct AbstractNativeClassRegistry;
+typedef std::shared_ptr<AbstractNativeClassRegistry> AbstractNativeClassRegistryPtr;
+
+struct AbstractNativeClassRegistry
+{
+    virtual ~AbstractNativeClassRegistry() {};
+
+    virtual void addClassRegistration(AbstractNativeClassRegistration *registration) = 0;
+    virtual void removeClassRegistration(AbstractNativeClassRegistration *registration) = 0;
+
+    virtual AbstractNativeClassRegistration *findClassRegistrationByName(const std::string &name) = 0;
+
+    static AbstractNativeClassRegistryPtr get();
+};
+
 struct AbstractNativeClassRegistration
 {
-    static void addClassRegistration(AbstractNativeClassRegistration *registration);
-    static void removeClassRegistration(AbstractNativeClassRegistration *registration);
-
     virtual std::string getClassName() const = 0;
     virtual Oop getClass() const = 0;
 };
 
 template<typename NCT>
-struct NativeClassRegistration : AbstractNativeClassRegistration
+class NativeClassRegistration : AbstractNativeClassRegistration
 {
+public:
     typedef NCT NativeClassType;
 
     NativeClassRegistration()
     {
-        addClassRegistration(this);
+        registry = AbstractNativeClassRegistry::get();
+        registry->addClassRegistration(this);
     }
 
     ~NativeClassRegistration()
     {
-        removeClassRegistration(this);
+        registry->removeClassRegistration(this);
     }
 
     virtual std::string getClassName() const override
@@ -40,6 +56,9 @@ struct NativeClassRegistration : AbstractNativeClassRegistration
     {
         return NativeClassType::__class__();
     }
+
+private:
+    AbstractNativeClassRegistryPtr registry;
 };
 
 } // End of namespace nyast

@@ -16,6 +16,7 @@ set(Nyast_Sources
     BaseClassLibrary/LargeInteger.cpp
     BaseClassLibrary/LargeNegativeInteger.cpp
     BaseClassLibrary/LargePositiveInteger.cpp
+    BaseClassLibrary/LookupKey.cpp
     BaseClassLibrary/Message.cpp
     BaseClassLibrary/Metaclass.cpp
     BaseClassLibrary/MethodDictionary.cpp

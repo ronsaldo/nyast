@@ -25,7 +25,7 @@ template<typename FT>
 MethodBinding makeRawNativeMethodBinding(const std::string &selector, const FT &function)
 {
     auto selectorOop = Oop::internSymbol(selector);
-    auto nativeMethod = basicNewInstance<NativeMethod> ();
+    auto nativeMethod = staticBasicNewInstance<NativeMethod> ();
     nativeMethod->selector = selectorOop;
     nativeMethod->entryPoint = reinterpret_cast<void*> (function);
     return MethodBinding{selectorOop, Oop::fromObjectPtr(nativeMethod)};

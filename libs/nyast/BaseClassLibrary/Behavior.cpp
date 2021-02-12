@@ -48,6 +48,12 @@ MethodBindings Behavior::__instanceMethods__()
         makeGetterMethodBinding("classLayout", &SelfType::layout),
         makeSetterMethodBinding("classLayout:", &SelfType::layout),
 
+        // Instance creation.
+        makeMethodBinding("basicNew", static_cast<Oop(SelfType::*)() const> (&SelfType::basicNewInstance)),
+        makeMethodBinding("basicNew:", static_cast<Oop(SelfType::*)(size_t) const> (&SelfType::basicNewInstance)),
+        makeMethodBinding("new", static_cast<Oop(SelfType::*)() const> (&SelfType::newInstance)),
+        makeMethodBinding("new:", static_cast<Oop(SelfType::*)(size_t) const> (&SelfType::newInstance)),
+
         // Initialization
         makeMethodBinding("initialize", &SelfType::initialize),
 
@@ -62,6 +68,51 @@ MethodBindings Behavior::__instanceMethods__()
     };
 }
 
+Oop Behavior::basicNewInstance() const
+{
+    return self()->basicNewInstance(0);
+}
+
+Oop Behavior::basicNewInstance(size_t variableDataSize) const
+{
+    size_t allocationSize = instanceSize + variableDataElementSize * variableDataSize;
+    char *allocation = new char[allocationSize] ();
+    memset(allocation, 0, allocationSize);
+
+    auto result = reinterpret_cast<ProtoObject*> (allocation);
+    result->__vtable = instanceVTable;
+
+    // Basic initialize the object.
+    instanceVTable->basicInitialize(reinterpret_cast<AbiOop> (result));
+    result->__vtable = instanceVTable;
+
+    // Initialize the variable oop data into nil.
+    result->__variableDataSize = uint32_t(variableDataSize);
+    if(isVariableDataOop)
+    {
+        assert(variableDataElementSize == sizeof(Oop));
+        auto oopData = reinterpret_cast<Oop*> (allocation + instanceSize);
+        for(size_t i = 0; i < variableDataSize; ++i)
+            oopData[i] = Oop();
+    }
+
+    return Oop::fromObjectPtr(result);
+}
+
+Oop Behavior::newInstance() const
+{
+    auto result = self()->basicNewInstance();
+    result->initialize();
+    return result;
+}
+
+Oop Behavior::newInstance(size_t variableDataSize) const
+{
+    auto result = self()->basicNewInstance(variableDataSize);
+    result->initialize();
+    return result;
+}
+
 bool Behavior::isBehavior() const
 {
     return true;
@@ -69,7 +120,7 @@ bool Behavior::isBehavior() const
 
 void Behavior::initialize()
 {
-    methodDict = Oop::fromObjectPtr(newInstance<MethodDictionary> ());
+    methodDict = Oop::fromObjectPtr(staticNewInstance<MethodDictionary> ());
 }
 
 Oop Behavior::lookupSelector(Oop selector) const
@@ -86,7 +137,7 @@ Oop Behavior::lookupSelector(Oop selector) const
 
 Oop Behavior::runWithIn(Oop selector, const OopList &marshalledArguments, Oop receiver)
 {
-    auto message = basicNewInstance<Message> ();
+    auto message = staticBasicNewInstance<Message> ();
     message->selector = selector;
     message->args = Oop::fromOopList(marshalledArguments);
     message->lookupClass = self();

@@ -3,28 +3,30 @@
 
 #pragma once
 
-#include "Object.hpp"
+#include "LookupKey.hpp"
 
 namespace nyast
 {
 
-struct Association : Subclass<Object, Association>
+struct Association : Subclass<LookupKey, Association>
 {
     static constexpr char const __className__[] = "Association";
 
     static MethodBindings __instanceMethods__();
+    static MethodBindings __classMethods__();
     static SlotDefinitions __slots__();
 
     Association() = default;
     Association(Oop ckey, Oop cvalue)
-        : key(ckey), value(cvalue) {}
+        : DirectSuper(ckey), value(cvalue) {}
 
     bool isAssociation() const;
 
-    Oop getKey() const;
     Oop evaluateValue() const;
 
-    MemberOop key;
+    std::string asString() const;
+    std::string printString() const;
+
     MemberOop value;
 };
 

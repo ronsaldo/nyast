@@ -73,6 +73,26 @@ const NyastObjectVTable StaticClassVTableFor<T>::value = {
         return reinterpret_cast<T*> (self)->addSubclass(subclass);
     },
 
+    // basicNew
+    +[](AbiOop self) -> Oop {
+        return reinterpret_cast<T*> (self)->basicNewInstance();
+    },
+
+    // basicNew:
+    +[](AbiOop self, size_t variableDataSize) -> Oop {
+        return reinterpret_cast<T*> (self)->basicNewInstance(variableDataSize);
+    },
+
+    // new
+    +[](AbiOop self) -> Oop {
+        return reinterpret_cast<T*> (self)->newInstance();
+    },
+
+    // new:
+    +[](AbiOop self, size_t variableDataSize) -> Oop {
+        return reinterpret_cast<T*> (self)->newInstance(variableDataSize);
+    },
+
     // read:
     +[](AbiOop self, Oop receiver) -> Oop {
         return reinterpret_cast<T*> (self)->read(receiver);
@@ -259,7 +279,7 @@ const typename T::value_type *variableDataOf(const T *self)
 }
 
 template<typename T, typename... Args>
-T *basicNewInstance(size_t variableDataSize = 0, Args&&... args)
+T *staticBasicNewInstance(size_t variableDataSize = 0, Args&&... args)
 {
     size_t allocationSize = sizeof(T) + T::__variableDataElementSize__ * variableDataSize;
     char *allocation = new char[allocationSize] ();
@@ -271,7 +291,7 @@ T *basicNewInstance(size_t variableDataSize = 0, Args&&... args)
     new (result) T(std::forward<Args> (args)...);
 
     // Set the object vtable.
-    reinterpret_cast<NyastObject*> (allocation)->__vtable = &StaticClassVTableFor<T>::value;
+    result->__vtable = &StaticClassVTableFor<T>::value;
 
     // Initialize the variable data.
     result->__variableDataSize = uint32_t(variableDataSize);
@@ -281,9 +301,9 @@ T *basicNewInstance(size_t variableDataSize = 0, Args&&... args)
 }
 
 template<typename T, typename... Args>
-T *newInstance(size_t variableDataSize = 0, Args&&... args)
+T *staticNewInstance(size_t variableDataSize = 0, Args&&... args)
 {
-    auto result = basicNewInstance<T> (variableDataSize, std::forward<Args> (args)...);
+    auto result = staticBasicNewInstance<T> (variableDataSize, std::forward<Args> (args)...);
     result->initialize();
     return result;
 }
@@ -337,6 +357,9 @@ struct Subclass : BT
 {
     typedef BT Super;
     typedef ST SelfType;
+    typedef Subclass<BT, ST> DirectSuper;
+
+    using Super::Super;
 
     static constexpr bool __isImmediate__ = false;
     static constexpr size_t __instanceSize__ = sizeof(SelfType);
@@ -379,9 +402,13 @@ struct SubclassWithVariableDataOfType : Subclass<ST, SelfType>
     typedef ET value_type;
     typedef value_type *iterator;
     typedef const value_type *const_iterator;
+    typedef SubclassWithVariableDataOfType<ST, SelfType, ET> DirectSuper;
+
+    using Subclass<ST, SelfType>::Subclass;
 
     static constexpr size_t __variableDataElementSize__ = sizeof(value_type);
     static constexpr size_t __variableDataElementAlignment__ = alignof(value_type);
+    static constexpr bool __isVariableDataOop__ = std::is_same<value_type, Oop>::value || std::is_same<value_type, MemberOop>::value;
 
     value_type *variableData()
     {
@@ -449,6 +476,10 @@ struct SubclassWithVariableDataOfType : Subclass<ST, SelfType>
 template<typename ST, typename SelfType>
 struct SubclassWithImmediateRepresentation : Subclass<ST, SelfType>
 {
+    typedef SubclassWithImmediateRepresentation<ST, SelfType> DirectSuper;
+
+    using Subclass<ST, SelfType>::Subclass;
+
     static constexpr bool __isImmediate__ = true;
 
     static constexpr size_t __instanceSize__ = 0;
@@ -462,6 +493,7 @@ struct ProtoObject : Subclass<NyastObject, ProtoObject>
 
     static constexpr size_t __variableDataElementSize__ = 0;
     static constexpr size_t __variableDataElementAlignment__ = 0;
+    static constexpr bool __isVariableDataOop__ = false;
 
     static constexpr char const __className__[] = "ProtoObject";
 
@@ -475,6 +507,10 @@ struct ProtoObject : Subclass<NyastObject, ProtoObject>
     Oop runWithIn(Oop selector, const OopList &marshalledArguments, Oop self);
     MethodLookupResult asMethodLookupResult(MessageDispatchTrampolineSet trampolineSet) const;
     void addSubclass(Oop subclass);
+    Oop basicNewInstance() const;
+    Oop basicNewInstance(size_t variableDataSize) const;
+    Oop newInstance() const;
+    Oop newInstance(size_t variableDataSize) const;
     Oop read(Oop receiver);
     Oop writeTo(Oop value, Oop receiver);
 
@@ -580,6 +616,11 @@ struct Behavior : Subclass<Object, Behavior>
 
     bool isBehavior() const;
 
+    Oop basicNewInstance() const;
+    Oop basicNewInstance(size_t variableDataSize) const;
+    Oop newInstance() const;
+    Oop newInstance(size_t variableDataSize) const;
+
     void initialize();
     Oop lookupSelector(Oop selector) const;
     Oop runWithIn(Oop selector, const OopList &marshalledArguments, Oop self);
@@ -591,11 +632,14 @@ struct Behavior : Subclass<Object, Behavior>
     MemberOop methodDict;
     MemberOop layout;
 
+    const NyastObjectVTable *instanceVTable;
+
     size_t instanceSize;
     size_t instanceAlignment;
 
     size_t variableDataElementSize;
     size_t variableDataElementAlignment;
+    bool isVariableDataOop;
 };
 
 struct ClassDescription : Subclass<Behavior, ClassDescription>
@@ -637,8 +681,8 @@ Oop StaticClassObjectFor<T>::value()
     if(oop.isNotNilOrNull())
         return oop;
 
-    auto metaClass = newInstance<Metaclass> ();
-    auto clazz = newInstance<Class> ();
+    auto metaClass = staticNewInstance<Metaclass> ();
+    auto clazz = staticNewInstance<Class> ();
     clazz->metaClass = Oop::fromObjectPtr(metaClass);
     metaClass->thisClass = Oop::fromObjectPtr(clazz);
     oop = Oop::fromObjectPtr(clazz);
@@ -656,11 +700,14 @@ Oop StaticClassObjectFor<T>::value()
         metaClass->superclass = staticClassObjectFor<Class> (); // Short circuit
     }
 
+    metaClass->instanceVTable = &StaticClassVTableFor<Metaclass>::value;
+    clazz->instanceVTable = &StaticClassVTableFor<T>::value;
     clazz->instanceSize = T::__instanceSize__;
     clazz->instanceAlignment = T::__instanceAlignment__;
 
     clazz->variableDataElementSize = T::__variableDataElementSize__;
     clazz->variableDataElementAlignment = T::__variableDataElementAlignment__;
+    clazz->isVariableDataOop = T::__isVariableDataOop__;
 
     clazz->name = Oop::internSymbol(T::__className__);
     clazz->addMethodBindings(T::__instanceMethods__());

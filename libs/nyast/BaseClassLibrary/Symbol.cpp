@@ -13,7 +13,7 @@ Oop Oop::internSymbol(const std::string &string)
     if(it != internedSymbols.end())
         return it->second;
 
-    auto object = newInstance<Symbol> (string.size());
+    auto object = staticNewInstance<Symbol> (string.size());
     if(!string.empty())
         memcpy(object->variableData(), string.data(), string.size());
 

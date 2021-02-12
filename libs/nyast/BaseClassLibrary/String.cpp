@@ -9,7 +9,7 @@ namespace nyast
 
 Oop Oop::fromString(const std::string &string)
 {
-    auto object = newInstance<String> (string.size());
+    auto object = staticNewInstance<String> (string.size());
     if(!string.empty())
         memcpy(object->variableData(), string.data(), string.size());
     return Oop::fromObjectPtr(object);

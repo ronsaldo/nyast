@@ -3,6 +3,7 @@
 #include "nyast/BaseClassLibrary/NativeClassRegistration.hpp"
 #include "nyast/BaseClassLibrary/CppMethodBinding.hpp"
 #include "nyast/BaseClassLibrary/CppMemberSlot.hpp"
+#include <sstream>
 
 namespace nyast
 {
@@ -12,8 +13,19 @@ static NativeClassRegistration<Association> associationClassRegistration;
 SlotDefinitions Association::__slots__()
 {
     return SlotDefinitions{
-        makeMemberSlot("key", &SelfType::key),
         makeMemberSlot("value", &SelfType::value),
+    };
+}
+
+MethodBindings Association::__classMethods__()
+{
+    return MethodBindings{
+        makeMethodBinding<Oop (Oop, Oop, Oop)> ("key:value:", [](Oop clazz, Oop key, Oop value) {
+            auto result = clazz->basicNewInstance();
+            result.as<SelfType> ()->key = key;
+            result.as<SelfType> ()->value = value;
+            return result;
+        }),
     };
 }
 
@@ -23,11 +35,12 @@ MethodBindings Association::__instanceMethods__()
         makeMethodBinding("isAssociation", &SelfType::isAssociation),
 
         // Accessing
-        makeGetterMethodBinding("key", &SelfType::key),
-        makeSetterMethodBinding("key:", &SelfType::key),
-
         makeGetterMethodBinding("value", &SelfType::value),
         makeSetterMethodBinding("value:", &SelfType::value),
+
+        // Printing.
+        makeMethodBinding("asString", &SelfType::asString),
+        makeMethodBinding("printString", &SelfType::printString),
     };
 }
 
@@ -36,14 +49,21 @@ bool Association::isAssociation() const
     return true;
 }
 
-Oop Association::getKey() const
-{
-    return key;
-}
-
 Oop Association::evaluateValue() const
 {
     return value;
+}
+
+std::string Association::asString() const
+{
+    return self()->printString();
+}
+
+std::string Association::printString() const
+{
+    std::ostringstream out;
+    out << key << "->" << value;
+    return out.str();
 }
 
 } // End of namespace nyast
