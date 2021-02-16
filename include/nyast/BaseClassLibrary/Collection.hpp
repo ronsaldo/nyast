@@ -11,7 +11,7 @@ struct Collection : Subclass<Object, Collection>
 {
     static constexpr char const __className__[] = "Collection";
 
-    static MethodBindings __instanceMethods__();
+    static MethodCategories __instanceMethods__();
 };
 
 } // End of namespace namespace nyast

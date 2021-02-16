@@ -10,13 +10,19 @@ namespace nyast
 {
 static NativeClassRegistration<SmallInteger> smallIntegerClassRegistration;
 
-MethodBindings SmallInteger::__instanceMethods__()
+MethodCategories SmallInteger::__instanceMethods__()
 {
-    return MethodBindings{
-        makeMethodBinding("+", &SelfType::additionWith),
-        makeMethodBinding("-", &SelfType::subtractionWith),
-        makeMethodBinding("*", &SelfType::multiplicationWith),
-        makeMethodBinding("/", &SelfType::divisionWith),
+    return MethodCategories{
+        {"arithmetic", {
+            makeMethodBinding("+", &SelfType::additionWith),
+            makeMethodBinding("-", &SelfType::subtractionWith),
+            makeMethodBinding("*", &SelfType::multiplicationWith),
+            makeMethodBinding("/", &SelfType::divisionWith),
+        }},
+
+        {"printing", {
+            makeMethodBinding("asString", &SelfType::asString),
+        }},
     };
 }
 

@@ -2,15 +2,40 @@
 #include "nyast/BaseClassLibrary/Array.hpp"
 
 #include "nyast/BaseClassLibrary/NativeClassRegistration.hpp"
+#include "nyast/BaseClassLibrary/CppMethodBinding.hpp"
 
 namespace nyast
 {
 static NativeClassRegistration<MethodDictionary> methodDictionaryClassRegistration;
 
-void MethodDictionary::initialize()
+MethodCategories MethodDictionary::__instanceMethods__()
+{
+    return MethodCategories{
+        {"adding", {
+            makeMethodBinding("add:", &SelfType::add),
+        }},
+
+        {"initialization", {
+            makeMethodBinding("initialize", &SelfType::initialize),
+        }},
+
+        {"accessing", {
+            makeMethodBinding("at:put:", &SelfType::atPut),
+            makeMethodBinding("atOrNil:", &SelfType::atOrNil),
+        }},
+
+        {"private", {
+            makeMethodBinding("scanFor:", &SelfType::scanFor),
+            makeMethodBinding("grow", &SelfType::grow),
+        }},
+    };
+}
+
+Oop MethodDictionary::initialize()
 {
     Super::initialize();
     methods = Oop::fromObjectPtr(staticBasicNewInstance<Array> (array->getBasicSize()));
+    return self();
 }
 
 Oop MethodDictionary::scanFor(Oop key) const

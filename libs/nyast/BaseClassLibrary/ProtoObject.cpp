@@ -11,30 +11,37 @@ ProtoObject::~ProtoObject()
 {
 }
 
-MethodBindings ProtoObject::__instanceMethods__()
+MethodCategories ProtoObject::__instanceMethods__()
 {
-    return MethodBindings{
-        // Basic methods.
-        makeMethodBinding("doesNotUnderstand:", &SelfType::doesNotUnderstand),
-        makeMethodBinding("yourself", &SelfType::yourself),
-        makeMethodBinding("initialize", &SelfType::initialize),
-        makeMethodBinding("class", +[](Oop self) -> Oop {
-            return self->getClass();
-        }),
+    return MethodCategories{
+        {"basic methods", {
+            makeMethodBinding("doesNotUnderstand:", &SelfType::doesNotUnderstand),
+            makeMethodBinding("yourself", &SelfType::yourself),
+            makeMethodBinding("initialize", &SelfType::initialize),
+            makeMethodBinding("class", +[](Oop self) -> Oop {
+                return self->getClass();
+            }),
+        }},
 
-        // Comparisons
-        makeMethodBinding("identityHash", &SelfType::identityHash),
-        makeMethodBinding("==", &SelfType::identityEquals),
-        makeMethodBinding("~~", +[](Oop self, Oop other) -> bool {
-            return !self->identityEquals(other);
-        }),
+        {"comparisons", {
+            makeMethodBinding("identityHash", &SelfType::identityHash),
+            makeMethodBinding("==", &SelfType::identityEquals),
+            makeMethodBinding("~~", +[](Oop self, Oop other) -> bool {
+                return !self->identityEquals(other);
+            }),
 
-        makeMethodBinding("hash", &SelfType::hash),
-        makeMethodBinding("=", &SelfType::equals),
-        makeMethodBinding("~=", +[](Oop self, Oop other) -> bool {
-            return !self->equals(other);
-        }),
+            makeMethodBinding("hash", &SelfType::hash),
+            makeMethodBinding("=", &SelfType::equals),
+            makeMethodBinding("~=", +[](Oop self, Oop other) -> bool {
+                return !self->equals(other);
+            }),
+        }},
     };
+}
+
+MethodCategories ProtoObject::__classMethods__()
+{
+    return MethodCategories{};
 }
 
 Oop ProtoObject::yourself()
@@ -47,14 +54,9 @@ Oop ProtoObject::doesNotUnderstand(Oop message)
     throw std::runtime_error("Message not understood: " + message->printString());
 }
 
-MethodBindings ProtoObject::__classMethods__()
+Oop ProtoObject::initialize()
 {
-    return MethodBindings{};
-}
-
-void ProtoObject::initialize()
-{
-    // By default do nothing.
+    return self();
 }
 
 OopHash ProtoObject::identityHash() const

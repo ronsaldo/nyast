@@ -12,7 +12,7 @@ struct SmallInteger : SubclassWithImmediateRepresentation<Integer, SmallInteger>
 {
     static constexpr char const __className__[] = "SmallInteger";
 
-    static MethodBindings __instanceMethods__();
+    static MethodCategories __instanceMethods__();
 
     std::string asString() const;
 

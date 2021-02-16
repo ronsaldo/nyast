@@ -16,6 +16,9 @@ struct Metaclass;
 typedef std::pair<Oop, Oop> MethodBinding;
 typedef std::vector<MethodBinding> MethodBindings;
 
+typedef std::pair<std::string, MethodBindings> MethodCategory;
+typedef std::vector<MethodCategory> MethodCategories;
+
 typedef Oop SlotDefinition;
 typedef OopList SlotDefinitions;
 
@@ -39,7 +42,7 @@ const NyastObjectVTable StaticClassVTableFor<T>::value = {
 
     // initialize
     +[](AbiOop self) {
-        reinterpret_cast<T*> (self)->initialize();
+        return reinterpret_cast<T*> (self)->initialize();
     },
 
     // finalize
@@ -375,9 +378,9 @@ struct Subclass : BT
         return __class__();
     }
 
-    static MethodBindings __instanceMethods__()
+    static MethodCategories __instanceMethods__()
     {
-        return MethodBindings{};
+        return MethodCategories{};
     }
 
     static SlotDefinitions __slots__()
@@ -385,9 +388,9 @@ struct Subclass : BT
         return SlotDefinitions{};
     }
 
-    static MethodBindings __classMethods__()
+    static MethodCategories __classMethods__()
     {
-        return MethodBindings{};
+        return MethodCategories{};
     }
 
     static SlotDefinitions __classSlots__()
@@ -497,11 +500,11 @@ struct ProtoObject : Subclass<NyastObject, ProtoObject>
 
     static constexpr char const __className__[] = "ProtoObject";
 
-    static MethodBindings __instanceMethods__();
-    static MethodBindings __classMethods__();
+    static MethodCategories __instanceMethods__();
+    static MethodCategories __classMethods__();
 
     ~ProtoObject();
-    void initialize();
+    Oop initialize();
 
     Oop lookupSelector(Oop selector) const;
     Oop runWithIn(Oop selector, const OopList &marshalledArguments, Oop self);
@@ -579,7 +582,7 @@ struct Object : Subclass<ProtoObject, Object>
 {
     static constexpr char const __className__[] = "Object";
 
-    static MethodBindings __instanceMethods__();
+    static MethodCategories __instanceMethods__();
 
     // Testing methods
     bool isArray() const;
@@ -612,7 +615,7 @@ struct Behavior : Subclass<Object, Behavior>
 {
     static constexpr char const __className__[] = "Behavior";
     static SlotDefinitions __slots__();
-    static MethodBindings __instanceMethods__();
+    static MethodCategories __instanceMethods__();
 
     bool isBehavior() const;
 
@@ -621,11 +624,11 @@ struct Behavior : Subclass<Object, Behavior>
     Oop newInstance() const;
     Oop newInstance(size_t variableDataSize) const;
 
-    void initialize();
+    Oop initialize();
     Oop lookupSelector(Oop selector) const;
     Oop runWithIn(Oop selector, const OopList &marshalledArguments, Oop self);
 
-    void addMethodBindings(const MethodBindings &methods);
+    void addMethodCategories(const MethodCategories &methods);
     void setSlotDefinitions(const SlotDefinitions &slotDefinitions);
 
     MemberOop superclass;
@@ -651,7 +654,7 @@ struct Class : Subclass<ClassDescription, Class>
 {
     static constexpr char const __className__[] = "Class";
 
-    static MethodBindings __instanceMethods__();
+    static MethodCategories __instanceMethods__();
 
     std::string asString() const;
     Oop getClass() const;
@@ -668,7 +671,7 @@ struct Metaclass : Subclass<ClassDescription, Metaclass>
 {
     static constexpr char const __className__[] = "Metaclass";
 
-    static MethodBindings __instanceMethods__();
+    static MethodCategories __instanceMethods__();
 
     std::string asString() const;
 
@@ -710,10 +713,10 @@ Oop StaticClassObjectFor<T>::value()
     clazz->isVariableDataOop = T::__isVariableDataOop__;
 
     clazz->name = Oop::internSymbol(T::__className__);
-    clazz->addMethodBindings(T::__instanceMethods__());
+    clazz->addMethodCategories(T::__instanceMethods__());
     clazz->setSlotDefinitions(T::__slots__());
 
-    metaClass->addMethodBindings(T::__classMethods__());
+    metaClass->addMethodCategories(T::__classMethods__());
     metaClass->setSlotDefinitions(T::__classSlots__());
 
     return oop;

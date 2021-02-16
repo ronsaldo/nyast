@@ -11,10 +11,12 @@ Oop Oop::trueValue()
     return True::uniqueInstance();
 }
 
-MethodBindings True::__instanceMethods__()
+MethodCategories True::__instanceMethods__()
 {
-    return MethodBindings{
-        makeMethodBinding("asString", &SelfType::asString),
+    return MethodCategories{
+        {"printing", {
+            makeMethodBinding("asString", &SelfType::asString),            
+        }},
     };
 }
 

@@ -19,20 +19,27 @@ Oop Oop::fromOopList(const std::vector<Oop> &list)
     return Oop::fromObjectPtr(object);
 }
 
-MethodBindings Array::__instanceMethods__()
+MethodCategories Array::__instanceMethods__()
 {
-    return MethodBindings{
-        makeMethodBinding("basicSize", &SelfType::size),
-        makeMethodBinding("basicAt:", &SelfType::basicAt),
-        makeMethodBinding("basicAt:put:", &SelfType::basicAtPut),
+    return MethodCategories{
+        {"accessing", {
+            makeMethodBinding("basicSize", &SelfType::size),
+            makeMethodBinding("basicAt:", &SelfType::basicAt),
+            makeMethodBinding("basicAt:put:", &SelfType::basicAtPut),
 
-        makeMethodBinding("size", &SelfType::getSize),
-        makeMethodBinding("at:", &SelfType::at),
-        makeMethodBinding("at:put:", &SelfType::atPut),
+            makeMethodBinding("size", &SelfType::getSize),
+            makeMethodBinding("at:", &SelfType::at),
+            makeMethodBinding("at:put:", &SelfType::atPut),
+        }},
 
-        makeMethodBinding("isArray", &SelfType::isArray),
-        makeMethodBinding("asString", &SelfType::asString),
-        makeMethodBinding("printString", &SelfType::printString),
+        {"testing", {
+            makeMethodBinding("isArray", &SelfType::isArray),
+        }},
+
+        {"printing", {
+            makeMethodBinding("asString", &SelfType::asString),
+            makeMethodBinding("printString", &SelfType::printString),
+        }},
     };
 }
 

@@ -12,7 +12,7 @@ struct True : Subclass<Boolean, True>
 {
     static constexpr char const __className__[] = "True";
 
-    static MethodBindings __instanceMethods__();
+    static MethodCategories __instanceMethods__();
     
     static Oop uniqueInstance()
     {

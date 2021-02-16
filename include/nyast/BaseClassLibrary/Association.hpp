@@ -12,8 +12,8 @@ struct Association : Subclass<LookupKey, Association>
 {
     static constexpr char const __className__[] = "Association";
 
-    static MethodBindings __instanceMethods__();
-    static MethodBindings __classMethods__();
+    static MethodCategories __instanceMethods__();
+    static MethodCategories __classMethods__();
     static SlotDefinitions __slots__();
 
     Association() = default;

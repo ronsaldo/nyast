@@ -12,6 +12,8 @@ struct Dictionary : Subclass<HashedCollection, Dictionary>
 {
     static constexpr char const __className__[] = "Dictionary";
 
+    static MethodCategories __instanceMethods__();
+
     Oop scanFor(Oop key) const;
 
     Oop add(Oop anAssociation);

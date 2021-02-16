@@ -15,12 +15,13 @@ SlotDefinitions Variable::__slots__()
     };
 }
 
-MethodBindings Variable::__instanceMethods__()
+MethodCategories Variable::__instanceMethods__()
 {
-    return MethodBindings{
-        // Accessing
-        makeGetterMethodBinding("name", &SelfType::name),
-        makeSetterMethodBinding("name:", &SelfType::name),
+    return MethodCategories{
+        {"accessing", {
+            makeGetterMethodBinding("name", &SelfType::name),
+            makeSetterMethodBinding("name:", &SelfType::name),            
+        }},
     };
 }
 

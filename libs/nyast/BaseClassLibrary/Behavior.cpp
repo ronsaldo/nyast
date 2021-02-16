@@ -27,44 +27,50 @@ SlotDefinitions Behavior::__slots__()
     };
 }
 
-MethodBindings Behavior::__instanceMethods__()
+MethodCategories Behavior::__instanceMethods__()
 {
-    return MethodBindings{
-        // Runtime required method.
-        makeMethodBinding("run:with:in:", +[](Oop self, Oop selector, Oop arguments, Oop receiver) -> Oop {
-            return self->runWithIn(selector, arguments->asOopList(), receiver);
-        }),
+    return MethodCategories{
+        {"runtime", {
+            makeMethodBinding("run:with:in:", +[](Oop self, Oop selector, Oop arguments, Oop receiver) -> Oop {
+                return self->runWithIn(selector, arguments->asOopList(), receiver);
+            }),
+        }},
 
-        // Accessing
-        makeGetterMethodBinding("superclass", &SelfType::superclass),
-        makeSetterMethodBinding("superclass:", &SelfType::superclass),
+        {"accessing", {
+            makeGetterMethodBinding("superclass", &SelfType::superclass),
+            makeSetterMethodBinding("superclass:", &SelfType::superclass),
 
-        makeGetterMethodBinding("instSize", &SelfType::instanceSize),
-        makeGetterMethodBinding("instAlignment", &SelfType::instanceAlignment),
+            makeGetterMethodBinding("instSize", &SelfType::instanceSize),
+            makeGetterMethodBinding("instAlignment", &SelfType::instanceAlignment),
 
-        makeGetterMethodBinding("variableDataElementSize", &SelfType::variableDataElementSize),
-        makeGetterMethodBinding("variableDataElementAlignment", &SelfType::variableDataElementAlignment),
+            makeGetterMethodBinding("variableDataElementSize", &SelfType::variableDataElementSize),
+            makeGetterMethodBinding("variableDataElementAlignment", &SelfType::variableDataElementAlignment),
 
-        makeGetterMethodBinding("classLayout", &SelfType::layout),
-        makeSetterMethodBinding("classLayout:", &SelfType::layout),
+            makeGetterMethodBinding("classLayout", &SelfType::layout),
+            makeSetterMethodBinding("classLayout:", &SelfType::layout),
+        }},
 
-        // Instance creation.
-        makeMethodBinding("basicNew", static_cast<Oop(SelfType::*)() const> (&SelfType::basicNewInstance)),
-        makeMethodBinding("basicNew:", static_cast<Oop(SelfType::*)(size_t) const> (&SelfType::basicNewInstance)),
-        makeMethodBinding("new", static_cast<Oop(SelfType::*)() const> (&SelfType::newInstance)),
-        makeMethodBinding("new:", static_cast<Oop(SelfType::*)(size_t) const> (&SelfType::newInstance)),
+        {"instance creation", {
+            makeMethodBinding("basicNew", static_cast<Oop(SelfType::*)() const> (&SelfType::basicNewInstance)),
+            makeMethodBinding("basicNew:", static_cast<Oop(SelfType::*)(size_t) const> (&SelfType::basicNewInstance)),
+            makeMethodBinding("new", static_cast<Oop(SelfType::*)() const> (&SelfType::newInstance)),
+            makeMethodBinding("new:", static_cast<Oop(SelfType::*)(size_t) const> (&SelfType::newInstance)),
+        }},
 
-        // Initialization
-        makeMethodBinding("initialize", &SelfType::initialize),
+        {"initialization", {
+            makeMethodBinding("initialize", &SelfType::initialize),
+        }},
 
-        // Testing methods
-        makeMethodBinding("isBehavior", &SelfType::isBehavior),
+        {"testing", {
+            makeMethodBinding("isBehavior", &SelfType::isBehavior),
+        }},
 
-        // Method dictionary
-        makeGetterMethodBinding("methodDict", &SelfType::methodDict),
-        makeSetterMethodBinding("methodDict:", &SelfType::methodDict),
+        {"method dictionary", {
+            makeGetterMethodBinding("methodDict", &SelfType::methodDict),
+            makeSetterMethodBinding("methodDict:", &SelfType::methodDict),
 
-        makeMethodBinding("lookupSelector:", &SelfType::lookupSelector),
+            makeMethodBinding("lookupSelector:", &SelfType::lookupSelector),
+        }},
     };
 }
 
@@ -108,9 +114,7 @@ Oop Behavior::newInstance() const
 
 Oop Behavior::newInstance(size_t variableDataSize) const
 {
-    auto result = self()->basicNewInstance(variableDataSize);
-    result->initialize();
-    return result;
+    return self()->basicNewInstance(variableDataSize)->initialize();
 }
 
 bool Behavior::isBehavior() const
@@ -118,9 +122,10 @@ bool Behavior::isBehavior() const
     return true;
 }
 
-void Behavior::initialize()
+Oop Behavior::initialize()
 {
     methodDict = Oop::fromObjectPtr(staticNewInstance<MethodDictionary> ());
+    return self();
 }
 
 Oop Behavior::lookupSelector(Oop selector) const
@@ -145,10 +150,13 @@ Oop Behavior::runWithIn(Oop selector, const OopList &marshalledArguments, Oop re
     return receiver.perform<Oop> ("doesNotUnderstand:", messageOop);
 }
 
-void Behavior::addMethodBindings(const MethodBindings &methods)
+void Behavior::addMethodCategories(const MethodCategories &categories)
 {
-    for(auto &[selector, method] : methods)
-        methodDict->atPut(selector, method);
+    for(auto &[category, methods] : categories)
+    {
+        for(auto &[selector, method] : methods)
+            methodDict->atPut(selector, method);        
+    }
 }
 
 void Behavior::setSlotDefinitions(const SlotDefinitions &slotDefinitions)

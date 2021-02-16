@@ -2,16 +2,32 @@
 #include "nyast/BaseClassLibrary/Array.hpp"
 
 #include "nyast/BaseClassLibrary/NativeClassRegistration.hpp"
+#include "nyast/BaseClassLibrary/CppMethodBinding.hpp"
 
 namespace nyast
 {
 
 static NativeClassRegistration<HashedCollection> hashedCollectionClassRegistration;
 
-void HashedCollection::initialize()
+MethodCategories HashedCollection::__instanceMethods__()
+{
+    return MethodCategories{
+        {"initialization", {
+            makeMethodBinding("initialize", &SelfType::initialize),
+        }},
+
+        {"private", {
+            makeMethodBinding("grow", &SelfType::grow),
+            makeMethodBinding("fullCheck", &SelfType::fullCheck),
+        }}
+    };
+}
+
+Oop HashedCollection::initialize()
 {
     tally = 0;
     array = Oop::fromObjectPtr(staticBasicNewInstance<Array> (5));
+    return self();
 }
 
 void HashedCollection::fullCheck()

@@ -7,15 +7,19 @@ namespace nyast
 {
 static NativeClassRegistration<Number> numberClassRegistration;
 
-MethodBindings Number::__instanceMethods__()
+MethodCategories Number::__instanceMethods__()
 {
-    return MethodBindings{
-        makeMethodBinding("+", &SelfType::additionWith),
-        makeMethodBinding("-", &SelfType::subtractionWith),
-        makeMethodBinding("*", &SelfType::multiplicationWith),
-        makeMethodBinding("/", &SelfType::divisionWith),
+    return MethodCategories{
+        {"arithmetic", {
+            makeMethodBinding("+", &SelfType::additionWith),
+            makeMethodBinding("-", &SelfType::subtractionWith),
+            makeMethodBinding("*", &SelfType::multiplicationWith),
+            makeMethodBinding("/", &SelfType::divisionWith),
+        }},
 
-        makeMethodBinding("isNumber", &SelfType::isNumber),
+        {"testing", {
+            makeMethodBinding("isNumber", &SelfType::isNumber),
+        }},
     };
 }
 

@@ -16,13 +16,19 @@ Oop Oop::makeBoxedFloat(double value)
     return Oop::fromObjectPtr(boxedFloat64);
 }
 
-MethodBindings BoxedFloat64::__instanceMethods__()
+MethodCategories BoxedFloat64::__instanceMethods__()
 {
-    return MethodBindings{
-        makeMethodBinding("+", &SelfType::additionWith),
-        makeMethodBinding("-", &SelfType::subtractionWith),
-        makeMethodBinding("*", &SelfType::multiplicationWith),
-        makeMethodBinding("/", &SelfType::divisionWith),
+    return MethodCategories{
+        {"arithmetic", {
+            makeMethodBinding("+", &SelfType::additionWith),
+            makeMethodBinding("-", &SelfType::subtractionWith),
+            makeMethodBinding("*", &SelfType::multiplicationWith),
+            makeMethodBinding("/", &SelfType::divisionWith),
+        }},
+
+        {"converting", {
+            makeMethodBinding("asString", &SelfType::asString),
+        }},
     };
 }
 

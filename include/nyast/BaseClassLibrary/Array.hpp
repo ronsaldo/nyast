@@ -12,7 +12,7 @@ struct Array : SubclassWithVariableDataOfType<ArrayedCollection, Array, Oop>
 {
     static constexpr char const __className__[] = "Array";
 
-    static MethodBindings __instanceMethods__();
+    static MethodCategories __instanceMethods__();
 
     bool isArray() const;
 

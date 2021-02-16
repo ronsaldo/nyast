@@ -18,10 +18,12 @@ Oop Oop::nil()
 
 static NativeClassRegistration<UndefinedObject> undefinedObjectClassRegistration;
 
-MethodBindings UndefinedObject::__instanceMethods__()
+MethodCategories UndefinedObject::__instanceMethods__()
 {
-    return MethodBindings{
-        makeMethodBinding("asString", &SelfType::asString),
+    return MethodCategories{
+        {"printing", {
+            makeMethodBinding("asString", &SelfType::asString),
+        }}
     };
 }
 

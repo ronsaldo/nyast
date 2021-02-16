@@ -17,15 +17,20 @@ Oop Oop::fromString(const std::string &string)
 
 static NativeClassRegistration<String> stringClassRegistration;
 
-MethodBindings String::__instanceMethods__()
+MethodCategories String::__instanceMethods__()
 {
-    return MethodBindings{
-        makeMethodBinding("hash", &SelfType::hash),
-        makeMethodBinding("=", &SelfType::equals),
-        makeMethodBinding("asString", +[](Oop self) -> Oop {
-            return self;
-        }),
-        makeMethodBinding("printString", &SelfType::printString),
+    return MethodCategories{
+        {"comparisons", {
+            makeMethodBinding("hash", &SelfType::hash),
+            makeMethodBinding("=", &SelfType::equals),
+        }},
+
+        {"printing", {
+            makeMethodBinding("asString", +[](Oop self) -> Oop {
+                return self;
+            }),
+            makeMethodBinding("printString", &SelfType::printString),
+        }},
     };
 }
 

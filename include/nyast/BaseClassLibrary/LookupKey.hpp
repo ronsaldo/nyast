@@ -12,8 +12,8 @@ struct LookupKey : Subclass<Magnitude, LookupKey>
 {
     static constexpr char const __className__[] = "LookupKey";
 
-    static MethodBindings __instanceMethods__();
-    static MethodBindings __classMethods__();
+    static MethodCategories __instanceMethods__();
+    static MethodCategories __classMethods__();
     static SlotDefinitions __slots__();
 
     LookupKey() = default;

@@ -13,10 +13,12 @@ Oop Oop::falseValue()
 
 static NativeClassRegistration<False> falseClassRegistration;
 
-MethodBindings False::__instanceMethods__()
+MethodCategories False::__instanceMethods__()
 {
-    return MethodBindings{
-        makeMethodBinding("asString", &SelfType::asString),
+    return MethodCategories{
+        {"converting", {
+            makeMethodBinding("asString", &SelfType::asString),
+        }}
     };
 }
 

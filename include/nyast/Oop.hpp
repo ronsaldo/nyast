@@ -581,7 +581,7 @@ struct NyastObjectVTable
 {
     // Construction / finalization
     void (*basicInitialize) (AbiOop self);
-    void (*initialize) (AbiOop self);
+    Oop (*initialize) (AbiOop self);
     void (*finalize) (AbiOop self);
 
     // Reflection core.
@@ -681,9 +681,9 @@ struct NyastObjectDispatcher
         __vtable()->basicInitialize(abiSelf());
     }
 
-    void initialize()
+    Oop initialize()
     {
-        __vtable()->initialize(abiSelf());
+        return __vtable()->initialize(abiSelf());
     }
 
     void finalize()

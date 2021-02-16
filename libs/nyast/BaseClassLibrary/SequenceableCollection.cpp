@@ -9,18 +9,20 @@ namespace nyast
 
 static NativeClassRegistration<SequenceableCollection> sequenceableCollectionClassRegistration;
 
-MethodBindings SequenceableCollection::__instanceMethods__()
+MethodCategories SequenceableCollection::__instanceMethods__()
 {
-    return MethodBindings{
-        makeMethodBinding("first", &SelfType::first),
-        makeMethodBinding("second", &SelfType::second),
-        makeMethodBinding("third", &SelfType::third),
-        makeMethodBinding("fourth", &SelfType::fourth),
-        makeMethodBinding("fifth", &SelfType::fifth),
-        makeMethodBinding("sixth", &SelfType::sixth),
-        makeMethodBinding("seventh", &SelfType::seventh),
-        makeMethodBinding("eighth", &SelfType::eighth),
-        makeMethodBinding("ninth", &SelfType::ninth),
+    return MethodCategories{
+        {"accessing", {
+            makeMethodBinding("first", &SelfType::first),
+            makeMethodBinding("second", &SelfType::second),
+            makeMethodBinding("third", &SelfType::third),
+            makeMethodBinding("fourth", &SelfType::fourth),
+            makeMethodBinding("fifth", &SelfType::fifth),
+            makeMethodBinding("sixth", &SelfType::sixth),
+            makeMethodBinding("seventh", &SelfType::seventh),
+            makeMethodBinding("eighth", &SelfType::eighth),
+            makeMethodBinding("ninth", &SelfType::ninth),
+        }}
     };
 }
 

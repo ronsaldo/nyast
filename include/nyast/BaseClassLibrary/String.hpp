@@ -12,7 +12,7 @@ struct String : SubclassWithVariableDataOfType<ArrayedCollection, String, char>
 {
     static constexpr char const __className__[] = "String";
 
-    static MethodBindings __instanceMethods__();
+    static MethodCategories __instanceMethods__();
 
     OopHash hash() const;
     bool equals(Oop other) const;

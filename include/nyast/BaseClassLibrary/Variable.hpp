@@ -11,7 +11,7 @@ namespace nyast
 struct Variable : Subclass<Object, Variable>
 {
     static constexpr char const __className__[] = "Variable";
-    static MethodBindings __instanceMethods__();
+    static MethodCategories __instanceMethods__();
     static SlotDefinitions __slots__();
 
     MemberOop name;

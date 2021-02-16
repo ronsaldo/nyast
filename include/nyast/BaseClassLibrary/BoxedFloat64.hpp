@@ -12,7 +12,7 @@ struct BoxedFloat64 : Subclass<Float, BoxedFloat64>
 {
     static constexpr char const __className__[] = "BoxedFloat64";
 
-    static MethodBindings __instanceMethods__();
+    static MethodCategories __instanceMethods__();
 
     std::string asString() const;
     double asFloat64() const;

@@ -12,7 +12,7 @@ struct SequenceableCollection : Subclass<Collection, SequenceableCollection>
 {
     static constexpr char const __className__[] = "SequenceableCollection";
 
-    static MethodBindings __instanceMethods__();
+    static MethodCategories __instanceMethods__();
 
     Oop first() const;
     Oop second() const;

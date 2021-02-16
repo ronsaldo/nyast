@@ -17,30 +17,38 @@ SlotDefinitions Association::__slots__()
     };
 }
 
-MethodBindings Association::__classMethods__()
+MethodCategories Association::__classMethods__()
 {
-    return MethodBindings{
-        makeMethodBinding<Oop (Oop, Oop, Oop)> ("key:value:", [](Oop clazz, Oop key, Oop value) {
-            auto result = clazz->basicNewInstance();
-            result.as<SelfType> ()->key = key;
-            result.as<SelfType> ()->value = value;
-            return result;
-        }),
+    return MethodCategories{
+        {"constructing", {
+            makeMethodBinding<Oop (Oop, Oop, Oop)> ("key:value:", [](Oop clazz, Oop key, Oop value) {
+                auto result = clazz->basicNewInstance();
+                result.as<SelfType> ()->key = key;
+                result.as<SelfType> ()->value = value;
+                return result;
+            }),
+        }}
     };
 }
 
-MethodBindings Association::__instanceMethods__()
+MethodCategories Association::__instanceMethods__()
 {
-    return MethodBindings{
-        makeMethodBinding("isAssociation", &SelfType::isAssociation),
+    return MethodCategories{
+        {"testing", {
+            makeMethodBinding("isAssociation", &SelfType::isAssociation),
+        }},
 
         // Accessing
-        makeGetterMethodBinding("value", &SelfType::value),
-        makeSetterMethodBinding("value:", &SelfType::value),
+        {"accessing", {
+            makeGetterMethodBinding("value", &SelfType::value),
+            makeSetterMethodBinding("value:", &SelfType::value),
+        }},
 
         // Printing.
-        makeMethodBinding("asString", &SelfType::asString),
-        makeMethodBinding("printString", &SelfType::printString),
+        {"printing", {
+            makeMethodBinding("asString", &SelfType::asString),
+            makeMethodBinding("printString", &SelfType::printString),
+        }}
     };
 }
 

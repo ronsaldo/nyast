@@ -12,7 +12,7 @@ struct Symbol : Subclass<String, Symbol>
 {
     static constexpr char const __className__[] = "Symbol";
 
-    static MethodBindings __instanceMethods__();
+    static MethodCategories __instanceMethods__();
     
     std::string printString() const;
 };

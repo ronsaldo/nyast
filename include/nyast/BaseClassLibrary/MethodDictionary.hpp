@@ -12,7 +12,9 @@ struct MethodDictionary : Subclass<Dictionary, MethodDictionary>
 {
     static constexpr char const __className__[] = "MethodDictionary";
 
-    void initialize();
+    static MethodCategories __instanceMethods__();
+
+    Oop initialize();
 
     Oop add(Oop anAssociation);
     Oop scanFor(Oop key) const;

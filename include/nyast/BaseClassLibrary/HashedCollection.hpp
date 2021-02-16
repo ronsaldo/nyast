@@ -12,7 +12,9 @@ struct HashedCollection : Subclass<Collection, HashedCollection>
 {
     static constexpr char const __className__[] = "HashedCollection";
 
-    void initialize();
+    static MethodCategories __instanceMethods__();
+
+    Oop initialize();
     void fullCheck();
     void grow();
 

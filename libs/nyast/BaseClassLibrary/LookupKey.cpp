@@ -16,24 +16,26 @@ SlotDefinitions LookupKey::__slots__()
     };
 }
 
-MethodBindings LookupKey::__classMethods__()
+MethodCategories LookupKey::__classMethods__()
 {
-    return MethodBindings{
-        makeMethodBinding<Oop (Oop, Oop)> ("key:", [](Oop clazz, Oop key) {
-            auto result = clazz->basicNewInstance();
-            result.as<SelfType> ()->key = key;
-            return result;
-        }),
+    return MethodCategories{
+        {"constructing", {
+            makeMethodBinding<Oop (Oop, Oop)> ("key:", [](Oop clazz, Oop key) {
+                auto result = clazz->basicNewInstance();
+                result.as<SelfType> ()->key = key;
+                return result;
+            }),
+        }}
     };
 }
 
-MethodBindings LookupKey::__instanceMethods__()
+MethodCategories LookupKey::__instanceMethods__()
 {
-    return MethodBindings{
-
-        // Accessing
-        makeGetterMethodBinding("key", &SelfType::key),
-        makeSetterMethodBinding("key:", &SelfType::key),
+    return MethodCategories{
+        {"accessing", {
+            makeGetterMethodBinding("key", &SelfType::key),
+            makeSetterMethodBinding("key:", &SelfType::key),
+        }}
     };
 }
 

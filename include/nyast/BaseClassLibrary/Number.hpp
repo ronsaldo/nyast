@@ -12,7 +12,7 @@ struct Number : Subclass<Magnitude, Number>
 {
     static constexpr char const __className__[] = "Number";
 
-    static MethodBindings __instanceMethods__();
+    static MethodCategories __instanceMethods__();
 
     bool isNumber() const;
 

@@ -3,11 +3,30 @@
 #include "nyast/BaseClassLibrary/Association.hpp"
 
 #include "nyast/BaseClassLibrary/NativeClassRegistration.hpp"
+#include "nyast/BaseClassLibrary/CppMethodBinding.hpp"
 
 namespace nyast
 {
 
 static NativeClassRegistration<Dictionary> dictionaryClassRegistration;
+
+MethodCategories Dictionary::__instanceMethods__()
+{
+    return MethodCategories{
+        {"adding", {
+            makeMethodBinding("add:", &SelfType::add),
+        }},
+
+        {"accessing", {
+            makeMethodBinding("at:put:", &SelfType::atPut),
+            makeMethodBinding("atOrNil:", &SelfType::atOrNil),
+        }},
+
+        {"private", {
+            makeMethodBinding("scanFor:", &SelfType::scanFor),
+        }},
+    };
+}
 
 Oop Dictionary::scanFor(Oop key) const
 {

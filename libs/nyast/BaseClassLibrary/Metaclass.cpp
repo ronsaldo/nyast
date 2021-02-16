@@ -7,14 +7,16 @@ namespace nyast
 {
 static NativeClassRegistration<Metaclass> metaclassClassRegistration;
 
-MethodBindings Metaclass::__instanceMethods__()
+MethodCategories Metaclass::__instanceMethods__()
 {
-    return MethodBindings{
-        // Accessing
-        makeGetterMethodBinding("soleInstance", &SelfType::thisClass),
+    return MethodCategories{
+        {"accessing", {
+            makeGetterMethodBinding("soleInstance", &SelfType::thisClass),
+        }},
 
-        // Printing.
-        makeMethodBinding("asString", &SelfType::asString),
+        {"printing", {
+            makeMethodBinding("asString", &SelfType::asString),
+        }},
     };
 }
 

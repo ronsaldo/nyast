@@ -8,20 +8,23 @@ namespace nyast
 
 static NativeClassRegistration<Class> classClassRegistration;
 
-MethodBindings Class::__instanceMethods__()
+MethodCategories Class::__instanceMethods__()
 {
-    return MethodBindings{
-        // Accessing
-        makeGetterMethodBinding("name", &SelfType::name),
-        makeGetterMethodBinding("getName", &SelfType::name),
-        makeSetterMethodBinding("setName:", &SelfType::name),
+    return MethodCategories{
+        {"accessing", {
+            makeGetterMethodBinding("name", &SelfType::name),
+            makeGetterMethodBinding("getName", &SelfType::name),
+            makeSetterMethodBinding("setName:", &SelfType::name),
+        }},
 
-        // Printing.
-        makeMethodBinding("asString", &SelfType::asString),
+        {"printing", {
+            makeMethodBinding("asString", &SelfType::asString),
+        }},
 
-        // Class hierarchy.
-        makeMethodBinding("addSubclass:", &SelfType::addSubclass),
-        makeMethodBinding("subclasses", &SelfType::getSubclasses),
+        {"class hierarchy", {
+            makeMethodBinding("addSubclass:", &SelfType::addSubclass),
+            makeMethodBinding("subclasses", &SelfType::getSubclasses),
+        }},
     };
 }
 

@@ -9,9 +9,9 @@ namespace nyast
 
 static NativeClassRegistration<Collection> collectionClassRegistration;
 
-MethodBindings Collection::__instanceMethods__()
+MethodCategories Collection::__instanceMethods__()
 {
-    return MethodBindings{
+    return MethodCategories{
     };
 }
 

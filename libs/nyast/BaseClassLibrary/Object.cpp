@@ -8,40 +8,44 @@ namespace nyast
 
 static NativeClassRegistration<Object> objectClassRegistration;
 
-MethodBindings Object::__instanceMethods__()
+MethodCategories Object::__instanceMethods__()
 {
-    return MethodBindings{
-        // Associating
-        makeMethodBinding<Oop (Oop, Oop)> ("->", [](Oop self, Oop value) {
-            return Oop::fromObjectPtr(staticBasicNewInstance<Association> (0, self, value));
-        }),
+    return MethodCategories{
+        {"associating", {
+            makeMethodBinding<Oop (Oop, Oop)> ("->", [](Oop self, Oop value) {
+                return Oop::fromObjectPtr(staticBasicNewInstance<Association> (0, self, value));
+            }),
+        }},
 
-        // Converting methods.
-        makeMethodBinding("asString", &SelfType::asString),
-        makeMethodBinding("printString", &SelfType::printString),
+        {"converting", {
+            makeMethodBinding("asString", &SelfType::asString),
+            makeMethodBinding("printString", &SelfType::printString),
+        }},
 
-        // Testing methods.
-        makeMethodBinding("isArray", &SelfType::isArray),
-        makeMethodBinding("isAssociation", &SelfType::isAssociation),
-        makeMethodBinding("isBehavior", &SelfType::isBehavior),
-        makeMethodBinding("isBlock", &SelfType::isBlock),
-        makeMethodBinding("isCharacter", &SelfType::isCharacter),
-        makeMethodBinding("isDictionary", &SelfType::isDictionary),
-        makeMethodBinding("isFloat", &SelfType::isFloat),
-        makeMethodBinding("isFraction", &SelfType::isFraction),
-        makeMethodBinding("isInteger", &SelfType::isInteger),
-        makeMethodBinding("isInterval", &SelfType::isInterval),
-        makeMethodBinding("isNumber", &SelfType::isNumber),
-        makeMethodBinding("isString", &SelfType::isString),
-        makeMethodBinding("isSymbol", &SelfType::isSymbol),
+        {"testing", {
+            makeMethodBinding("isArray", &SelfType::isArray),
+            makeMethodBinding("isAssociation", &SelfType::isAssociation),
+            makeMethodBinding("isBehavior", &SelfType::isBehavior),
+            makeMethodBinding("isBlock", &SelfType::isBlock),
+            makeMethodBinding("isCharacter", &SelfType::isCharacter),
+            makeMethodBinding("isDictionary", &SelfType::isDictionary),
+            makeMethodBinding("isFloat", &SelfType::isFloat),
+            makeMethodBinding("isFraction", &SelfType::isFraction),
+            makeMethodBinding("isInteger", &SelfType::isInteger),
+            makeMethodBinding("isInterval", &SelfType::isInterval),
+            makeMethodBinding("isNumber", &SelfType::isNumber),
+            makeMethodBinding("isString", &SelfType::isString),
+            makeMethodBinding("isSymbol", &SelfType::isSymbol),
+        }},
 
-        // Errors
-        makeMethodBinding("error", static_cast<Oop(SelfType::*)()> (&SelfType::error)),
-        makeMethodBinding("error", static_cast<Oop(SelfType::*)(const std::string &)> (&SelfType::error)),
-        makeMethodBinding("explicitRequirement", &SelfType::explicitRequirement),
-        makeMethodBinding("subclassResponsibility", &SelfType::subclassResponsibility),
-        makeMethodBinding("shouldBeImplemented", &SelfType::shouldBeImplemented),
-        makeMethodBinding("shouldNotImplement", &SelfType::shouldNotImplement),
+        {"errors", {
+            makeMethodBinding("error", static_cast<Oop(SelfType::*)()> (&SelfType::error)),
+            makeMethodBinding("error", static_cast<Oop(SelfType::*)(const std::string &)> (&SelfType::error)),
+            makeMethodBinding("explicitRequirement", &SelfType::explicitRequirement),
+            makeMethodBinding("subclassResponsibility", &SelfType::subclassResponsibility),
+            makeMethodBinding("shouldBeImplemented", &SelfType::shouldBeImplemented),
+            makeMethodBinding("shouldNotImplement", &SelfType::shouldNotImplement),
+        }},
     };
 }
 

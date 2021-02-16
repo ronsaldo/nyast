@@ -12,7 +12,7 @@ struct False : Subclass<Boolean, False>
 {
     static constexpr char const __className__[] = "False";
 
-    static MethodBindings __instanceMethods__();
+    static MethodCategories __instanceMethods__();
     
     static Oop uniqueInstance()
     {

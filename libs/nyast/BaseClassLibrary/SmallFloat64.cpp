@@ -8,13 +8,19 @@ namespace nyast
 {
 static NativeClassRegistration<SmallFloat64> smallFloat64ClassRegistration;
 
-MethodBindings SmallFloat64::__instanceMethods__()
+MethodCategories SmallFloat64::__instanceMethods__()
 {
-    return MethodBindings{
-        makeMethodBinding("+", &SelfType::additionWith),
-        makeMethodBinding("-", &SelfType::subtractionWith),
-        makeMethodBinding("*", &SelfType::multiplicationWith),
-        makeMethodBinding("/", &SelfType::divisionWith),
+    return MethodCategories{
+        {"arithmetic", {
+            makeMethodBinding("+", &SelfType::additionWith),
+            makeMethodBinding("-", &SelfType::subtractionWith),
+            makeMethodBinding("*", &SelfType::multiplicationWith),
+            makeMethodBinding("/", &SelfType::divisionWith),
+        }},
+
+        {"printing", {
+            makeMethodBinding("asString", &SelfType::asString),
+        }},
     };
 }
 

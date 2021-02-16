@@ -12,7 +12,7 @@ struct SmallFloat64 : SubclassWithImmediateRepresentation<Float, SmallFloat64>
 {
     static constexpr char const __className__[] = "SmallFloat64";
 
-    static MethodBindings __instanceMethods__();
+    static MethodCategories __instanceMethods__();
 
     std::string asString() const;
     double asFloat64() const;

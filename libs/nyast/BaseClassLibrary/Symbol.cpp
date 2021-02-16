@@ -24,10 +24,12 @@ Oop Oop::internSymbol(const std::string &string)
 
 static NativeClassRegistration<Symbol> symbolClassRegistration;
 
-MethodBindings Symbol::__instanceMethods__()
+MethodCategories Symbol::__instanceMethods__()
 {
-    return MethodBindings{
-        makeMethodBinding("printString", &SelfType::printString),
+    return MethodCategories{
+        {"printing", {
+            makeMethodBinding("printString", &SelfType::printString),
+        }},
     };
 }
 
