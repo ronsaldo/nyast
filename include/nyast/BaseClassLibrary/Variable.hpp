@@ -14,6 +14,8 @@ struct Variable : Subclass<Object, Variable>
     static MethodCategories __instanceMethods__();
     static SlotDefinitions __slots__();
 
+    Oop getName() const;
+
     MemberOop name;
 };
 

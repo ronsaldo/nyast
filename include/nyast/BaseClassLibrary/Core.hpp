@@ -96,6 +96,22 @@ const NyastObjectVTable StaticClassVTableFor<T>::value = {
         return reinterpret_cast<T*> (self)->newInstance(variableDataSize);
     },
 
+    // classLayout
+    +[](AbiOop self) -> Oop {
+        return reinterpret_cast<T*> (self)->getClassLayout();
+    },
+
+    // slotScope
+    +[](AbiOop self) -> Oop {
+        return reinterpret_cast<T*> (self)->getSlotScope();
+    },
+
+    // Slot
+    // name
+    +[](AbiOop self) -> Oop {
+        return reinterpret_cast<T*> (self)->getName();
+    },
+
     // read:
     +[](AbiOop self, Oop receiver) -> Oop {
         return reinterpret_cast<T*> (self)->read(receiver);
@@ -311,6 +327,18 @@ T *staticNewInstance(size_t variableDataSize = 0, Args&&... args)
     return result;
 }
 
+template<typename T, typename... Args>
+Oop staticOopBasicNewInstance(size_t variableDataSize = 0, Args&&... args)
+{
+    return Oop::fromObjectPtr(staticBasicNewInstance<T> (variableDataSize, std::forward<Args> (args)...));
+}
+
+template<typename T, typename... Args>
+Oop staticOopNewInstance(size_t variableDataSize = 0, Args&&... args)
+{
+    return Oop::fromObjectPtr(staticNewInstance<T> (variableDataSize, std::forward<Args> (args)...));
+}
+
 template <typename T>
 struct ObjectSingletonInstanceOf
 {
@@ -514,6 +542,11 @@ struct ProtoObject : Subclass<NyastObject, ProtoObject>
     Oop basicNewInstance(size_t variableDataSize) const;
     Oop newInstance() const;
     Oop newInstance(size_t variableDataSize) const;
+
+    Oop getClassLayout();
+    Oop getSlotScope() const;
+
+    Oop getName() const;
     Oop read(Oop receiver);
     Oop writeTo(Oop value, Oop receiver);
 
@@ -630,6 +663,7 @@ struct Behavior : Subclass<Object, Behavior>
 
     void addMethodCategories(const MethodCategories &methods);
     void setSlotDefinitions(const SlotDefinitions &slotDefinitions);
+    Oop getClassLayout();
 
     MemberOop superclass;
     MemberOop methodDict;

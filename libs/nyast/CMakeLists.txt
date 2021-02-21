@@ -1,6 +1,7 @@
 set(Nyast_Sources
     Oop.cpp
 
+    BaseClassLibrary/AbstractLayout.cpp
     BaseClassLibrary/Array.cpp
     BaseClassLibrary/ArrayedCollection.cpp
     BaseClassLibrary/Association.cpp
@@ -11,6 +12,8 @@ set(Nyast_Sources
     BaseClassLibrary/Class.cpp
     BaseClassLibrary/Collection.cpp
     BaseClassLibrary/Core.cpp
+    BaseClassLibrary/CppMemberSlot.cpp
+    BaseClassLibrary/CppMethodBinding.cpp
     BaseClassLibrary/Dictionary.cpp
     BaseClassLibrary/False.cpp
     BaseClassLibrary/Fraction.cpp
@@ -18,6 +21,9 @@ set(Nyast_Sources
     BaseClassLibrary/LargeInteger.cpp
     BaseClassLibrary/LargeNegativeInteger.cpp
     BaseClassLibrary/LargePositiveInteger.cpp
+    BaseClassLibrary/LayoutAbstractScope.cpp
+    BaseClassLibrary/LayoutClassScope.cpp
+    BaseClassLibrary/LayoutEmptyScope.cpp
     BaseClassLibrary/LookupKey.cpp
     BaseClassLibrary/Message.cpp
     BaseClassLibrary/Metaclass.cpp
@@ -26,6 +32,7 @@ set(Nyast_Sources
     BaseClassLibrary/NativeMethod.cpp
     BaseClassLibrary/Number.cpp
     BaseClassLibrary/Object.cpp
+    BaseClassLibrary/ObjectLayout.cpp
     BaseClassLibrary/ProtoObject.cpp
     BaseClassLibrary/SequenceableCollection.cpp
     BaseClassLibrary/Slot.cpp

@@ -20,9 +20,14 @@ MethodCategories Variable::__instanceMethods__()
     return MethodCategories{
         {"accessing", {
             makeGetterMethodBinding("name", &SelfType::name),
-            makeSetterMethodBinding("name:", &SelfType::name),            
+            makeSetterMethodBinding("name:", &SelfType::name),
         }},
     };
+}
+
+Oop Variable::getName() const
+{
+    return name;
 }
 
 } // End of namespace nyast

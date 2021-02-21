@@ -249,6 +249,21 @@ Oop ProtoObject::newInstance(size_t variableDataSize) const
     return self().perform<Oop> ("new:", variableDataSize);
 }
 
+Oop ProtoObject::getClassLayout()
+{
+    return self().perform<Oop> ("classLayout");
+}
+
+Oop ProtoObject::getSlotScope() const
+{
+    return self().perform<Oop> ("slotScope");
+}
+
+Oop ProtoObject::getName() const
+{
+    return self().perform<Oop> ("name");
+}
+
 Oop ProtoObject::read(Oop receiver)
 {
     return self().perform<Oop> ("read:", receiver);

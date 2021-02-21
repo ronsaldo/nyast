@@ -1,6 +1,8 @@
 #include "nyast/BaseClassLibrary/Behavior.hpp"
 #include "nyast/BaseClassLibrary/Message.hpp"
 #include "nyast/BaseClassLibrary/MethodDictionary.hpp"
+#include "nyast/BaseClassLibrary/ObjectLayout.hpp"
+#include "nyast/BaseClassLibrary/LayoutClassScope.hpp"
 
 #include "nyast/BaseClassLibrary/NativeClassRegistration.hpp"
 #include "nyast/BaseClassLibrary/CppMethodBinding.hpp"
@@ -46,7 +48,7 @@ MethodCategories Behavior::__instanceMethods__()
             makeGetterMethodBinding("variableDataElementSize", &SelfType::variableDataElementSize),
             makeGetterMethodBinding("variableDataElementAlignment", &SelfType::variableDataElementAlignment),
 
-            makeGetterMethodBinding("classLayout", &SelfType::layout),
+            makeMethodBinding("classLayout", &SelfType::getClassLayout),
             makeSetterMethodBinding("classLayout:", &SelfType::layout),
         }},
 
@@ -124,7 +126,7 @@ bool Behavior::isBehavior() const
 
 Oop Behavior::initialize()
 {
-    methodDict = Oop::fromObjectPtr(staticNewInstance<MethodDictionary> ());
+    methodDict = staticOopNewInstance<MethodDictionary> ();
     return self();
 }
 
@@ -155,13 +157,37 @@ void Behavior::addMethodCategories(const MethodCategories &categories)
     for(auto &[category, methods] : categories)
     {
         for(auto &[selector, method] : methods)
-            methodDict->atPut(selector, method);        
+            methodDict->atPut(selector, method);
     }
 }
 
 void Behavior::setSlotDefinitions(const SlotDefinitions &slotDefinitions)
 {
-    (void)slotDefinitions;
+    self()->getClassLayout()->getSlotScope().as<LayoutClassScope> ()->setSlotDefinitions(slotDefinitions);
+}
+
+Oop Behavior::getClassLayout()
+{
+    if(layout.isNil())
+    {
+        auto layoutInstance = staticNewInstance<ObjectLayout> ();
+        layoutInstance->host = self();
+        layout = Oop::fromObjectPtr(layoutInstance);
+
+        auto slotScope = staticNewInstance<LayoutClassScope> ();
+        layoutInstance->slotScope = Oop::fromObjectPtr(slotScope);
+
+        if(superclass.isNil())
+        {
+
+        }
+        else
+        {
+            slotScope->parentScope = superclass->getClassLayout()->getSlotScope();
+        }
+    }
+
+    return layout;
 }
 
 } // End of namespace nyast

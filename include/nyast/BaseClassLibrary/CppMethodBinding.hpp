@@ -15,8 +15,14 @@ struct CppMethodBindingBase : Subclass<Object, CppMethodBindingBase>
 {
     static constexpr char const __className__[] = "CppMethodBinding";
 
+    static MethodCategories __instanceMethods__();
+    static SlotDefinitions __slots__();
+
     CppMethodBindingBase(Oop cselector)
         : selector(cselector) {}
+
+    std::string printString() const;
+    std::string asString() const;
 
     MemberOop selector;
 };

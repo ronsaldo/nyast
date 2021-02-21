@@ -15,6 +15,12 @@ struct CppMemberSlotBase : Subclass<Slot, CppMemberSlotBase>
 {
     static constexpr char const __className__[] = "CppMemberSlot";
 
+    static MethodCategories __instanceMethods__();
+    static SlotDefinitions __slots__();
+
+    std::string printString() const;
+    std::string asString() const;
+
     size_t offset;
 };
 

@@ -597,7 +597,11 @@ struct NyastObjectVTable
     Oop (*newInstance) (AbiOop self);
     Oop (*newInstanceWithVariableSize) (AbiOop self, size_t variableSize);
 
+    Oop (*getClassLayout) (AbiOop self);
+    Oop (*getSlotScope) (AbiOop self);
+
     // Slots.
+    Oop (*getName) (AbiOop self);
     Oop (*read) (AbiOop self, Oop receiver);
     Oop (*writeTo) (AbiOop self, Oop value, Oop receiver);
 
@@ -740,6 +744,21 @@ struct NyastObjectDispatcher
     Oop newInstance(size_t variableDataSize)
     {
         return __vtable()->newInstanceWithVariableSize(abiSelf(), variableDataSize);
+    }
+
+    Oop getClassLayout()
+    {
+        return __vtable()->getClassLayout(abiSelf());
+    }
+
+    Oop getSlotScope()
+    {
+        return __vtable()->getSlotScope(abiSelf());
+    }
+
+    Oop getName()
+    {
+        return __vtable()->getName(abiSelf());
     }
 
     Oop read(Oop receiver)
