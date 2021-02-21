@@ -301,22 +301,23 @@ template<typename T, typename... Args>
 T *staticBasicNewInstance(size_t variableDataSize = 0, Args&&... args)
 {
     size_t allocationSize = sizeof(T) + T::__variableDataElementSize__ * variableDataSize;
-    char *allocation = new char[allocationSize] ();
-    memset(allocation, 0, allocationSize);
 
-    auto result = reinterpret_cast<T*> (allocation);
+    return reinterpret_cast<T*> (allocateAndInitializeObjectMemoryWith(allocationSize, [&](uint8_t *allocation) {
+        memset(allocation, 0, allocationSize);
 
-    // Basic initialize the object.
-    new (result) T(std::forward<Args> (args)...);
+        auto result = reinterpret_cast<T*> (allocation);
 
-    // Set the object vtable.
-    result->__vtable = &StaticClassVTableFor<T>::value;
+        // Basic initialize the object.
+        new (result) T(std::forward<Args> (args)...);
 
-    // Initialize the variable data.
-    result->__variableDataSize = uint32_t(variableDataSize);
-    if constexpr(T::__variableDataElementSize__ > 0)
-        new (variableDataOf(result)) typename T::value_type[variableDataSize];
-    return result;
+        // Set the object vtable.
+        result->__vtable = &StaticClassVTableFor<T>::value;
+
+        // Initialize the variable data.
+        result->__variableDataSize = uint32_t(variableDataSize);
+        if constexpr(T::__variableDataElementSize__ > 0)
+            new (variableDataOf(result)) typename T::value_type[variableDataSize];
+    }));
 }
 
 template<typename T, typename... Args>
@@ -360,7 +361,7 @@ struct ObjectSingletonInstanceOf
 template <typename T>
 struct StaticClassObjectFor
 {
-    static Oop oop;
+    static inline RootOop oop;
 
     static Oop value();
 };
@@ -373,9 +374,6 @@ struct StaticClassObjectFor<void>
         return Oop::nil();
     }
 };
-
-template<typename T>
-Oop StaticClassObjectFor<T>::oop = Oop();
 
 template<typename T>
 Oop staticClassObjectFor ()

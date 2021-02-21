@@ -1,5 +1,8 @@
 set(Nyast_Sources
     Oop.cpp
+    GCRoots.cpp
+    SimpleGCHeap.cpp
+    SpillRegisters.cpp
 
     BaseClassLibrary/AbstractLayout.cpp
     BaseClassLibrary/Array.cpp

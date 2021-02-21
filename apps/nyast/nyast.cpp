@@ -49,18 +49,20 @@ bool evaluateSmalltalkExpression(const std::string &expression)
 
 int main(int argc, const char *argv[])
 {
-    for(int i = 1; i < argc; ++i)
-    {
-        std::string arg = argv[i];
-        if(arg == "-e" || arg == "-eval")
+    return withGarbageCollectedStack([&]() {
+        for(int i = 1; i < argc; ++i)
         {
-            evaluateSmalltalkExpression(argv[++i]);
+            std::string arg = argv[i];
+            if(arg == "-e" || arg == "-eval")
+            {
+                evaluateSmalltalkExpression(argv[++i]);
+            }
+            else
+            {
+                evaluateSmalltalkFileNamed(arg);
+            }
         }
-        else
-        {
-            evaluateSmalltalkFileNamed(arg);
-        }
-    }
 
-    return 0;
+        return 0;
+    });
 }

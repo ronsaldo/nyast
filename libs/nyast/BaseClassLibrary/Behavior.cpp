@@ -84,27 +84,27 @@ Oop Behavior::basicNewInstance() const
 Oop Behavior::basicNewInstance(size_t variableDataSize) const
 {
     size_t allocationSize = instanceSize + variableDataElementSize * variableDataSize;
-    char *allocation = new char[allocationSize] ();
-    memset(allocation, 0, allocationSize);
 
-    auto result = reinterpret_cast<ProtoObject*> (allocation);
-    result->__vtable = instanceVTable;
+    return Oop::fromObjectPtr(reinterpret_cast<NyastObject*> (allocateAndInitializeObjectMemoryWith(allocationSize, [&](uint8_t *allocation) {
+        memset(allocation, 0, allocationSize);
 
-    // Basic initialize the object.
-    instanceVTable->basicInitialize(reinterpret_cast<AbiOop> (result));
-    result->__vtable = instanceVTable;
+        auto result = reinterpret_cast<ProtoObject*> (allocation);
+        result->__vtable = instanceVTable;
 
-    // Initialize the variable oop data into nil.
-    result->__variableDataSize = uint32_t(variableDataSize);
-    if(isVariableDataOop)
-    {
-        assert(variableDataElementSize == sizeof(Oop));
-        auto oopData = reinterpret_cast<Oop*> (allocation + instanceSize);
-        for(size_t i = 0; i < variableDataSize; ++i)
-            oopData[i] = Oop();
-    }
+        // Basic initialize the object.
+        instanceVTable->basicInitialize(reinterpret_cast<AbiOop> (result));
+        result->__vtable = instanceVTable;
 
-    return Oop::fromObjectPtr(result);
+        // Initialize the variable oop data into nil.
+        result->__variableDataSize = uint32_t(variableDataSize);
+        if(isVariableDataOop)
+        {
+            assert(variableDataElementSize == sizeof(Oop));
+            auto oopData = reinterpret_cast<Oop*> (allocation + instanceSize);
+            for(size_t i = 0; i < variableDataSize; ++i)
+                oopData[i] = Oop();
+        }
+    })));
 }
 
 Oop Behavior::newInstance() const

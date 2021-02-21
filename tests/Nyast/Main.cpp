@@ -1,6 +1,9 @@
 #include "UnitTest++/UnitTest++.h"
+#include "nyast/Oop.hpp"
 
 int main(int, char const *[])
 {
-   return UnitTest::RunAllTests();
+    return nyast::withGarbageCollectedStack([]() {
+        return UnitTest::RunAllTests();
+    });
 }

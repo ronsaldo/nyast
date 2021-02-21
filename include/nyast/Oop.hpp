@@ -508,6 +508,9 @@ inline Oop NyastObject::self() const
 
 typedef std::vector<Oop> OopList;
 
+void registerGlobalOopRoots(size_t rootCount, Oop *roots);
+void unregisterGlobalOopRoots(size_t rootCount, Oop *roots);
+
 /**
  * I am an oop that is present in a member function.
  */
@@ -547,6 +550,125 @@ struct MemberOop : Oop
         return *this;
     }
 };
+
+struct RootOop : Oop
+{
+    RootOop()
+    {
+        registerGlobalOopRoots(1, this);
+    }
+
+    ~RootOop()
+    {
+        unregisterGlobalOopRoots(1, this);
+    }
+
+    const RootOop &operator=(const Oop &o)
+    {
+        value = o.value;
+        return *this;
+    }
+
+    const RootOop &operator=(const RootOop &o)
+    {
+        value = o.value;
+        return *this;
+    }
+
+    const RootOop &operator=(const RootOop &&o)
+    {
+        value = o.value;
+        return *this;
+    }
+};
+
+/**
+ * For conservative garbage collection, we need to ensure that registers are at
+ * least spilled once onto the stack.
+ */
+struct StackSpilledRegisters
+{
+    uintptr_t pointerRegisters[16];
+    uintptr_t endOfStruct;
+};
+
+struct StackRangeRecord
+{
+    StackSpilledRegisters spilledRegisters;
+    StackRangeRecord *previous;
+    bool isActive;
+    const void *startAddress;
+    const void *endAddress;
+};
+
+/**
+ * This function cannot be inlined, and must be defined in a separate compilation unit.
+ */
+StackSpilledRegisters spillRegistersOntoStack(
+    uintptr_t arg0=0, uintptr_t arg1=0, uintptr_t arg2=0, uintptr_t arg3=0,
+    uintptr_t arg4=0, uintptr_t arg5=0, uintptr_t arg6=0, uintptr_t arg7=0,
+    uintptr_t arg8=0, uintptr_t arg9=0, uintptr_t arg10=0, uintptr_t arg11=0,
+    uintptr_t arg12=0, uintptr_t arg13=0, uintptr_t arg14=0, uintptr_t arg15=0
+);
+
+StackRangeRecord *getCurrentStackRangeRecord();
+void activateStackRangeRecord(StackRangeRecord *record);
+void deactivateStackRangeRecord(StackRangeRecord *record);
+void deactivateCurrentStackRangeRecordAtAddress(const void *address);
+void reactivateCurrentStackRangeRecordAtAddress(const void *address);
+uint8_t *allocateAndInitializeObjectMemoryWith(size_t allocationSize, std::function<void (uint8_t*)> memoryInitializationFunction);
+void gcSafePoint();
+
+struct ActivateStackRangeRecord
+{
+    ActivateStackRangeRecord(StackRangeRecord *crecord)
+        : record(crecord)
+    {
+        activateStackRangeRecord(record);
+    }
+
+    ~ActivateStackRangeRecord()
+    {
+        deactivateStackRangeRecord(record);
+    }
+
+    StackRangeRecord *record;
+};
+
+struct DeactiveCurrentStackRangeRecord
+{
+    DeactiveCurrentStackRangeRecord(const void *cendAddress)
+        : endAddress(cendAddress)
+    {
+        deactivateCurrentStackRangeRecordAtAddress(endAddress);
+    }
+
+    ~DeactiveCurrentStackRangeRecord()
+    {
+        reactivateCurrentStackRangeRecordAtAddress(endAddress);
+    }
+
+    const void *endAddress;
+};
+
+template<typename FT>
+inline auto withGarbageCollectedStack(const FT &f)
+{
+    auto rangeRecord = StackRangeRecord{};
+    rangeRecord.spilledRegisters = spillRegistersOntoStack();
+    rangeRecord.startAddress = &rangeRecord.spilledRegisters.endOfStruct;
+
+    ActivateStackRangeRecord barrier(&rangeRecord);
+    return f();
+}
+
+template<typename FT>
+inline auto withoutGarbageCollectedStack(const FT &f)
+{
+    auto spilledRegisters = spillRegistersOntoStack();
+    DeactiveCurrentStackRangeRecord barrier(&spilledRegisters.endOfStruct);
+    return f();
+}
 
 template<>
 struct CppToOopAbi<Oop>
@@ -1413,6 +1535,7 @@ template<typename ResultType, typename... Args>
 ResultType Oop::typedPerformInSuperclass(InlineCache *inlineCache, Oop clazz, Oop typedSelector, Args&&... args)
 {
     (void)inlineCache;
+    gcSafePoint();
     auto foundMethod = clazz->lookupSelector(typedSelector);
     if(foundMethod.isNil())
         foundMethod = clazz;
