@@ -8,7 +8,7 @@
 namespace nyast
 {
 
-struct LargeInteger : SubclassWithVariableDataOfType<Integer, LargeInteger, uint8_t>
+struct NYAST_CORE_EXPORT LargeInteger : SubclassWithVariableDataOfType<Integer, LargeInteger, uint8_t>
 {
     static constexpr char const __className__[] = "LargeInteger";
 

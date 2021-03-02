@@ -8,7 +8,7 @@
 namespace nyast
 {
 
-struct Variable : Subclass<Object, Variable>
+struct NYAST_CORE_EXPORT Variable : Subclass<Object, Variable>
 {
     static constexpr char const __className__[] = "Variable";
     static MethodCategories __instanceMethods__();

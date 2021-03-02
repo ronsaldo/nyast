@@ -11,18 +11,19 @@
 #include <vector>
 #include <functional>
 #include <ostream>
+#include "DllExport.hpp"
 
 namespace nyast
 {
 typedef uintptr_t AbiOop;
-struct Oop;
+struct NYAST_CORE_EXPORT Oop;
 
 struct NyastObjectVTable;
-struct NyastObject
+struct NYAST_CORE_EXPORT NyastObject
 {
     NyastObject() {}
 
-    const NyastObjectVTable *__vtable;
+    const NyastObjectVTable *__vtable = nullptr;
 
     Oop self() const;
 };
@@ -62,7 +63,7 @@ struct OopAbiToCpp
 /**
  * I am the result for a method lookup,
  */
-struct MethodLookupResult
+struct NYAST_CORE_EXPORT MethodLookupResult
 {
     void *methodObjectOrEntryPoint;
     void *dispatchTrampoline;
@@ -77,7 +78,7 @@ struct MethodLookupResult
 /**
  * I am a set of method dispatch trampolines that are used for adjusting the method arguments in a message send site.
  */
-struct MessageDispatchTrampolineSet
+struct NYAST_CORE_EXPORT MessageDispatchTrampolineSet
 {
     void *nativeMethodDispatchTrampoline;
     void *objectMethodDispatchTrampoline;
@@ -89,7 +90,7 @@ struct MessageDispatchTrampolineSet
 /**
  * I am the structure layout for an inline cache.
  */
-struct InlineCache
+struct NYAST_CORE_EXPORT InlineCache
 {
 };
 
@@ -235,7 +236,7 @@ struct OopPointerSizeDependentImplementation<uint64_t>
 /**
  * I am an ordinary object pointer.
  */
-struct Oop : OopPointerSizeDependentImplementation<AbiOop>
+struct NYAST_CORE_EXPORT Oop : OopPointerSizeDependentImplementation<AbiOop>
 {
     static constexpr intptr_t SmallIntegerUsableBits = OopBits - SmallIntegerTagShift;
     static constexpr intptr_t SmallIntegerMinValue = -( ((intptr_t)1)<<(SmallIntegerUsableBits - 1) ) ;
@@ -508,13 +509,13 @@ inline Oop NyastObject::self() const
 
 typedef std::vector<Oop> OopList;
 
-void registerGlobalOopRoots(size_t rootCount, Oop *roots);
-void unregisterGlobalOopRoots(size_t rootCount, Oop *roots);
+NYAST_CORE_EXPORT void registerGlobalOopRoots(size_t rootCount, Oop *roots);
+NYAST_CORE_EXPORT void unregisterGlobalOopRoots(size_t rootCount, Oop *roots);
 
 /**
  * I am an oop that is present in a member function.
  */
-struct MemberOop : Oop
+struct NYAST_CORE_EXPORT MemberOop : Oop
 {
     MemberOop() {}
     MemberOop(const Oop &other)
@@ -551,7 +552,7 @@ struct MemberOop : Oop
     }
 };
 
-struct RootOop : Oop
+struct NYAST_CORE_EXPORT RootOop : Oop
 {
     RootOop()
     {
@@ -604,22 +605,22 @@ struct StackRangeRecord
 /**
  * This function cannot be inlined, and must be defined in a separate compilation unit.
  */
-StackSpilledRegisters spillRegistersOntoStack(
+NYAST_CORE_EXPORT StackSpilledRegisters spillRegistersOntoStack(
     uintptr_t arg0=0, uintptr_t arg1=0, uintptr_t arg2=0, uintptr_t arg3=0,
     uintptr_t arg4=0, uintptr_t arg5=0, uintptr_t arg6=0, uintptr_t arg7=0,
     uintptr_t arg8=0, uintptr_t arg9=0, uintptr_t arg10=0, uintptr_t arg11=0,
     uintptr_t arg12=0, uintptr_t arg13=0, uintptr_t arg14=0, uintptr_t arg15=0
 );
 
-StackRangeRecord *getCurrentStackRangeRecord();
-void activateStackRangeRecord(StackRangeRecord *record);
-void deactivateStackRangeRecord(StackRangeRecord *record);
-void deactivateCurrentStackRangeRecordAtAddress(const void *address);
-void reactivateCurrentStackRangeRecordAtAddress(const void *address);
-uint8_t *allocateAndInitializeObjectMemoryWith(size_t allocationSize, std::function<void (uint8_t*)> memoryInitializationFunction);
-void gcSafePoint();
+NYAST_CORE_EXPORT StackRangeRecord *getCurrentStackRangeRecord();
+NYAST_CORE_EXPORT void activateStackRangeRecord(StackRangeRecord *record);
+NYAST_CORE_EXPORT void deactivateStackRangeRecord(StackRangeRecord *record);
+NYAST_CORE_EXPORT void deactivateCurrentStackRangeRecordAtAddress(const void *address);
+NYAST_CORE_EXPORT void reactivateCurrentStackRangeRecordAtAddress(const void *address);
+NYAST_CORE_EXPORT uint8_t *allocateAndInitializeObjectMemoryWith(size_t allocationSize, std::function<void (uint8_t*)> memoryInitializationFunction);
+NYAST_CORE_EXPORT void gcSafePoint();
 
-struct ActivateStackRangeRecord
+struct NYAST_CORE_EXPORT ActivateStackRangeRecord
 {
     ActivateStackRangeRecord(StackRangeRecord *crecord)
         : record(crecord)
@@ -635,7 +636,7 @@ struct ActivateStackRangeRecord
     StackRangeRecord *record;
 };
 
-struct DeactiveCurrentStackRangeRecord
+struct NYAST_CORE_EXPORT DeactiveCurrentStackRangeRecord
 {
     DeactiveCurrentStackRangeRecord(const void *cendAddress)
         : endAddress(cendAddress)

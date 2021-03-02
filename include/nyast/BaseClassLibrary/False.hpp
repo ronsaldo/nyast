@@ -8,7 +8,7 @@
 namespace nyast
 {
 
-struct False : Subclass<Boolean, False>
+struct NYAST_CORE_EXPORT False : Subclass<Boolean, False>
 {
     static constexpr char const __className__[] = "False";
 

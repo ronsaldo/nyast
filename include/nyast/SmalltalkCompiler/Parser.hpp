@@ -10,9 +10,9 @@ namespace nyast
 namespace SmalltalkCompiler
 {
 
-ASTNodePtr parseTokenListWithDoIt(const TokenListPtr &tokenList);
-ASTNodePtr parseTokenListWithMethod(const TokenListPtr &tokenList);
-ASTNodePtr parseTokenListWithLiteralArrayContent(const TokenListPtr &tokenList);
+NYAST_CORE_EXPORT ASTNodePtr parseTokenListWithDoIt(const TokenListPtr &tokenList);
+NYAST_CORE_EXPORT ASTNodePtr parseTokenListWithMethod(const TokenListPtr &tokenList);
+NYAST_CORE_EXPORT ASTNodePtr parseTokenListWithLiteralArrayContent(const TokenListPtr &tokenList);
 
 inline ASTNodePtr parseStringWithDoIt(const std::string &sourceString, const std::string &sourceName = "")
 {

@@ -8,7 +8,7 @@
 namespace nyast
 {
 
-struct Integer : Subclass<Number, Integer>
+struct NYAST_CORE_EXPORT Integer : Subclass<Number, Integer>
 {
     static constexpr char const __className__[] = "Integer";
 };

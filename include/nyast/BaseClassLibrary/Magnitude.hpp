@@ -8,7 +8,7 @@
 namespace nyast
 {
 
-struct Magnitude : Subclass<Object, Magnitude>
+struct NYAST_CORE_EXPORT Magnitude : Subclass<Object, Magnitude>
 {
     static constexpr char const __className__[] = "Magnitude";
 };

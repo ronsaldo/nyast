@@ -7,7 +7,7 @@
 
 namespace nyast
 {
-struct Collection : Subclass<Object, Collection>
+struct NYAST_CORE_EXPORT Collection : Subclass<Object, Collection>
 {
     static constexpr char const __className__[] = "Collection";
 

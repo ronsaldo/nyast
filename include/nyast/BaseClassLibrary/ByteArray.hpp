@@ -8,7 +8,7 @@
 namespace nyast
 {
 
-struct ByteArray : SubclassWithVariableDataOfType<ArrayedCollection, ByteArray, uint8_t>
+struct NYAST_CORE_EXPORT ByteArray : SubclassWithVariableDataOfType<ArrayedCollection, ByteArray, uint8_t>
 {
     static constexpr char const __className__[] = "ByteArray";
 

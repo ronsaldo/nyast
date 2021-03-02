@@ -11,7 +11,7 @@ namespace nyast
 /**
  * I am a direct native method.
  */
-struct NativeMethod : Subclass<Object, NativeMethod>
+struct NYAST_CORE_EXPORT NativeMethod : Subclass<Object, NativeMethod>
 {
     static constexpr char const __className__[] = "NativeMethod";
 

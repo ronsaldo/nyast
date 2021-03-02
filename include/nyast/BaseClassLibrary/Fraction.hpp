@@ -8,7 +8,7 @@
 namespace nyast
 {
 
-struct Fraction : Subclass<Number, Fraction>
+struct NYAST_CORE_EXPORT Fraction : Subclass<Number, Fraction>
 {
     static constexpr char const __className__[] = "Fraction";
 

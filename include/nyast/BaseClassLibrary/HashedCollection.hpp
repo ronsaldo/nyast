@@ -8,7 +8,7 @@
 namespace nyast
 {
 
-struct HashedCollection : Subclass<Collection, HashedCollection>
+struct NYAST_CORE_EXPORT HashedCollection : Subclass<Collection, HashedCollection>
 {
     static constexpr char const __className__[] = "HashedCollection";
 
@@ -18,7 +18,7 @@ struct HashedCollection : Subclass<Collection, HashedCollection>
     void fullCheck();
     void grow();
 
-    size_t tally;
+    size_t tally = 0;
     MemberOop array;
 };
 

@@ -10,6 +10,6 @@ set(NyastTests_Sources
 )
 
 add_executable(NyastTests ${NyastTests_Sources})
-target_link_libraries(NyastTests UnitTest++ nyast)
+target_link_libraries(NyastTests UnitTest++ NyastCore)
 
 add_test(NAME RunNyastTests COMMAND NyastTests)

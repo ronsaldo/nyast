@@ -8,7 +8,7 @@
 namespace nyast
 {
 
-struct Slot : Subclass<Variable, Slot>
+struct NYAST_CORE_EXPORT Slot : Subclass<Variable, Slot>
 {
     static constexpr char const __className__[] = "Slot";
 

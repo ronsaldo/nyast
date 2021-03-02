@@ -8,7 +8,7 @@
 namespace nyast
 {
 
-struct AbstractLayout : Subclass<Object, AbstractLayout>
+struct NYAST_CORE_EXPORT AbstractLayout : Subclass<Object, AbstractLayout>
 {
     static constexpr char const __className__[] = "AbstractLayout";
 

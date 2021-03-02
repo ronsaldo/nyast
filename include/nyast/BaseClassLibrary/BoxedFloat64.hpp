@@ -8,7 +8,7 @@
 namespace nyast
 {
 
-struct BoxedFloat64 : Subclass<Float, BoxedFloat64>
+struct NYAST_CORE_EXPORT BoxedFloat64 : Subclass<Float, BoxedFloat64>
 {
     static constexpr char const __className__[] = "BoxedFloat64";
 

@@ -8,7 +8,7 @@
 namespace nyast
 {
 
-struct LargePositiveInteger : Subclass<LargeInteger, LargePositiveInteger>
+struct NYAST_CORE_EXPORT LargePositiveInteger : Subclass<LargeInteger, LargePositiveInteger>
 {
     static constexpr char const __className__[] = "LargePositiveInteger";
 

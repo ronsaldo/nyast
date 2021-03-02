@@ -23,267 +23,266 @@ typedef Oop SlotDefinition;
 typedef OopList SlotDefinitions;
 
 template <typename T>
-struct StaticClassVTableFor
-{
-    static const NyastObjectVTable value;
-};
+struct StaticClassVTableFor;
 
 template<typename T>
-const NyastObjectVTable StaticClassVTableFor<T>::value = {
+inline constexpr NyastObjectVTable makeDefaultStaticClassVTable()
+{
+    return NyastObjectVTable{
+        // Construction / finalization
+        // basicInitialize.
+        +[](AbiOop self) {
+            if constexpr (std::is_default_constructible<T>::value)
+                new (reinterpret_cast<T*> (self)) T;
+            else
+                throw std::runtime_error("Cannot basic initialize non-default constructible type.");
+        },
 
-    // Construction / finalization
-    // basicInitialize.
-    +[](AbiOop self) {
-        if constexpr(std::is_default_constructible<T>::value)
-            new (reinterpret_cast<T*> (self)) T;
-        else
-            throw std::runtime_error("Cannot basic initialize non-default constructible type.");
-    },
+        // initialize
+        +[](AbiOop self) {
+            return reinterpret_cast<T*> (self)->initialize();
+        },
 
-    // initialize
-    +[](AbiOop self) {
-        return reinterpret_cast<T*> (self)->initialize();
-    },
+        // finalize
+        +[](AbiOop self) {
+            reinterpret_cast<T*> (self)->~T();
+        },
 
-    // finalize
-    +[](AbiOop self) {
-        reinterpret_cast<T*> (self)->~T();
-    },
+        // Reflection core.
+        // class
+        +[](AbiOop self) -> Oop {
+            return reinterpret_cast<T*> (self)->getClass();
+        },
 
-    // Reflection core.
-    // class
-    +[](AbiOop self) -> Oop {
-        return reinterpret_cast<T*> (self)->getClass();
-    },
+        // lookupSelector:
+        +[](AbiOop self, Oop selector)-> Oop {
+            return reinterpret_cast<T*> (self)->lookupSelector(selector);
+        },
 
-    // lookupSelector:
-    +[](AbiOop self, Oop selector)-> Oop {
-        return reinterpret_cast<T*> (self)->lookupSelector(selector);
-    },
+        // run:with:in:
+        +[](AbiOop self, Oop selector, const OopList& marshalledArguments, Oop receiver) -> Oop {
+            return reinterpret_cast<T*> (self)->runWithIn(selector, marshalledArguments, receiver);
+        },
 
-    // run:with:in:
-    +[](AbiOop self, Oop selector, const OopList &marshalledArguments, Oop receiver) -> Oop {
-        return reinterpret_cast<T*> (self)->runWithIn(selector, marshalledArguments, receiver);
-    },
+        // asMethodLookupResultFor:
+        +[](AbiOop self, MessageDispatchTrampolineSet trampolineSet) -> MethodLookupResult {
+            return reinterpret_cast<T*> (self)->asMethodLookupResult(trampolineSet);
+        },
 
-    // asMethodLookupResultFor:
-    +[](AbiOop self, MessageDispatchTrampolineSet trampolineSet) -> MethodLookupResult {
-        return reinterpret_cast<T*> (self)->asMethodLookupResult(trampolineSet);
-    },
+        // addSubclass:
+        +[](AbiOop self, Oop subclass) -> void {
+            return reinterpret_cast<T*> (self)->addSubclass(subclass);
+        },
 
-    // addSubclass:
-    +[](AbiOop self, Oop subclass) -> void {
-        return reinterpret_cast<T*> (self)->addSubclass(subclass);
-    },
+        // basicNew
+        +[](AbiOop self) -> Oop {
+            return reinterpret_cast<T*> (self)->basicNewInstance();
+        },
 
-    // basicNew
-    +[](AbiOop self) -> Oop {
-        return reinterpret_cast<T*> (self)->basicNewInstance();
-    },
+        // basicNew:
+        +[](AbiOop self, size_t variableDataSize) -> Oop {
+            return reinterpret_cast<T*> (self)->basicNewInstance(variableDataSize);
+        },
 
-    // basicNew:
-    +[](AbiOop self, size_t variableDataSize) -> Oop {
-        return reinterpret_cast<T*> (self)->basicNewInstance(variableDataSize);
-    },
+        // new
+        +[](AbiOop self) -> Oop {
+            return reinterpret_cast<T*> (self)->newInstance();
+        },
 
-    // new
-    +[](AbiOop self) -> Oop {
-        return reinterpret_cast<T*> (self)->newInstance();
-    },
+        // new:
+        +[](AbiOop self, size_t variableDataSize) -> Oop {
+            return reinterpret_cast<T*> (self)->newInstance(variableDataSize);
+        },
 
-    // new:
-    +[](AbiOop self, size_t variableDataSize) -> Oop {
-        return reinterpret_cast<T*> (self)->newInstance(variableDataSize);
-    },
+        // classLayout
+        +[](AbiOop self) -> Oop {
+            return reinterpret_cast<T*> (self)->getClassLayout();
+        },
 
-    // classLayout
-    +[](AbiOop self) -> Oop {
-        return reinterpret_cast<T*> (self)->getClassLayout();
-    },
+        // slotScope
+        +[](AbiOop self) -> Oop {
+            return reinterpret_cast<T*> (self)->getSlotScope();
+        },
 
-    // slotScope
-    +[](AbiOop self) -> Oop {
-        return reinterpret_cast<T*> (self)->getSlotScope();
-    },
+        // Slot
+        // name
+        +[](AbiOop self) -> Oop {
+            return reinterpret_cast<T*> (self)->getName();
+        },
 
-    // Slot
-    // name
-    +[](AbiOop self) -> Oop {
-        return reinterpret_cast<T*> (self)->getName();
-    },
+        // read:
+        +[](AbiOop self, Oop receiver) -> Oop {
+            return reinterpret_cast<T*> (self)->read(receiver);
+        },
 
-    // read:
-    +[](AbiOop self, Oop receiver) -> Oop {
-        return reinterpret_cast<T*> (self)->read(receiver);
-    },
+        // write:to:
+        +[](AbiOop self, Oop value, Oop receiver) -> Oop {
+            return reinterpret_cast<T*> (self)->writeTo(value, receiver);
+        },
 
-    // write:to:
-    +[](AbiOop self, Oop value, Oop receiver) -> Oop {
-        return reinterpret_cast<T*> (self)->writeTo(value, receiver);
-    },
+        // Basic operations
+        // identityHash
+        +[](AbiOop self) -> OopHash {
+            return reinterpret_cast<T*> (self)->identityHash();
+        },
 
-    // Basic operations
-    // identityHash
-    +[](AbiOop self) -> OopHash {
-        return reinterpret_cast<T*> (self)->identityHash();
-    },
+        // ==
+        +[](AbiOop self, Oop other) -> bool {
+            return reinterpret_cast<T*> (self)->identityEquals(other);
+        },
 
-    // ==
-    +[](AbiOop self, Oop other) -> bool {
-        return reinterpret_cast<T*> (self)->identityEquals(other);
-    },
+        // hash
+        +[](AbiOop self) -> OopHash {
+            return reinterpret_cast<T*> (self)->hash();
+        },
 
-    // hash
-    +[](AbiOop self) -> OopHash {
-        return reinterpret_cast<T*> (self)->hash();
-    },
+        // =
+        +[](AbiOop self, Oop other) -> bool {
+            return reinterpret_cast<T*> (self)->equals(other);
+        },
 
-    // =
-    +[](AbiOop self, Oop other) -> bool {
-        return reinterpret_cast<T*> (self)->equals(other);
-    },
+        // Common collection methods.
+        // basicSize
+        +[](AbiOop self) -> size_t {
+            return reinterpret_cast<T*> (self)->getBasicSize();
+        },
+        // basicAt:
+        +[](AbiOop self, size_t key) -> Oop {
+            return reinterpret_cast<T*> (self)->basicAt(key);
+        },
+        // basicAt:put:
+        +[](AbiOop self, size_t key, Oop value) -> Oop {
+            return reinterpret_cast<T*> (self)->basicAtPut(key, value);
+        },
 
-    // Common collection methods.
-    // basicSize
-    +[](AbiOop self) -> size_t {
-        return reinterpret_cast<T*> (self)->getBasicSize();
-    },
-    // basicAt:
-    +[](AbiOop self, size_t key) -> Oop {
-        return reinterpret_cast<T*> (self)->basicAt(key);
-    },
-    // basicAt:put:
-    +[](AbiOop self, size_t key, Oop value) -> Oop {
-        return reinterpret_cast<T*> (self)->basicAtPut(key, value);
-    },
+        // size
+        +[](AbiOop self) -> size_t {
+            return reinterpret_cast<T*> (self)->getSize();
+        },
+        // at:
+        +[](AbiOop self, Oop key) -> Oop {
+            return reinterpret_cast<T*> (self)->at(key);
+        },
+        // at:put:
+        +[](AbiOop self, Oop key, Oop value) -> Oop {
+            return reinterpret_cast<T*> (self)->atPut(key, value);
+        },
+        // atOrNil:
+        +[](AbiOop self, Oop key) -> Oop {
+            return reinterpret_cast<T*> (self)->atOrNil(key);
+        },
 
-    // size
-    +[](AbiOop self) -> size_t {
-        return reinterpret_cast<T*> (self)->getSize();
-    },
-    // at:
-    +[](AbiOop self, Oop key) -> Oop {
-        return reinterpret_cast<T*> (self)->at(key);
-    },
-    // at:put:
-    +[](AbiOop self, Oop key, Oop value) -> Oop {
-        return reinterpret_cast<T*> (self)->atPut(key, value);
-    },
-    // atOrNil:
-    +[](AbiOop self, Oop key) -> Oop {
-        return reinterpret_cast<T*> (self)->atOrNil(key);
-    },
+        // scanFor:
+        +[](AbiOop self, Oop key) -> Oop {
+            return reinterpret_cast<T*> (self)->scanFor(key);
+        },
 
-    // scanFor:
-    +[](AbiOop self, Oop key) -> Oop {
-        return reinterpret_cast<T*> (self)->scanFor(key);
-    },
+        // grow
+        +[](AbiOop self) -> void {
+            return reinterpret_cast<T*> (self)->grow();
+        },
 
-    // grow
-    +[](AbiOop self) -> void {
-        return reinterpret_cast<T*> (self)->grow();
-    },
+        // add:
+        +[](AbiOop self, Oop value) -> Oop {
+            return reinterpret_cast<T*> (self)->add(value);
+        },
 
-    // add:
-    +[](AbiOop self, Oop value) -> Oop {
-        return reinterpret_cast<T*> (self)->add(value);
-    },
+        // Association
+        // key
+        +[](AbiOop self) -> Oop {
+            return reinterpret_cast<T*> (self)->getKey();
+        },
 
-    // Association
-    // key
-    +[](AbiOop self) -> Oop {
-        return reinterpret_cast<T*> (self)->getKey();
-    },
+        // Blocks
+        // value
+        +[](AbiOop self) -> Oop {
+            return reinterpret_cast<T*> (self)->evaluateValue();
+        },
+        // value:
+        +[](AbiOop self, Oop arg) -> Oop {
+            return reinterpret_cast<T*> (self)->evaluateValueWithArg(arg);
+        },
 
-    // Blocks
-    // value
-    +[](AbiOop self) -> Oop {
-        return reinterpret_cast<T*> (self)->evaluateValue();
-    },
-    // value:
-    +[](AbiOop self, Oop arg) -> Oop {
-        return reinterpret_cast<T*> (self)->evaluateValueWithArg(arg);
-    },
+        // Testing methods.
+        +[](AbiOop self) -> bool {
+            return reinterpret_cast<T*> (self)->isArray();
+        },
+        +[](AbiOop self) -> bool {
+            return reinterpret_cast<T*> (self)->isAssociation();
+        },
+        +[](AbiOop self) -> bool {
+            return reinterpret_cast<T*> (self)->isBehavior();
+        },
+        +[](AbiOop self) -> bool {
+            return reinterpret_cast<T*> (self)->isBlock();
+        },
+        +[](AbiOop self) -> bool {
+            return reinterpret_cast<T*> (self)->isCharacter();
+        },
+        +[](AbiOop self) -> bool {
+            return reinterpret_cast<T*> (self)->isDictionary();
+        },
+        +[](AbiOop self) -> bool {
+            return reinterpret_cast<T*> (self)->isFloat();
+        },
+        +[](AbiOop self) -> bool {
+            return reinterpret_cast<T*> (self)->isFraction();
+        },
+        +[](AbiOop self) -> bool {
+            return reinterpret_cast<T*> (self)->isInteger();
+        },
+        +[](AbiOop self) -> bool {
+            return reinterpret_cast<T*> (self)->isInterval();
+        },
+        +[](AbiOop self) -> bool {
+            return reinterpret_cast<T*> (self)->isNumber();
+        },
+        +[](AbiOop self) -> bool {
+            return reinterpret_cast<T*> (self)->isString();
+        },
+        +[](AbiOop self) -> bool {
+            return reinterpret_cast<T*> (self)->isSymbol();
+        },
 
-    // Testing methods.
-    +[](AbiOop self) -> bool {
-        return reinterpret_cast<T*> (self)->isArray();
-    },
-    +[](AbiOop self) -> bool {
-        return reinterpret_cast<T*> (self)->isAssociation();
-    },
-    +[](AbiOop self) -> bool {
-        return reinterpret_cast<T*> (self)->isBehavior();
-    },
-    +[](AbiOop self) -> bool {
-        return reinterpret_cast<T*> (self)->isBlock();
-    },
-    +[](AbiOop self) -> bool {
-        return reinterpret_cast<T*> (self)->isCharacter();
-    },
-    +[](AbiOop self) -> bool {
-        return reinterpret_cast<T*> (self)->isDictionary();
-    },
-    +[](AbiOop self) -> bool {
-        return reinterpret_cast<T*> (self)->isFloat();
-    },
-    +[](AbiOop self) -> bool {
-        return reinterpret_cast<T*> (self)->isFraction();
-    },
-    +[](AbiOop self) -> bool {
-        return reinterpret_cast<T*> (self)->isInteger();
-    },
-    +[](AbiOop self) -> bool {
-        return reinterpret_cast<T*> (self)->isInterval();
-    },
-    +[](AbiOop self) -> bool {
-        return reinterpret_cast<T*> (self)->isNumber();
-    },
-    +[](AbiOop self) -> bool {
-        return reinterpret_cast<T*> (self)->isString();
-    },
-    +[](AbiOop self) -> bool {
-        return reinterpret_cast<T*> (self)->isSymbol();
-    },
-
-    // Basic conversions
-    +[](AbiOop self) -> std::string {
-        return reinterpret_cast<T*> (self)->asString();
-    },
-    +[](AbiOop self) -> std::string {
-        return reinterpret_cast<T*> (self)->printString();
-    },
-    +[](AbiOop self) -> bool {
-        return reinterpret_cast<T*> (self)->asBoolean8();
-    },
-    +[](AbiOop self) -> uint32_t {
-        return reinterpret_cast<T*> (self)->asUInt32();
-    },
-    +[](AbiOop self) -> int32_t {
-        return reinterpret_cast<T*> (self)->asInt32();
-    },
-    +[](AbiOop self) -> uint64_t {
-        return reinterpret_cast<T*> (self)->asUInt64();
-    },
-    +[](AbiOop self) -> int64_t {
-        return reinterpret_cast<T*> (self)->asInt64();
-    },
-    +[](AbiOop self) -> char32_t {
-        return reinterpret_cast<T*> (self)->asChar32();
-    },
-    +[](AbiOop self) -> double {
-        return reinterpret_cast<T*> (self)->asFloat64();
-    },
-    +[](AbiOop self) -> std::string {
-        return reinterpret_cast<T*> (self)->asStdString();
-    },
-    +[](AbiOop self) -> OopList {
-        return reinterpret_cast<T*> (self)->asOopList();
-    },
-    +[](AbiOop self) -> ByteArrayData {
-        return reinterpret_cast<T*> (self)->asByteArrayData();
-    },
-};
+        // Basic conversions
+        +[](AbiOop self) -> std::string {
+            return reinterpret_cast<T*> (self)->asString();
+        },
+        +[](AbiOop self) -> std::string {
+            return reinterpret_cast<T*> (self)->printString();
+        },
+        +[](AbiOop self) -> bool {
+            return reinterpret_cast<T*> (self)->asBoolean8();
+        },
+        +[](AbiOop self) -> uint32_t {
+            return reinterpret_cast<T*> (self)->asUInt32();
+        },
+        +[](AbiOop self) -> int32_t {
+            return reinterpret_cast<T*> (self)->asInt32();
+        },
+        +[](AbiOop self) -> uint64_t {
+            return reinterpret_cast<T*> (self)->asUInt64();
+        },
+        +[](AbiOop self) -> int64_t {
+            return reinterpret_cast<T*> (self)->asInt64();
+        },
+        +[](AbiOop self) -> char32_t {
+            return reinterpret_cast<T*> (self)->asChar32();
+        },
+        +[](AbiOop self) -> double {
+            return reinterpret_cast<T*> (self)->asFloat64();
+        },
+        +[](AbiOop self) -> std::string {
+            return reinterpret_cast<T*> (self)->asStdString();
+        },
+        +[](AbiOop self) -> OopList {
+            return reinterpret_cast<T*> (self)->asOopList();
+        },
+        +[](AbiOop self) -> ByteArrayData {
+            return reinterpret_cast<T*> (self)->asByteArrayData();
+        },
+    };
+}
 
 template<typename T>
 typename T::value_type *variableDataOf(T *self)
@@ -391,8 +390,6 @@ struct Subclass : BT
     using Super::Super;
 
     static constexpr bool __isImmediate__ = false;
-    static constexpr size_t __instanceSize__ = sizeof(SelfType);
-    static constexpr size_t __instanceAlignment__ = alignof(SelfType);
 
     static Oop __class__()
     {
@@ -510,12 +507,9 @@ struct SubclassWithImmediateRepresentation : Subclass<ST, SelfType>
     using Subclass<ST, SelfType>::Subclass;
 
     static constexpr bool __isImmediate__ = true;
-
-    static constexpr size_t __instanceSize__ = 0;
-    static constexpr size_t __instanceAlignment__ = 0;
 };
 
-struct ProtoObject : Subclass<NyastObject, ProtoObject>
+struct NYAST_CORE_EXPORT ProtoObject : Subclass<NyastObject, ProtoObject>
 {
     typedef void Super;
     typedef void value_type;
@@ -609,7 +603,7 @@ private:
     Oop doesNotUnderstand(Oop message);
 };
 
-struct Object : Subclass<ProtoObject, Object>
+struct NYAST_CORE_EXPORT Object : Subclass<ProtoObject, Object>
 {
     static constexpr char const __className__[] = "Object";
 
@@ -642,7 +636,7 @@ struct Object : Subclass<ProtoObject, Object>
     Oop shouldNotImplement();
 };
 
-struct Behavior : Subclass<Object, Behavior>
+struct NYAST_CORE_EXPORT Behavior : Subclass<Object, Behavior>
 {
     static constexpr char const __className__[] = "Behavior";
     static SlotDefinitions __slots__();
@@ -677,12 +671,12 @@ struct Behavior : Subclass<Object, Behavior>
     bool isVariableDataOop;
 };
 
-struct ClassDescription : Subclass<Behavior, ClassDescription>
+struct NYAST_CORE_EXPORT ClassDescription : Subclass<Behavior, ClassDescription>
 {
     static constexpr char const __className__[] = "ClassDescription";
 };
 
-struct Class : Subclass<ClassDescription, Class>
+struct NYAST_CORE_EXPORT Class : Subclass<ClassDescription, Class>
 {
     static constexpr char const __className__[] = "Class";
 
@@ -699,7 +693,7 @@ struct Class : Subclass<ClassDescription, Class>
     MemberOop metaClass;
 };
 
-struct Metaclass : Subclass<ClassDescription, Metaclass>
+struct NYAST_CORE_EXPORT Metaclass : Subclass<ClassDescription, Metaclass>
 {
     static constexpr char const __className__[] = "Metaclass";
 
@@ -708,6 +702,12 @@ struct Metaclass : Subclass<ClassDescription, Metaclass>
     std::string asString() const;
 
     MemberOop thisClass;
+};
+
+template <typename T>
+struct StaticClassVTableFor
+{
+    static inline const auto value = makeDefaultStaticClassVTable<T> ();
 };
 
 template <typename T>
@@ -737,8 +737,8 @@ Oop StaticClassObjectFor<T>::value()
 
     metaClass->instanceVTable = &StaticClassVTableFor<Metaclass>::value;
     clazz->instanceVTable = &StaticClassVTableFor<T>::value;
-    clazz->instanceSize = T::__instanceSize__;
-    clazz->instanceAlignment = T::__instanceAlignment__;
+    clazz->instanceSize = T::__isImmediate__ ? 0 : sizeof(T);
+    clazz->instanceAlignment = T::__isImmediate__ ? 1 : alignof(T);
 
     clazz->variableDataElementSize = T::__variableDataElementSize__;
     clazz->variableDataElementAlignment = T::__variableDataElementAlignment__;

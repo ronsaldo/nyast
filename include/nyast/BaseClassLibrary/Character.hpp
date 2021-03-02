@@ -8,7 +8,7 @@
 namespace nyast
 {
 
-struct Character : SubclassWithImmediateRepresentation<Magnitude, Character>
+struct NYAST_CORE_EXPORT Character : SubclassWithImmediateRepresentation<Magnitude, Character>
 {
     static constexpr char const __className__[] = "Character";
 

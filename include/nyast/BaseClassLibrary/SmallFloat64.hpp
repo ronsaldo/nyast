@@ -8,7 +8,7 @@
 namespace nyast
 {
 
-struct SmallFloat64 : SubclassWithImmediateRepresentation<Float, SmallFloat64>
+struct NYAST_CORE_EXPORT SmallFloat64 : SubclassWithImmediateRepresentation<Float, SmallFloat64>
 {
     static constexpr char const __className__[] = "SmallFloat64";
 

@@ -8,7 +8,7 @@
 namespace nyast
 {
 
-struct SmallInteger : SubclassWithImmediateRepresentation<Integer, SmallInteger>
+struct NYAST_CORE_EXPORT SmallInteger : SubclassWithImmediateRepresentation<Integer, SmallInteger>
 {
     static constexpr char const __className__[] = "SmallInteger";
 

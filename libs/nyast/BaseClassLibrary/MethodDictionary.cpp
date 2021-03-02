@@ -34,7 +34,7 @@ MethodCategories MethodDictionary::__instanceMethods__()
 Oop MethodDictionary::initialize()
 {
     Super::initialize();
-    methods = Oop::fromObjectPtr(staticBasicNewInstance<Array> (array->getBasicSize()));
+    methods = staticOopBasicNewInstance<Array> (array->getBasicSize());
     return self();
 }
 

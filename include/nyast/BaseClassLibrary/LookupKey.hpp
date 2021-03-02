@@ -8,7 +8,7 @@
 namespace nyast
 {
 
-struct LookupKey : Subclass<Magnitude, LookupKey>
+struct NYAST_CORE_EXPORT LookupKey : Subclass<Magnitude, LookupKey>
 {
     static constexpr char const __className__[] = "LookupKey";
 

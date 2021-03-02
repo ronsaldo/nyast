@@ -71,7 +71,7 @@ int64_t SmallInteger::asInt64() const
 
 double SmallInteger::asFloat64() const
 {
-    return self().decodeSmallInteger();
+    return double(self().decodeSmallInteger());
 }
 
 Oop SmallInteger::additionWith(Oop other)

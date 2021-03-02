@@ -26,7 +26,7 @@ MethodCategories HashedCollection::__instanceMethods__()
 Oop HashedCollection::initialize()
 {
     tally = 0;
-    array = Oop::fromObjectPtr(staticBasicNewInstance<Array> (5));
+    array = staticOopBasicNewInstance<Array> (5);
     return self();
 }
 

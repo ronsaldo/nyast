@@ -8,7 +8,7 @@
 namespace nyast
 {
 
-struct Message : Subclass<Object, Message>
+struct NYAST_CORE_EXPORT Message : Subclass<Object, Message>
 {
     static constexpr char const __className__[] = "Message";
 

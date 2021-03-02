@@ -8,7 +8,7 @@
 namespace nyast
 {
 
-struct Dictionary : Subclass<HashedCollection, Dictionary>
+struct NYAST_CORE_EXPORT Dictionary : Subclass<HashedCollection, Dictionary>
 {
     static constexpr char const __className__[] = "Dictionary";
 

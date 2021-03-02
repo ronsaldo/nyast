@@ -8,7 +8,7 @@
 namespace nyast
 {
 
-struct UndefinedObject : Subclass<Object, UndefinedObject>
+struct NYAST_CORE_EXPORT UndefinedObject : Subclass<Object, UndefinedObject>
 {
     static constexpr char const __className__[] = "UndefinedObject";
 

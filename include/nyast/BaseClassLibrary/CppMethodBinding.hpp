@@ -11,7 +11,7 @@ namespace nyast
 /**
  * I am the base class for a cpp functional method.
  */
-struct CppMethodBindingBase : Subclass<Object, CppMethodBindingBase>
+struct NYAST_CORE_EXPORT CppMethodBindingBase : Subclass<Object, CppMethodBindingBase>
 {
     static constexpr char const __className__[] = "CppMethodBinding";
 
@@ -33,6 +33,9 @@ struct CppMethodBinding;
 template<typename T>
 using CppTypeToOopType = Oop;
 
+template<typename T>
+using CppTypeToOopAbiType = typename CppToOopAbi<CppTypeToOopType<T>>::type;
+
 template<typename ResultType, typename... Args, typename FT>
 struct CppMethodBinding<ResultType (Args...), FT> : CppMethodBindingBase
 {
@@ -41,7 +44,7 @@ struct CppMethodBinding<ResultType (Args...), FT> : CppMethodBindingBase
     CppMethodBinding(Oop cselector, FT cfunctor)
         : CppMethodBindingBase(cselector), functor(cfunctor) {}
 
-    static Oop trampoline(SelfType *methodBinding, Oop, typename CppToOopAbi<CppTypeToOopType<Args>>::type... args)
+    static Oop trampoline(SelfType *methodBinding, Oop, typename CppTypeToOopAbiType<Args>... args)
     {
         if constexpr(std::is_same<ResultType, void>::value)
         {

@@ -8,7 +8,7 @@
 namespace nyast
 {
 
-struct LayoutAbstractScope : Subclass<Object, LayoutAbstractScope>
+struct NYAST_CORE_EXPORT LayoutAbstractScope : Subclass<Object, LayoutAbstractScope>
 {
     static constexpr char const __className__[] = "LayoutAbstractScope";
 

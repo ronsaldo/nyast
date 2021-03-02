@@ -8,7 +8,7 @@
 namespace nyast
 {
 
-struct Association : Subclass<LookupKey, Association>
+struct NYAST_CORE_EXPORT Association : Subclass<LookupKey, Association>
 {
     static constexpr char const __className__[] = "Association";
 

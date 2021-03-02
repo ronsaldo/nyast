@@ -8,7 +8,7 @@
 namespace nyast
 {
 
-struct MethodDictionary : Subclass<Dictionary, MethodDictionary>
+struct NYAST_CORE_EXPORT MethodDictionary : Subclass<Dictionary, MethodDictionary>
 {
     static constexpr char const __className__[] = "MethodDictionary";
 

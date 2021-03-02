@@ -54,4 +54,5 @@ set(Nyast_SmalltalkCompiler_Sources
     SmalltalkCompiler/Evaluator.cpp
 )
 
-add_library(nyast SHARED ${Nyast_Sources} ${Nyast_SmalltalkCompiler_Sources})
+add_definitions(-DNYAST_CORE_BUILD_DLL)
+add_library(NyastCore SHARED ${Nyast_Sources} ${Nyast_SmalltalkCompiler_Sources})

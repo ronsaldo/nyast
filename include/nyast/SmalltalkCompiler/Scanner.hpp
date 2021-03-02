@@ -3,6 +3,7 @@
 #pragma once
 
 #include "Token.hpp"
+#include "../DllExport.hpp"
 
 namespace nyast
 {
@@ -10,7 +11,7 @@ namespace SmalltalkCompiler
 {
 
 
-TokenListPtr scanSourceCollection(const SourceCollectionPtr &sourceCollection);
+NYAST_CORE_EXPORT TokenListPtr scanSourceCollection(const SourceCollectionPtr &sourceCollection);
 
 inline TokenListPtr scanString(const std::string &sourceString, const std::string &sourceName = "")
 {

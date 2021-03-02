@@ -8,7 +8,7 @@
 namespace nyast
 {
 
-struct String : SubclassWithVariableDataOfType<ArrayedCollection, String, char>
+struct NYAST_CORE_EXPORT String : SubclassWithVariableDataOfType<ArrayedCollection, String, char>
 {
     static constexpr char const __className__[] = "String";
 

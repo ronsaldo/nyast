@@ -11,7 +11,7 @@ endif ()
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
-# Turn warnings and use C++ 2011.
+# Turn warnings and use C++ 2017.
 if (${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC)
 	# using Visual Studio C++
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /std:c++17")

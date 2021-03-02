@@ -8,7 +8,7 @@
 namespace nyast
 {
 
-struct Symbol : Subclass<String, Symbol>
+struct NYAST_CORE_EXPORT Symbol : Subclass<String, Symbol>
 {
     static constexpr char const __className__[] = "Symbol";
 

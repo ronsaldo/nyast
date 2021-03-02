@@ -11,7 +11,7 @@ namespace nyast
 /**
  * I am the base class for a cpp functional method.
  */
-struct CppMemberSlotBase : Subclass<Slot, CppMemberSlotBase>
+struct NYAST_CORE_EXPORT CppMemberSlotBase : Subclass<Slot, CppMemberSlotBase>
 {
     static constexpr char const __className__[] = "CppMemberSlot";
 

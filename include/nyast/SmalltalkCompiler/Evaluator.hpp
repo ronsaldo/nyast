@@ -10,8 +10,8 @@ namespace nyast
 namespace SmalltalkCompiler
 {
 
-Oop evaluateValidatedParsedDoIt(ASTNodePtr ast);
-Oop evaluateDoItString(const std::string &string, const std::string &fileName="");
+NYAST_CORE_EXPORT Oop evaluateValidatedParsedDoIt(ASTNodePtr ast);
+NYAST_CORE_EXPORT Oop evaluateDoItString(const std::string &string, const std::string &fileName="");
 
 } // End of namespace SmalltalkCompiler
 } // End of namespace nyast

@@ -8,7 +8,7 @@
 namespace nyast
 {
 
-struct ArrayedCollection : Subclass<SequenceableCollection, ArrayedCollection>
+struct NYAST_CORE_EXPORT ArrayedCollection : Subclass<SequenceableCollection, ArrayedCollection>
 {
     static constexpr char const __className__[] = "ArrayedCollection";
 

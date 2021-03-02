@@ -3,7 +3,7 @@
 namespace nyast
 {
 
-StackSpilledRegisters spillRegistersOntoStack(
+NYAST_CORE_EXPORT StackSpilledRegisters spillRegistersOntoStack(
     uintptr_t arg0, uintptr_t arg1, uintptr_t arg2, uintptr_t arg3,
     uintptr_t arg4, uintptr_t arg5, uintptr_t arg6, uintptr_t arg7,
     uintptr_t arg8, uintptr_t arg9, uintptr_t arg10, uintptr_t arg11,

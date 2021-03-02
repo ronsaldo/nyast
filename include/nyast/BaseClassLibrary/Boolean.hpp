@@ -7,7 +7,8 @@
 
 namespace nyast
 {
-struct Boolean : Subclass<Object, Boolean>
+
+struct NYAST_CORE_EXPORT Boolean : Subclass<Object, Boolean>
 {
     static constexpr char const __className__[] = "Boolean";
 };

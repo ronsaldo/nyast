@@ -12,7 +12,7 @@ struct AbstractNativeClassRegistration;
 struct AbstractNativeClassRegistry;
 typedef std::shared_ptr<AbstractNativeClassRegistry> AbstractNativeClassRegistryPtr;
 
-struct AbstractNativeClassRegistry
+struct NYAST_CORE_EXPORT AbstractNativeClassRegistry
 {
     virtual ~AbstractNativeClassRegistry() {};
 
@@ -24,7 +24,7 @@ struct AbstractNativeClassRegistry
     static AbstractNativeClassRegistryPtr get();
 };
 
-struct AbstractNativeClassRegistration
+struct NYAST_CORE_EXPORT AbstractNativeClassRegistration
 {
     virtual std::string getClassName() const = 0;
     virtual Oop getClass() const = 0;
