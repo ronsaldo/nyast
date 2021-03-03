@@ -44,7 +44,7 @@ struct CppMethodBinding<ResultType (Args...), FT> : CppMethodBindingBase
     CppMethodBinding(Oop cselector, FT cfunctor)
         : CppMethodBindingBase(cselector), functor(cfunctor) {}
 
-    static Oop trampoline(SelfType *methodBinding, Oop, typename CppTypeToOopAbiType<Args>... args)
+    static Oop trampoline(SelfType *methodBinding, Oop, CppTypeToOopAbiType<Args>... args)
     {
         if constexpr(std::is_same<ResultType, void>::value)
         {
