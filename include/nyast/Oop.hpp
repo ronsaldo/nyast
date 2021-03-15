@@ -617,7 +617,7 @@ NYAST_CORE_EXPORT void activateStackRangeRecord(StackRangeRecord *record);
 NYAST_CORE_EXPORT void deactivateStackRangeRecord(StackRangeRecord *record);
 NYAST_CORE_EXPORT void deactivateCurrentStackRangeRecordAtAddress(const void *address);
 NYAST_CORE_EXPORT void reactivateCurrentStackRangeRecordAtAddress(const void *address);
-NYAST_CORE_EXPORT uint8_t *allocateAndInitializeObjectMemoryWith(size_t allocationSize, std::function<void (uint8_t*)> memoryInitializationFunction);
+NYAST_CORE_EXPORT uint8_t *allocateAndInitializeObjectMemoryWith(size_t allocationSize, const std::function<void (uint8_t*)> &memoryInitializationFunction);
 NYAST_CORE_EXPORT void gcSafePoint();
 
 struct NYAST_CORE_EXPORT ActivateStackRangeRecord

@@ -190,4 +190,15 @@ Oop Behavior::getClassLayout()
     return layout;
 }
 
+
+Oop Behavior::getGCLayout()
+{
+    if(gcLayout.isNil())
+    {
+        printf("TODO: Create the GC layout for behavior %p.", this);
+    }
+
+    return gcLayout;
+}
+
 } // End of namespace nyast

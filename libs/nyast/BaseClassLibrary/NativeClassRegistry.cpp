@@ -36,4 +36,11 @@ AbstractNativeClassRegistration *NativeClassRegistry::findClassRegistrationByNam
     return it != nativeClassRegistrations.end() ? it->second : nullptr;
 }
 
+void NativeClassRegistry::initializeRuntimeEnvironmentClasses()
+{
+    // Get the classes.
+    for(auto &[name, registration] : nativeClassRegistrations)
+        registration->getClass();
+}
+
 } // End of namespace nyast

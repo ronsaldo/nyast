@@ -21,6 +21,8 @@ struct NYAST_CORE_EXPORT AbstractNativeClassRegistry
 
     virtual AbstractNativeClassRegistration *findClassRegistrationByName(const std::string &name) = 0;
 
+    virtual void initializeRuntimeEnvironmentClasses() = 0;
+
     static AbstractNativeClassRegistryPtr get();
 };
 

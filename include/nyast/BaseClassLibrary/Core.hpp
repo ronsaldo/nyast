@@ -346,10 +346,12 @@ struct ObjectSingletonInstanceOf
     {
         T result;
         result.__vtable = &StaticClassVTableFor<T>::value;
+        rootOop = Oop::fromObjectPtr(&instance);
         return result;
     }
 
     static inline T instance = makeSingleton();
+    static inline RootOop rootOop;
 
     static Oop value()
     {
@@ -656,10 +658,12 @@ struct NYAST_CORE_EXPORT Behavior : Subclass<Object, Behavior>
     void addMethodCategories(const MethodCategories &methods);
     void setSlotDefinitions(const SlotDefinitions &slotDefinitions);
     Oop getClassLayout();
+    Oop getGCLayout();
 
     MemberOop superclass;
     MemberOop methodDict;
     MemberOop layout;
+    MemberOop gcLayout;
 
     const NyastObjectVTable *instanceVTable;
 

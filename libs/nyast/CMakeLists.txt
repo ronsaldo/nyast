@@ -1,8 +1,11 @@
 set(Nyast_Sources
     Oop.cpp
-    GCRoots.cpp
-    SimpleGCHeap.cpp
-    SpillRegisters.cpp
+
+    RuntimeEnvironment/GarbageCollector.cpp
+    RuntimeEnvironment/GCRoots.cpp
+    RuntimeEnvironment/SimpleGCHeap.cpp
+    RuntimeEnvironment/SpillRegisters.cpp
+    RuntimeEnvironment/RuntimeEnvironment.cpp
 
     BaseClassLibrary/AbstractLayout.cpp
     BaseClassLibrary/Array.cpp

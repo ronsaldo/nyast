@@ -18,6 +18,8 @@ public:
 
     virtual AbstractNativeClassRegistration *findClassRegistrationByName(const std::string &name) override;
 
+    virtual void initializeRuntimeEnvironmentClasses() override;
+
 private:
     std::mutex mutex;
     std::unordered_map<std::string, AbstractNativeClassRegistration*> nativeClassRegistrations;
