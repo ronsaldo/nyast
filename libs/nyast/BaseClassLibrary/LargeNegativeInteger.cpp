@@ -22,7 +22,7 @@ int64_t LargeNegativeInteger::asInt64() const
     uint64_t decodedValue = 0;
     // FIXME: Support the big endian variant.
     memcpy(&decodedValue, variableData(), size());
-    if(decodedValue > -uint64_t(INT64_MIN))
+    if(decodedValue > uint64_t(-INT64_MIN))
         return Super::asInt64();
 
     return -int64_t(decodedValue);

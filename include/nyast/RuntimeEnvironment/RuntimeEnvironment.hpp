@@ -7,28 +7,21 @@
 
 namespace nyast
 {
-NYAST_CORE_EXPORT class GarbageCollector;
+class NYAST_CORE_EXPORT GarbageCollector;
 
 /**
  * I am a global nyast runtime environment. I contain most of the core global
  * data structures that requires specialized initialization machinery.
  */
-NYAST_CORE_EXPORT class RuntimeEnvironment
+class NYAST_CORE_EXPORT RuntimeEnvironment
 {
 public:
-    RuntimeEnvironment();
-    ~RuntimeEnvironment();
+    virtual ~RuntimeEnvironment();
 
     static RuntimeEnvironment& getCurrent();
 
-    void ensureInitialization();
-    GarbageCollector &getGarbageCollector();
-
-private:
-    std::unique_ptr<GarbageCollector> garbageCollector;
-
-    std::mutex environmentMutex;
-    bool isInitialized = false;
+    virtual void ensureInitialization() = 0;
+    virtual GarbageCollector &getGarbageCollector() = 0;
 };
 
 } // End of namespace nyast

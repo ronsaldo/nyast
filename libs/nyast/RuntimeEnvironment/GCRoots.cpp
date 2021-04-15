@@ -15,12 +15,12 @@ StackRangeRecord *getCurrentStackRangeRecord()
 
 void registerGlobalOopRoots(size_t rootCount, Oop *roots)
 {
-    GarbageCollector::getCurrent().registerGlobalOopRoots(rootCount, roots);
+    RuntimeEnvironment::getCurrent().getGarbageCollector().registerGlobalOopRoots(rootCount, roots);
 }
 
 void unregisterGlobalOopRoots(size_t rootCount, Oop *roots)
 {
-    GarbageCollector::getCurrent().unregisterGlobalOopRoots(rootCount, roots);
+    RuntimeEnvironment::getCurrent().getGarbageCollector().unregisterGlobalOopRoots(rootCount, roots);
 }
 
 void activateStackRangeRecord(StackRangeRecord *record)
@@ -30,9 +30,10 @@ void activateStackRangeRecord(StackRangeRecord *record)
     record->previous = currentStackRangeRecord;
     currentStackRangeRecord = record;
 
-    GarbageCollector::getCurrent().registerThisThread();
+    auto& environment = RuntimeEnvironment::getCurrent();
+    environment.getGarbageCollector().registerThisThread();
     if(shouldAttemptInitialization)
-        RuntimeEnvironment::getCurrent().ensureInitialization();
+        environment.ensureInitialization();
 }
 
 void deactivateStackRangeRecord(StackRangeRecord *record)
@@ -40,7 +41,7 @@ void deactivateStackRangeRecord(StackRangeRecord *record)
     record->isActive = false;
     currentStackRangeRecord = record->previous;
 
-    GarbageCollector::getCurrent().unregisterThisThread(currentStackRangeRecord);
+    RuntimeEnvironment::getCurrent().getGarbageCollector().unregisterThisThread(currentStackRangeRecord);
 }
 
 void deactivateCurrentStackRangeRecordAtAddress(const void *address)
@@ -50,7 +51,7 @@ void deactivateCurrentStackRangeRecordAtAddress(const void *address)
     currentStackRangeRecord->isActive = false;
     currentStackRangeRecord->endAddress = address;
 
-    GarbageCollector::getCurrent().unregisterThisThread(currentStackRangeRecord);
+    RuntimeEnvironment::getCurrent().getGarbageCollector().unregisterThisThread(currentStackRangeRecord);
 }
 
 void reactivateCurrentStackRangeRecordAtAddress(const void *address)
@@ -58,13 +59,13 @@ void reactivateCurrentStackRangeRecordAtAddress(const void *address)
     assert(currentStackRangeRecord != nullptr);
     assert(!currentStackRangeRecord->isActive);
     assert(currentStackRangeRecord->endAddress == address);
-    GarbageCollector::getCurrent().registerThisThread();
+    RuntimeEnvironment::getCurrent().getGarbageCollector().registerThisThread();
     currentStackRangeRecord->isActive = true;
 }
 
 void gcSafePoint()
 {
     assert(currentStackRangeRecord);
-    GarbageCollector::getCurrent().safePoint();
+    RuntimeEnvironment::getCurrent().getGarbageCollector().safePoint();
 }
 } // End of namespace nyast

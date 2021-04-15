@@ -12,25 +12,19 @@ namespace nyast
 /**
  * Garbage collector
  */
-NYAST_CORE_EXPORT class GarbageCollector
+class NYAST_CORE_EXPORT GarbageCollector
 {
 public:
-    GarbageCollector();
-    ~GarbageCollector();
+    virtual ~GarbageCollector();
+    static GarbageCollector* createDefault();
 
-    static GarbageCollector& getCurrent();
+    virtual uint8_t *allocateAndInitializeObjectMemoryWith(size_t allocationSize, const std::function<void (uint8_t*)> &memoryInitializationFunction) = 0;
 
-    uint8_t *allocateAndInitializeObjectMemoryWith(size_t allocationSize, const std::function<void (uint8_t*)> &memoryInitializationFunction);
-
-    void registerGlobalOopRoots(size_t rootCount, Oop *roots);
-    void unregisterGlobalOopRoots(size_t rootCount, Oop *roots);
-    void registerThisThread();
-    void unregisterThisThread(StackRangeRecord *record);
-    void safePoint();
-
-private:
-    std::mutex collectorMutex;
-    std::unordered_map<Oop*, size_t> globalOopRoots;
+    virtual void registerGlobalOopRoots(size_t rootCount, Oop *roots) = 0;
+    virtual void unregisterGlobalOopRoots(size_t rootCount, Oop *roots) = 0;
+    virtual void registerThisThread() = 0;
+    virtual void unregisterThisThread(StackRangeRecord *record) = 0;
+    virtual void safePoint() = 0;
 };
 
 } // End of namespace nyast

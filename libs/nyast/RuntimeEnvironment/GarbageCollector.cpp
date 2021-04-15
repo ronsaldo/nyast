@@ -4,20 +4,44 @@
 namespace nyast
 {
 
-GarbageCollector::GarbageCollector()
+class SimpleGarbageCollector : public GarbageCollector
 {
-}
+public:
+    SimpleGarbageCollector();
+    ~SimpleGarbageCollector();
+
+    uint8_t* allocateAndInitializeObjectMemoryWith(size_t allocationSize, const std::function<void(uint8_t*)>& memoryInitializationFunction);
+
+    void registerGlobalOopRoots(size_t rootCount, Oop* roots);
+    void unregisterGlobalOopRoots(size_t rootCount, Oop* roots);
+    void registerThisThread();
+    void unregisterThisThread(StackRangeRecord* record);
+    void safePoint();
+
+private:
+    std::mutex collectorMutex;
+    std::unordered_map<Oop*, size_t> globalOopRoots;
+};
 
 GarbageCollector::~GarbageCollector()
 {
 }
 
-GarbageCollector& GarbageCollector::getCurrent()
+GarbageCollector* GarbageCollector::createDefault()
 {
-    return RuntimeEnvironment::getCurrent().getGarbageCollector();
+    return new SimpleGarbageCollector();
 }
 
-uint8_t *GarbageCollector::allocateAndInitializeObjectMemoryWith(size_t allocationSize, const std::function<void (uint8_t*)> &memoryInitializationFunction)
+
+SimpleGarbageCollector::SimpleGarbageCollector()
+{
+}
+
+SimpleGarbageCollector::~SimpleGarbageCollector()
+{
+}
+
+uint8_t *SimpleGarbageCollector::allocateAndInitializeObjectMemoryWith(size_t allocationSize, const std::function<void (uint8_t*)> &memoryInitializationFunction)
 {
     assert(getCurrentStackRangeRecord() != nullptr && "GC collected memory must be allocated in a GC collected stack range.");
     auto allocation = new uint8_t[allocationSize];
@@ -25,13 +49,13 @@ uint8_t *GarbageCollector::allocateAndInitializeObjectMemoryWith(size_t allocati
     return allocation;
 }
 
-void GarbageCollector::registerGlobalOopRoots(size_t rootCount, Oop *roots)
+void SimpleGarbageCollector::registerGlobalOopRoots(size_t rootCount, Oop *roots)
 {
     std::unique_lock<std::mutex> l(collectorMutex);
     globalOopRoots[roots] = rootCount;
 }
 
-void GarbageCollector::unregisterGlobalOopRoots(size_t rootCount, Oop *roots)
+void SimpleGarbageCollector::unregisterGlobalOopRoots(size_t rootCount, Oop *roots)
 {
     (void)rootCount;
     std::unique_lock<std::mutex> l(collectorMutex);
@@ -40,24 +64,19 @@ void GarbageCollector::unregisterGlobalOopRoots(size_t rootCount, Oop *roots)
         globalOopRoots.erase(it);
 }
 
-void GarbageCollector::registerThisThread()
+void SimpleGarbageCollector::registerThisThread()
 {
     printf("TODO: registerThisThread\n");;
 }
 
-void GarbageCollector::unregisterThisThread(StackRangeRecord *record)
+void SimpleGarbageCollector::unregisterThisThread(StackRangeRecord *record)
 {
     printf("TODO: unregisterThisThread record: %p\n", record);
 }
 
-void GarbageCollector::safePoint()
+void SimpleGarbageCollector::safePoint()
 {
     printf("TODO: safePoint\n");;
-}
-
-NYAST_CORE_EXPORT uint8_t *allocateAndInitializeObjectMemoryWith(size_t allocationSize, const std::function<void (uint8_t*)> &memoryInitializationFunction)
-{
-    return GarbageCollector::getCurrent().allocateAndInitializeObjectMemoryWith(allocationSize, memoryInitializationFunction);
 }
 
 } // End of namespace nyast
