@@ -25,6 +25,8 @@ public:
     virtual void registerThisThread() = 0;
     virtual void unregisterThisThread(StackRangeRecord *record) = 0;
     virtual void safePoint() = 0;
+
+    virtual void runtimeHasFinishedInitialization() = 0;
 };
 
 } // End of namespace nyast

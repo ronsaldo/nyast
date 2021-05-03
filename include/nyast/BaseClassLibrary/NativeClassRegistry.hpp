@@ -3,6 +3,7 @@
 
 #include "NativeClassRegistration.hpp"
 #include <mutex>
+#include <unordered_map>
 
 namespace nyast
 {

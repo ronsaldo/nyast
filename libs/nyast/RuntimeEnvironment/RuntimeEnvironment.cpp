@@ -49,6 +49,7 @@ void RuntimeEnvironmentImpl::ensureInitialization()
         return;
 
     AbstractNativeClassRegistry::get()->initializeRuntimeEnvironmentClasses();
+    garbageCollector->runtimeHasFinishedInitialization();
     isInitialized = true;
 }
 

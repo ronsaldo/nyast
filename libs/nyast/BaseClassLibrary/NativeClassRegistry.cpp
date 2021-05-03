@@ -17,13 +17,13 @@ AbstractNativeClassRegistryPtr AbstractNativeClassRegistry::get()
 
 void NativeClassRegistry::addClassRegistration(AbstractNativeClassRegistration *registration)
 {
-    std::unique_lock l(mutex);
+    std::unique_lock<std::mutex> l(mutex);
     nativeClassRegistrations[registration->getClassName()] = registration;
 }
 
 void NativeClassRegistry::removeClassRegistration(AbstractNativeClassRegistration *registration)
 {
-    std::unique_lock l(mutex);
+    std::unique_lock<std::mutex> l(mutex);
     auto it = nativeClassRegistrations.find(registration->getClassName());
     if(it != nativeClassRegistrations.end())
         nativeClassRegistrations.erase(it);
@@ -31,7 +31,7 @@ void NativeClassRegistry::removeClassRegistration(AbstractNativeClassRegistratio
 
 AbstractNativeClassRegistration *NativeClassRegistry::findClassRegistrationByName(const std::string &name)
 {
-    std::unique_lock l(mutex);
+    std::unique_lock<std::mutex> l(mutex);
     auto it = nativeClassRegistrations.find(name);
     return it != nativeClassRegistrations.end() ? it->second : nullptr;
 }
