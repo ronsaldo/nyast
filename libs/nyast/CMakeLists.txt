@@ -16,6 +16,7 @@ set(Nyast_Sources
     BaseClassLibrary/ByteArray.cpp
     BaseClassLibrary/Character.cpp
     BaseClassLibrary/Class.cpp
+    BaseClassLibrary/ClassDescription.cpp
     BaseClassLibrary/Collection.cpp
     BaseClassLibrary/Core.cpp
     BaseClassLibrary/CppMemberSlot.cpp

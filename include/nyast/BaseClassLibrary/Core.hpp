@@ -708,6 +708,7 @@ struct NYAST_CORE_EXPORT Class : Subclass<ClassDescription, Class>
     static constexpr char const __className__[] = "Class";
 
     static MethodCategories __instanceMethods__();
+    static SlotDefinitions __slots__();
 
     std::string asString() const;
     Oop getClass() const;
@@ -725,6 +726,7 @@ struct NYAST_CORE_EXPORT Metaclass : Subclass<ClassDescription, Metaclass>
     static constexpr char const __className__[] = "Metaclass";
 
     static MethodCategories __instanceMethods__();
+    static SlotDefinitions __slots__();
 
     std::string asString() const;
 

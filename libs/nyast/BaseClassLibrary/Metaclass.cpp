@@ -2,10 +2,18 @@
 
 #include "nyast/BaseClassLibrary/NativeClassRegistration.hpp"
 #include "nyast/BaseClassLibrary/CppMethodBinding.hpp"
+#include "nyast/BaseClassLibrary/CppMemberSlot.hpp"
 
 namespace nyast
 {
 static NativeClassRegistration<Metaclass> metaclassClassRegistration;
+
+SlotDefinitions Metaclass::__slots__()
+{
+    return SlotDefinitions{
+        makeMemberSlot("thisClass", &SelfType::thisClass),
+    };
+}
 
 MethodCategories Metaclass::__instanceMethods__()
 {
