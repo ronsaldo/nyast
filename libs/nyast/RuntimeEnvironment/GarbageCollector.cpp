@@ -31,6 +31,7 @@ private:
         StackRangeRecord *activeStackRangeRecord = nullptr;
     };
 
+    void stopTheWorldBarrier();
     void stopTheWorldAndGarbageCollect();
     void performGarbageCollectionCycle();
 
@@ -73,8 +74,8 @@ void SimpleGarbageCollector::checkCollectionConditionFor(size_t requiredAllocati
 
 void SimpleGarbageCollector::stopTheWorldAndGarbageCollect()
 {
-    isStoppingTheWorld.store(true, std::memory_order_relaxed);
-    safePoint();
+    isStoppingTheWorld.store(true, std::memory_order_release);
+    stopTheWorldBarrier();
 }
 
 void SimpleGarbageCollector::performGarbageCollectionCycle()
@@ -145,15 +146,10 @@ void SimpleGarbageCollector::unregisterThisThread(StackRangeRecord *record)
 
 void SimpleGarbageCollector::safePoint()
 {
-    if(!isStoppingTheWorld.load(std::memory_order_relaxed))
+    if(!isStoppingTheWorld.load(std::memory_order_acquire))
         return;
 
-/*    std::unique_lock<std::mutex> l(collectorMutex);
-    auto it = registeredThread.find(std::this_thread::get_id());
-    assert(it != registeredThread.end());
-    assert(it->second.isActive);
-*/
-    printf("TODO: safePoint stop the world\n");
+    stopTheWorldBarrier();
 }
 
 void SimpleGarbageCollector::runtimeHasFinishedInitialization()
@@ -164,4 +160,13 @@ void SimpleGarbageCollector::runtimeHasFinishedInitialization()
 
 }
 
+void SimpleGarbageCollector::stopTheWorldBarrier()
+{
+/*    std::unique_lock<std::mutex> l(collectorMutex);
+    auto it = registeredThread.find(std::this_thread::get_id());
+    assert(it != registeredThread.end());
+    assert(it->second.isActive);
+*/
+    printf("TODO: stopTheWorldBarrier\n");
+}
 } // End of namespace nyast
