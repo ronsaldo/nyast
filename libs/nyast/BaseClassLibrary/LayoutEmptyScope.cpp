@@ -14,4 +14,10 @@ MethodCategories LayoutEmptyScope::__instanceMethods__()
     return MethodCategories{};
 }
 
+void LayoutEmptyScope::storeReferenceTypesInGCLayout(Oop gcLayout)
+{
+    (void)gcLayout;
+    // Nothing is required here.
+}
+
 } // End of namespace nyast

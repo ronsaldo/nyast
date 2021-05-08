@@ -23,4 +23,15 @@ Oop Oop::performInSuperclassWithArguments(InlineCache *inlineCache, Oop clazz, O
     }
 }
 
+const char *GCReferenceTypeToString(GCReferenceType referenceType)
+{
+    switch(referenceType)
+    {
+    case GCReferenceType::Value: return "value";
+    case GCReferenceType::Strong: return "strong";
+    case GCReferenceType::Weak: return "strong";
+    default: abort();
+    }
+}
+
 } // End of namespace nyast

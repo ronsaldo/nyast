@@ -40,4 +40,16 @@ void LayoutClassScope::setSlotDefinitions(const SlotDefinitions &slotDefinitions
 }
 
 
+void LayoutClassScope::storeReferenceTypesInGCLayout(Oop gcLayout)
+{
+    parentScope->storeReferenceTypesInGCLayout(gcLayout);
+
+    auto slotCount = slots->getSize();
+    for(size_t i = 1; i <= slotCount; ++i)
+    {
+        auto slot = slots->at(Oop::fromUIntPtr(i));
+        slot->storeReferenceTypesInGCLayout(gcLayout);
+    }
+}
+
 } // End of namespace nyast

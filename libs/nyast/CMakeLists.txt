@@ -23,6 +23,7 @@ set(Nyast_Sources
     BaseClassLibrary/Dictionary.cpp
     BaseClassLibrary/False.cpp
     BaseClassLibrary/Fraction.cpp
+    BaseClassLibrary/GCLayout.cpp
     BaseClassLibrary/HashedCollection.cpp
     BaseClassLibrary/LargeInteger.cpp
     BaseClassLibrary/LargeNegativeInteger.cpp

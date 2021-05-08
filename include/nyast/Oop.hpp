@@ -61,6 +61,21 @@ struct OopAbiToCpp
 };
 
 /**
+ * I describe the type of a reference for the Garbage Collector
+ */
+enum class GCReferenceType : uint8_t
+{
+    Value = 0,
+    Strong = 1,
+    Weak = 2,
+};
+
+static constexpr size_t GCReferenceTypeBitCount = 2;
+static constexpr uintptr_t GCReferenceTypeBitMask = (1<<GCReferenceTypeBitCount) - 1;
+
+NYAST_CORE_EXPORT const char * GCReferenceTypeToString(GCReferenceType referenceType);
+
+/**
  * I am the result for a method lookup,
  */
 struct NYAST_CORE_EXPORT MethodLookupResult
@@ -583,6 +598,22 @@ struct NYAST_CORE_EXPORT RootOop : Oop
     }
 };
 
+template<typename T>
+struct GCReferenceTypeForFieldType
+{
+    static constexpr GCReferenceType value = GCReferenceType::Value;
+};
+
+template<>
+struct GCReferenceTypeForFieldType<Oop>
+{
+    static constexpr GCReferenceType value = GCReferenceType::Strong;
+};
+
+template<>
+struct GCReferenceTypeForFieldType<MemberOop> : GCReferenceTypeForFieldType<Oop> {};
+
+
 /**
  * For conservative garbage collection, we need to ensure that registers are at
  * least spilled once onto the stack.
@@ -722,11 +753,16 @@ struct NyastObjectVTable
 
     Oop (*getClassLayout) (AbiOop self);
     Oop (*getSlotScope) (AbiOop self);
+    Oop (*getGCLayout) (AbiOop self);
+
+    // GC Layout.
+    void (*setGCReferenceTypeAtOffsetSize)(AbiOop self, size_t offset, size_t valueSize, GCReferenceType value);
 
     // Slots.
     Oop (*getName) (AbiOop self);
     Oop (*read) (AbiOop self, Oop receiver);
     Oop (*writeTo) (AbiOop self, Oop value, Oop receiver);
+    void (*storeReferenceTypesInGCLayout) (AbiOop self, Oop gcLayout);
 
     // Basic operations
     OopHash (*identityHash)(AbiOop self);
@@ -879,6 +915,16 @@ struct NyastObjectDispatcher
         return __vtable()->getSlotScope(abiSelf());
     }
 
+    Oop getGCLayout()
+    {
+        return __vtable()->getGCLayout(abiSelf());
+    }
+
+    void setGCReferenceTypeAtOffsetSize(size_t offset, size_t valueSize, GCReferenceType value)
+    {
+        return __vtable()->setGCReferenceTypeAtOffsetSize(abiSelf(), offset, valueSize, value);
+    }
+
     Oop getName()
     {
         return __vtable()->getName(abiSelf());
@@ -892,6 +938,11 @@ struct NyastObjectDispatcher
     Oop writeTo(Oop value, Oop receiver)
     {
         return __vtable()->writeTo(abiSelf(), value, receiver);
+    }
+
+    void storeReferenceTypesInGCLayout(Oop gcLayout)
+    {
+        __vtable()->storeReferenceTypesInGCLayout(abiSelf(), gcLayout);
     }
 
     // Basic operations.
@@ -1334,6 +1385,15 @@ struct OopToCpp<Oop>
 };
 
 template<>
+struct CppToOop<GCReferenceType>
+{
+    Oop operator()(GCReferenceType v)
+    {
+        return Oop::fromInt32(int32_t(v));
+    }
+};
+
+template<>
 struct OopToCpp<MemberOop> : OopToCpp<Oop> {};
 
 template<>
@@ -1484,6 +1544,15 @@ struct OopToCpp<void>
     void operator()(Oop)
     {
         // Nothing is required here.
+    }
+};
+
+template<>
+struct OopToCpp<GCReferenceType>
+{
+    GCReferenceType operator()(Oop v)
+    {
+        return GCReferenceType(v.decodeSmallInteger());
     }
 };
 

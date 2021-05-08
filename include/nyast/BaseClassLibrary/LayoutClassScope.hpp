@@ -16,6 +16,7 @@ struct NYAST_CORE_EXPORT LayoutClassScope : Subclass<LayoutAbstractScope, Layout
     static SlotDefinitions __slots__();
 
     void setSlotDefinitions(const SlotDefinitions &slotDefinitions);
+    void storeReferenceTypesInGCLayout(Oop gcLayout);
 
     MemberOop parentScope;
     MemberOop slots;

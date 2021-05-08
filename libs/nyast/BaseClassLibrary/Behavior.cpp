@@ -3,6 +3,8 @@
 #include "nyast/BaseClassLibrary/MethodDictionary.hpp"
 #include "nyast/BaseClassLibrary/ObjectLayout.hpp"
 #include "nyast/BaseClassLibrary/LayoutClassScope.hpp"
+#include "nyast/BaseClassLibrary/LayoutEmptyScope.hpp"
+#include "nyast/BaseClassLibrary/GCLayout.hpp"
 
 #include "nyast/BaseClassLibrary/NativeClassRegistration.hpp"
 #include "nyast/BaseClassLibrary/CppMethodBinding.hpp"
@@ -50,6 +52,8 @@ MethodCategories Behavior::__instanceMethods__()
 
             makeMethodBinding("classLayout", &SelfType::getClassLayout),
             makeSetterMethodBinding("classLayout:", &SelfType::layout),
+
+            makeMethodBinding("gcLayout", &SelfType::getGCLayout),
         }},
 
         {"instance creation", {
@@ -97,7 +101,7 @@ Oop Behavior::basicNewInstance(size_t variableDataSize) const
 
         // Initialize the variable oop data into nil.
         result->__variableDataSize = uint32_t(variableDataSize);
-        if(isVariableDataOop)
+        if(hasOopVariableData())
         {
             assert(variableDataElementSize == sizeof(Oop));
             auto oopData = reinterpret_cast<Oop*> (allocation + instanceSize);
@@ -122,6 +126,11 @@ Oop Behavior::newInstance(size_t variableDataSize) const
 bool Behavior::isBehavior() const
 {
     return true;
+}
+
+bool Behavior::hasOopVariableData() const
+{
+    return variableDataGCReferenceType != GCReferenceType::Value;
 }
 
 Oop Behavior::initialize()
@@ -176,26 +185,35 @@ Oop Behavior::getClassLayout()
 
         auto slotScope = staticNewInstance<LayoutClassScope> ();
         layoutInstance->slotScope = Oop::fromObjectPtr(slotScope);
-
-        if(superclass.isNil())
-        {
-
-        }
-        else
-        {
-            slotScope->parentScope = superclass->getClassLayout()->getSlotScope();
-        }
     }
 
     return layout;
 }
 
+void Behavior::fixupParentSlotScope()
+{
+    if(layout.isNil())
+        return;
+
+    auto slotScope = layout->getSlotScope().as<LayoutClassScope> ();
+    if(superclass.isNil())
+    {
+        slotScope->parentScope = Oop::fromObjectPtr(staticNewInstance<LayoutEmptyScope> ());
+    }
+    else
+    {
+        slotScope->parentScope = superclass->getClassLayout()->getSlotScope();
+    }
+}
 
 Oop Behavior::getGCLayout()
 {
     if(gcLayout.isNil())
     {
-        printf("TODO: Create the GC layout for behavior %p.", this);
+        auto layout = GCLayout::forInstanceSize(instanceSize, variableDataGCReferenceType);
+        gcLayout = Oop::fromObjectPtr(layout);
+
+        self()->getClassLayout()->storeReferenceTypesInGCLayout(gcLayout);
     }
 
     return gcLayout;

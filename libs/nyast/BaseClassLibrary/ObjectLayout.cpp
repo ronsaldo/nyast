@@ -31,4 +31,9 @@ Oop ObjectLayout::getSlotScope() const
     return slotScope;
 }
 
+void ObjectLayout::storeReferenceTypesInGCLayout(Oop gcLayout)
+{
+    slotScope->storeReferenceTypesInGCLayout(gcLayout);
+}
+
 } // End of namespace nyast

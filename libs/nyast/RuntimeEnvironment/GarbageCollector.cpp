@@ -41,7 +41,7 @@ private:
     size_t activeThreadCount = 0;
 
     bool isRuntimeInitialized = false;
-    std::atomic_bool isStoppingTheWorld;
+    std::atomic_bool isStoppingTheWorld = false;
 };
 
 GarbageCollector::~GarbageCollector()

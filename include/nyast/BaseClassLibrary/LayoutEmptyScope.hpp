@@ -13,6 +13,7 @@ struct NYAST_CORE_EXPORT LayoutEmptyScope : Subclass<LayoutAbstractScope, Layout
     static constexpr char const __className__[] = "LayoutEmptyScope";
 
     static MethodCategories __instanceMethods__();
+    void storeReferenceTypesInGCLayout(Oop gcLayout);
 };
 
 } // End of namespace namespace nyast

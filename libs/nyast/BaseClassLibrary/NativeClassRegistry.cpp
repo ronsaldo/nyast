@@ -1,5 +1,4 @@
 #include "nyast/BaseClassLibrary/NativeClassRegistry.hpp"
-#include <iostream>
 
 namespace nyast
 {
@@ -41,6 +40,13 @@ void NativeClassRegistry::initializeRuntimeEnvironmentClasses()
     // Get the classes.
     for(auto &[name, registration] : nativeClassRegistrations)
         registration->getClass();
+
+    // Get the classes gclayout.
+    for(auto &[name, registration] : nativeClassRegistrations)
+    {
+        registration->getClass()->getGCLayout();
+        registration->getClass()->getClass()->getGCLayout();
+    }
 }
 
 } // End of namespace nyast

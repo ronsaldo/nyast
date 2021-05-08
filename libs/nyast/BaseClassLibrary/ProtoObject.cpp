@@ -259,6 +259,16 @@ Oop ProtoObject::getSlotScope() const
     return self().perform<Oop> ("slotScope");
 }
 
+Oop ProtoObject::getGCLayout()
+{
+    return self().perform<Oop> ("gcLayout");
+}
+
+void ProtoObject::setGCReferenceTypeAtOffsetSize(size_t offset, size_t valueSize, GCReferenceType value)
+{
+    return self().perform<void> ("atOffset:size:setReferenceType:", offset, valueSize, value);
+}
+
 Oop ProtoObject::getName() const
 {
     return self().perform<Oop> ("name");
@@ -272,6 +282,11 @@ Oop ProtoObject::read(Oop receiver)
 Oop ProtoObject::writeTo(Oop value, Oop receiver)
 {
     return self().perform<Oop> ("write:to:", receiver, value);
+}
+
+void ProtoObject::storeReferenceTypesInGCLayout(Oop gcLayout)
+{
+    return self().perform<void> ("storeReferenceTypesInGCLayout:", gcLayout);
 }
 
 std::string ProtoObject::asString() const

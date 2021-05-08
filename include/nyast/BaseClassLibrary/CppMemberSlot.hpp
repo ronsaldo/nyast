@@ -20,8 +20,12 @@ struct NYAST_CORE_EXPORT CppMemberSlotBase : Subclass<Slot, CppMemberSlotBase>
 
     std::string printString() const;
     std::string asString() const;
+    
+    void storeReferenceTypesInGCLayout(Oop gcLayout);
 
     size_t offset;
+    size_t fieldSize;
+    GCReferenceType referenceType;
 };
 
 template<typename MT>
@@ -59,6 +63,8 @@ SlotDefinition makeMemberSlot(const std::string &name, MemberType SelfType::*mem
     auto slot = staticBasicNewInstance<CppMemberSlot<MemberType>> ();
     slot->name = Oop::internSymbol(name);
     slot->offset = offsetOfMemberPointer(member);
+    slot->fieldSize = sizeof(MemberType);
+    slot->referenceType = GCReferenceTypeForFieldType<MemberType>::value;
     return Oop::fromObjectPtr(slot);
 }
 

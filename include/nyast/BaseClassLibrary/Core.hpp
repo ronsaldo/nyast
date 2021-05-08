@@ -104,6 +104,17 @@ inline constexpr NyastObjectVTable makeDefaultStaticClassVTable()
             return reinterpret_cast<T*> (self)->getSlotScope();
         },
 
+        // gcLayout
+        +[](AbiOop self) -> Oop {
+            return reinterpret_cast<T*> (self)->getGCLayout();
+        },
+
+        // GCLayout
+        //atOffset:size:setReferenceType:
+        +[](AbiOop self, size_t offset, size_t valueSize, GCReferenceType value) -> void {
+            return reinterpret_cast<T*> (self)->setGCReferenceTypeAtOffsetSize(offset, valueSize, value);
+        },
+
         // Slot
         // name
         +[](AbiOop self) -> Oop {
@@ -118,6 +129,11 @@ inline constexpr NyastObjectVTable makeDefaultStaticClassVTable()
         // write:to:
         +[](AbiOop self, Oop value, Oop receiver) -> Oop {
             return reinterpret_cast<T*> (self)->writeTo(value, receiver);
+        },
+
+        // storeReferenceTypesInGCLayout:
+        +[](AbiOop self, Oop gcLayout) -> void {
+            return reinterpret_cast<T*> (self)->storeReferenceTypesInGCLayout(gcLayout);
         },
 
         // Basic operations
@@ -436,7 +452,7 @@ struct SubclassWithVariableDataOfType : Subclass<ST, SelfType>
 
     static constexpr size_t __variableDataElementSize__ = sizeof(value_type);
     static constexpr size_t __variableDataElementAlignment__ = alignof(value_type);
-    static constexpr bool __isVariableDataOop__ = std::is_same<value_type, Oop>::value || std::is_same<value_type, MemberOop>::value;
+    static constexpr GCReferenceType __variableDataGCReferenceType__ = GCReferenceTypeForFieldType<value_type>::value;
 
     value_type *variableData()
     {
@@ -515,10 +531,11 @@ struct NYAST_CORE_EXPORT ProtoObject : Subclass<NyastObject, ProtoObject>
 {
     typedef void Super;
     typedef void value_type;
+    typedef Class Meta;
 
     static constexpr size_t __variableDataElementSize__ = 0;
     static constexpr size_t __variableDataElementAlignment__ = 0;
-    static constexpr bool __isVariableDataOop__ = false;
+    static constexpr GCReferenceType __variableDataGCReferenceType__ = GCReferenceType::Value;
 
     static constexpr char const __className__[] = "ProtoObject";
 
@@ -539,10 +556,14 @@ struct NYAST_CORE_EXPORT ProtoObject : Subclass<NyastObject, ProtoObject>
 
     Oop getClassLayout();
     Oop getSlotScope() const;
+    Oop getGCLayout();
+    
+    void setGCReferenceTypeAtOffsetSize(size_t offset, size_t valueSize, GCReferenceType value);
 
     Oop getName() const;
     Oop read(Oop receiver);
     Oop writeTo(Oop value, Oop receiver);
+    void storeReferenceTypesInGCLayout(Oop gcLayout);
 
     OopHash identityHash() const;
     bool identityEquals(Oop other) const;
@@ -645,6 +666,7 @@ struct NYAST_CORE_EXPORT Behavior : Subclass<Object, Behavior>
     static MethodCategories __instanceMethods__();
 
     bool isBehavior() const;
+    bool hasOopVariableData() const;
 
     Oop basicNewInstance() const;
     Oop basicNewInstance(size_t variableDataSize) const;
@@ -657,6 +679,7 @@ struct NYAST_CORE_EXPORT Behavior : Subclass<Object, Behavior>
 
     void addMethodCategories(const MethodCategories &methods);
     void setSlotDefinitions(const SlotDefinitions &slotDefinitions);
+    void fixupParentSlotScope();
     Oop getClassLayout();
     Oop getGCLayout();
 
@@ -672,7 +695,7 @@ struct NYAST_CORE_EXPORT Behavior : Subclass<Object, Behavior>
 
     size_t variableDataElementSize;
     size_t variableDataElementAlignment;
-    bool isVariableDataOop;
+    GCReferenceType variableDataGCReferenceType;
 };
 
 struct NYAST_CORE_EXPORT ClassDescription : Subclass<Behavior, ClassDescription>
@@ -720,8 +743,11 @@ Oop StaticClassObjectFor<T>::value()
     if(oop.isNotNilOrNull())
         return oop;
 
+    typedef T InstanceSide;
+    typedef typename T::Meta ClassSide;
+
     auto metaClass = staticNewInstance<Metaclass> ();
-    auto clazz = staticNewInstance<Class> ();
+    auto clazz = staticNewInstance<ClassSide> ();
     clazz->metaClass = Oop::fromObjectPtr(metaClass);
     metaClass->thisClass = Oop::fromObjectPtr(clazz);
     oop = Oop::fromObjectPtr(clazz);
@@ -740,20 +766,29 @@ Oop StaticClassObjectFor<T>::value()
     }
 
     metaClass->instanceVTable = &StaticClassVTableFor<Metaclass>::value;
-    clazz->instanceVTable = &StaticClassVTableFor<T>::value;
-    clazz->instanceSize = T::__isImmediate__ ? 0 : sizeof(T);
-    clazz->instanceAlignment = T::__isImmediate__ ? 1 : alignof(T);
+    clazz->instanceVTable = &StaticClassVTableFor<InstanceSide>::value;
+    clazz->instanceSize = InstanceSide::__isImmediate__ ? 0 : sizeof(InstanceSide);
+    clazz->instanceAlignment = InstanceSide::__isImmediate__ ? 1 : alignof(InstanceSide);
 
-    clazz->variableDataElementSize = T::__variableDataElementSize__;
-    clazz->variableDataElementAlignment = T::__variableDataElementAlignment__;
-    clazz->isVariableDataOop = T::__isVariableDataOop__;
+    clazz->variableDataElementSize = InstanceSide::__variableDataElementSize__;
+    clazz->variableDataElementAlignment = InstanceSide::__variableDataElementAlignment__;
+    clazz->variableDataGCReferenceType = InstanceSide::__variableDataGCReferenceType__;
+
+    metaClass->instanceSize = ClassSide::__isImmediate__ ? 0 : sizeof(ClassSide);
+    metaClass->instanceAlignment = ClassSide::__isImmediate__ ? 1 : alignof(ClassSide);
+
+    metaClass->variableDataElementSize = ClassSide::__variableDataElementSize__;
+    metaClass->variableDataElementAlignment = ClassSide::__variableDataElementAlignment__;
+    metaClass->variableDataGCReferenceType = ClassSide::__variableDataGCReferenceType__;
 
     clazz->name = Oop::internSymbol(T::__className__);
     clazz->addMethodCategories(T::__instanceMethods__());
     clazz->setSlotDefinitions(T::__slots__());
+    clazz->fixupParentSlotScope();
 
     metaClass->addMethodCategories(T::__classMethods__());
     metaClass->setSlotDefinitions(T::__classSlots__());
+    metaClass->fixupParentSlotScope();
 
     return oop;
 }
