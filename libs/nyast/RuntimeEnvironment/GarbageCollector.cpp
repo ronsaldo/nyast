@@ -3,6 +3,7 @@
 
 #include <atomic>
 #include <thread>
+#include <condition_variable>
 
 namespace nyast
 {
@@ -35,6 +36,10 @@ private:
     void stopTheWorldAndGarbageCollect();
     void performGarbageCollectionCycle();
 
+    void markPhase();
+    void sweepPhase();
+    void collectorThreadLoop();
+
     std::mutex collectorMutex;
     std::unordered_map<Oop*, size_t> globalOopRoots;
 
@@ -43,6 +48,11 @@ private:
 
     bool isRuntimeInitialized = false;
     std::atomic_bool isStoppingTheWorld = false;
+
+    bool shuttingDown;
+    std::thread collectorThread;
+    std::condition_variable collectorThreadPendingJobCondition;
+    std::condition_variable collectionCycleEnded;
 };
 
 GarbageCollector::~GarbageCollector()
@@ -54,13 +64,26 @@ GarbageCollector* GarbageCollector::createDefault()
     return new SimpleGarbageCollector();
 }
 
-
 SimpleGarbageCollector::SimpleGarbageCollector()
 {
+    {
+        std::thread t([=](){
+            collectorThreadLoop();
+        });
+        collectorThread.swap(t);
+    }
 }
 
 SimpleGarbageCollector::~SimpleGarbageCollector()
 {
+    {
+        std::unique_lock<std::mutex> l(collectorMutex);
+        shuttingDown = true;
+        isStoppingTheWorld.store(true, std::memory_order_release);
+        collectorThreadPendingJobCondition.notify_all();
+    }
+
+    collectorThread.join();
 }
 
 void SimpleGarbageCollector::checkCollectionConditionFor(size_t requiredAllocationSize)
@@ -78,9 +101,41 @@ void SimpleGarbageCollector::stopTheWorldAndGarbageCollect()
     stopTheWorldBarrier();
 }
 
+void SimpleGarbageCollector::collectorThreadLoop()
+{
+    for(;;)
+    {
+        std::unique_lock<std::mutex> l(collectorMutex);
+        bool shouldPerformCollectionCycle;
+        while(!(
+            (shouldPerformCollectionCycle = isStoppingTheWorld.load(std::memory_order_acquire) && activeThreadCount == 0) ||
+            shuttingDown))
+            collectorThreadPendingJobCondition.wait(l);
+
+        if(shouldPerformCollectionCycle)
+            performGarbageCollectionCycle();
+        
+        if(shuttingDown)
+            return;
+    }
+}
+
+void SimpleGarbageCollector::markPhase()
+{
+}
+
+void SimpleGarbageCollector::sweepPhase()
+{
+
+}
+
 void SimpleGarbageCollector::performGarbageCollectionCycle()
 {
-    printf("TODO: Garbage collect\n");
+    markPhase();
+    sweepPhase();
+
+    isStoppingTheWorld.store(false, std::memory_order_release);
+    collectionCycleEnded.notify_all();
 }
 
 uint8_t *SimpleGarbageCollector::allocateAndInitializeObjectMemoryWith(size_t allocationSize, const std::function<void (uint8_t*)> &memoryInitializationFunction)
@@ -110,6 +165,9 @@ void SimpleGarbageCollector::unregisterGlobalOopRoots(size_t rootCount, Oop *roo
 void SimpleGarbageCollector::registerThisThread()
 {
     std::unique_lock<std::mutex> l(collectorMutex);
+    while(isStoppingTheWorld.load(std::memory_order_acquire))
+        collectionCycleEnded.wait(l);
+
     auto selfId = std::this_thread::get_id();
     auto it = registeredThread.find(selfId);
     if(it != registeredThread.end())
@@ -139,8 +197,7 @@ void SimpleGarbageCollector::unregisterThisThread(StackRangeRecord *record)
     --activeThreadCount;
     if(activeThreadCount == 0)
     {
-        printf("TODO: Garbage collect on last thread leaving\n");
-        performGarbageCollectionCycle();
+        collectorThreadPendingJobCondition.notify_all();
     }
 }
 
@@ -155,18 +212,14 @@ void SimpleGarbageCollector::safePoint()
 void SimpleGarbageCollector::runtimeHasFinishedInitialization()
 {
     isRuntimeInitialized = true;
-    std::unique_lock<std::mutex> l(collectorMutex);
-    printf("TODO: Peform first garbage collection cycle\n");
-
+    stopTheWorldBarrier();
 }
 
 void SimpleGarbageCollector::stopTheWorldBarrier()
 {
-/*    std::unique_lock<std::mutex> l(collectorMutex);
-    auto it = registeredThread.find(std::this_thread::get_id());
-    assert(it != registeredThread.end());
-    assert(it->second.isActive);
-*/
-    printf("TODO: stopTheWorldBarrier\n");
+    // Release the current thread from the GC here.
+    withoutGarbageCollectedStack([]() {
+        // Nothing is required here.
+    });
 }
 } // End of namespace nyast
