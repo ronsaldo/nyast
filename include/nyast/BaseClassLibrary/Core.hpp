@@ -580,7 +580,7 @@ struct NYAST_CORE_EXPORT ProtoObject : Subclass<NyastObject, ProtoObject>
 
     // Blocks
     Oop evaluateValue() const;
-    Oop evaluateValueWithArg(Oop arg) const;
+    Oop evaluateValueWithArg(Oop arg);
 
     // Testing methods
     bool isArray() const;

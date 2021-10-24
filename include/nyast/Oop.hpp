@@ -1049,7 +1049,7 @@ struct NyastObjectDispatcher
         return evaluateValue();
     }
 
-    void setValue(Oop value) const
+    void setValue(Oop value)
     {
         evaluateValueWithArg(value);
     }
@@ -1059,7 +1059,7 @@ struct NyastObjectDispatcher
         return __vtable()->evaluateValue(abiSelf());
     }
 
-    Oop evaluateValueWithArg(Oop arg) const
+    Oop evaluateValueWithArg(Oop arg)
     {
         return __vtable()->evaluateValueWithArg(abiSelf(), arg);
     }

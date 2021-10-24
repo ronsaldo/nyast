@@ -62,6 +62,12 @@ Oop Association::evaluateValue() const
     return value;
 }
 
+Oop Association::evaluateValueWithArg(Oop arg)
+{
+    value = arg;
+    return self();
+}
+
 std::string Association::asString() const
 {
     return self()->printString();

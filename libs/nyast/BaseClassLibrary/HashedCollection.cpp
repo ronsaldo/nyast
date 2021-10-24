@@ -52,14 +52,14 @@ void HashedCollection::grow()
     auto newCapacity = oldCapacity*2;
 
     tally = 0;
-    array = Oop::fromObjectPtr(staticBasicNewInstance<Array> (newCapacity));
+    array = staticOopBasicNewInstance<Array> (newCapacity);
 
     for(size_t i = 1; i <= oldCapacity; ++i)
     {
         auto element = oldArray->basicAt(i);
         if(element.isNotNil())
         {
-            add(element);
+            self()->add(element);
         }
     }
 }

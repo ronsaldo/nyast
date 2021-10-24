@@ -144,7 +144,7 @@ Oop ProtoObject::evaluateValue() const
     return self().perform<Oop> ("value");
 }
 
-Oop ProtoObject::evaluateValueWithArg(Oop arg) const
+Oop ProtoObject::evaluateValueWithArg(Oop arg)
 {
     return self().perform<Oop> ("value:", arg);
 }

@@ -19,6 +19,8 @@ struct NYAST_CORE_EXPORT UndefinedObject : Subclass<Object, UndefinedObject>
         return ObjectSingletonInstanceOf<UndefinedObject>::value();
     }
 
+    Oop evaluateValue() const;
+
     std::string asString() const;
 };
 

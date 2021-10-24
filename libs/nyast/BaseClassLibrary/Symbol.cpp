@@ -1,24 +1,29 @@
 #include "nyast/BaseClassLibrary/Symbol.hpp"
+#include "nyast/BaseClassLibrary/Dictionary.hpp"
 
 #include "nyast/BaseClassLibrary/NativeClassRegistration.hpp"
 #include "nyast/BaseClassLibrary/CppMethodBinding.hpp"
 
 namespace nyast
 {
-static std::unordered_map<std::string, Oop> internedSymbols;
+static RootOop internedSymbols;
 
 Oop Oop::internSymbol(const std::string &string)
 {
-    auto it = internedSymbols.find(string);
-    if(it != internedSymbols.end())
-        return it->second;
+    if(internedSymbols.isNull())
+        internedSymbols = staticOopNewInstance<Dictionary> ();
 
+    auto stringOop = Oop::fromString(string);
+    auto existent = internedSymbols->atOrNil(stringOop);
+    if(existent.isNotNilOrNull())
+        return existent;
+    
     auto object = staticNewInstance<Symbol> (string.size());
     if(!string.empty())
         memcpy(object->variableData(), string.data(), string.size());
 
     auto oop = Oop::fromObjectPtr(object);
-    internedSymbols.insert(std::make_pair(string, oop));
+    internedSymbols->atPut(stringOop, oop);
     return oop;
 }
 

@@ -23,6 +23,7 @@ struct NYAST_CORE_EXPORT Association : Subclass<LookupKey, Association>
     bool isAssociation() const;
 
     Oop evaluateValue() const;
+    Oop evaluateValueWithArg(Oop arg);
 
     std::string asString() const;
     std::string printString() const;

@@ -27,6 +27,11 @@ MethodCategories UndefinedObject::__instanceMethods__()
     };
 }
 
+Oop UndefinedObject::evaluateValue() const
+{
+    return self();
+}
+
 std::string UndefinedObject::asString() const
 {
     return "nil";
