@@ -11,6 +11,7 @@ namespace nyast
 struct NYAST_CORE_EXPORT Message : Subclass<Object, Message>
 {
     static constexpr char const __className__[] = "Message";
+    static SlotDefinitions __slots__();
 
     std::string printString() const;
 

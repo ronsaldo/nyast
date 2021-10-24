@@ -13,6 +13,7 @@ struct NYAST_CORE_EXPORT MethodDictionary : Subclass<Dictionary, MethodDictionar
     static constexpr char const __className__[] = "MethodDictionary";
 
     static MethodCategories __instanceMethods__();
+    static SlotDefinitions __slots__();
 
     Oop initialize();
 

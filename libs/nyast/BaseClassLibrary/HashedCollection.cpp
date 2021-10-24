@@ -3,6 +3,7 @@
 
 #include "nyast/BaseClassLibrary/NativeClassRegistration.hpp"
 #include "nyast/BaseClassLibrary/CppMethodBinding.hpp"
+#include "nyast/BaseClassLibrary/CppMemberSlot.hpp"
 
 namespace nyast
 {
@@ -20,6 +21,13 @@ MethodCategories HashedCollection::__instanceMethods__()
             makeMethodBinding("grow", &SelfType::grow),
             makeMethodBinding("fullCheck", &SelfType::fullCheck),
         }}
+    };
+}
+
+SlotDefinitions HashedCollection::__slots__()
+{
+    return SlotDefinitions{
+        makeMemberSlot("array", &SelfType::array),
     };
 }
 

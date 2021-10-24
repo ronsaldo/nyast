@@ -22,6 +22,7 @@ SlotDefinitions Behavior::__slots__()
         makeMemberSlot("superclass", &SelfType::superclass),
         makeMemberSlot("methodDict", &SelfType::methodDict),
         makeMemberSlot("layout", &SelfType::layout),
+        makeMemberSlot("gcLayout", &SelfType::gcLayout),
 
         makeMemberSlot("instanceSize", &SelfType::instanceSize),
         makeMemberSlot("instanceAlignment", &SelfType::instanceAlignment),

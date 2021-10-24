@@ -53,6 +53,11 @@ void RuntimeEnvironmentImpl::ensureInitialization()
     isInitialized = true;
 }
 
+bool RuntimeEnvironment::hasCurrent()
+{
+    return defaultRuntimeEnvironment.get() != nullptr;
+}
+
 RuntimeEnvironment& RuntimeEnvironment::getCurrent()
 {
     std::call_once(defaultRuntimeEnvironmentInitialization, [](){

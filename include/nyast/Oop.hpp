@@ -25,6 +25,11 @@ struct NYAST_CORE_EXPORT NyastObject
 
     const NyastObjectVTable *__vtable = nullptr;
 
+    uint32_t __variableDataSize;
+    uint32_t __gcMarkingColor : 2;
+    uint32_t __isReadOnly : 1;
+    uint32_t __reservedBits : 29;
+
     Oop self() const;
 };
 
@@ -359,6 +364,16 @@ struct NYAST_CORE_EXPORT Oop : OopPointerSizeDependentImplementation<AbiOop>
         return value == nil().value;
     }
 
+    bool isNull() const
+    {
+        return value == 0;
+    }
+
+    bool isNilOrNull() const
+    {
+        return value == 0 || value == nil().value;
+    }
+
     bool isPointer() const
     {
         return (value & PointerTagMask) == PointerTagValue;
@@ -570,6 +585,7 @@ struct NYAST_CORE_EXPORT MemberOop : Oop
 struct NYAST_CORE_EXPORT RootOop : Oop
 {
     RootOop()
+        : Oop(0)
     {
         registerGlobalOopRoots(1, this);
     }

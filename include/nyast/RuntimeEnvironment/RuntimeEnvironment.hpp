@@ -18,6 +18,7 @@ class NYAST_CORE_EXPORT RuntimeEnvironment
 public:
     virtual ~RuntimeEnvironment();
 
+    static bool hasCurrent();
     static RuntimeEnvironment& getCurrent();
 
     virtual void ensureInitialization() = 0;

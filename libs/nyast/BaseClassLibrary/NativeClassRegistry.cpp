@@ -41,7 +41,7 @@ void NativeClassRegistry::initializeRuntimeEnvironmentClasses()
     for(auto &[name, registration] : nativeClassRegistrations)
         registration->getClass();
 
-    // Get the classes gclayout.
+    // Get the classes gc layout.
     for(auto &[name, registration] : nativeClassRegistrations)
     {
         registration->getClass()->getGCLayout();

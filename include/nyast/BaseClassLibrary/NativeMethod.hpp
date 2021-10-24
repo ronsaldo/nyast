@@ -14,6 +14,8 @@ namespace nyast
 struct NYAST_CORE_EXPORT NativeMethod : Subclass<Object, NativeMethod>
 {
     static constexpr char const __className__[] = "NativeMethod";
+    
+    static SlotDefinitions __slots__();
 
     MethodLookupResult asMethodLookupResult(MessageDispatchTrampolineSet trampolineSet) const;
 

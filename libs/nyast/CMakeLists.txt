@@ -2,6 +2,7 @@ set(Nyast_Sources
     Oop.cpp
 
     RuntimeEnvironment/GarbageCollector.cpp
+    RuntimeEnvironment/GCHeap.cpp
     RuntimeEnvironment/GCRoots.cpp
     RuntimeEnvironment/SimpleGCHeap.cpp
     RuntimeEnvironment/SpillRegisters.cpp
@@ -12,6 +13,7 @@ set(Nyast_Sources
     BaseClassLibrary/ArrayedCollection.cpp
     BaseClassLibrary/Association.cpp
     BaseClassLibrary/Behavior.cpp
+    BaseClassLibrary/Boolean.cpp
     BaseClassLibrary/BoxedFloat64.cpp
     BaseClassLibrary/ByteArray.cpp
     BaseClassLibrary/Character.cpp
@@ -23,9 +25,11 @@ set(Nyast_Sources
     BaseClassLibrary/CppMethodBinding.cpp
     BaseClassLibrary/Dictionary.cpp
     BaseClassLibrary/False.cpp
+    BaseClassLibrary/Float.cpp
     BaseClassLibrary/Fraction.cpp
     BaseClassLibrary/GCLayout.cpp
     BaseClassLibrary/HashedCollection.cpp
+    BaseClassLibrary/Integer.cpp
     BaseClassLibrary/LargeInteger.cpp
     BaseClassLibrary/LargeNegativeInteger.cpp
     BaseClassLibrary/LargePositiveInteger.cpp
@@ -33,6 +37,7 @@ set(Nyast_Sources
     BaseClassLibrary/LayoutClassScope.cpp
     BaseClassLibrary/LayoutEmptyScope.cpp
     BaseClassLibrary/LookupKey.cpp
+    BaseClassLibrary/Magnitude.cpp
     BaseClassLibrary/Message.cpp
     BaseClassLibrary/Metaclass.cpp
     BaseClassLibrary/MethodDictionary.cpp

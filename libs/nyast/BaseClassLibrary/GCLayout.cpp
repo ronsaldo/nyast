@@ -35,7 +35,7 @@ std::string GCLayout::printString() const
 {
     std::ostringstream out;
     out << "GCLayout instanceSize: " << instanceSize << " fixedLayout: #(";
-    fixedLayoutDo([&](GCReferenceType refType) {
+    fixedLayoutDo([&](size_t, GCReferenceType refType) {
         out << ' ' << GCReferenceTypeToString(refType);
     });
 

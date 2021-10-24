@@ -358,20 +358,13 @@ Oop staticOopNewInstance(size_t variableDataSize = 0, Args&&... args)
 template <typename T>
 struct ObjectSingletonInstanceOf
 {
-    static T makeSingleton()
-    {
-        T result;
-        result.__vtable = &StaticClassVTableFor<T>::value;
-        rootOop = Oop::fromObjectPtr(&instance);
-        return result;
-    }
-
-    static inline T instance = makeSingleton();
     static inline RootOop rootOop;
 
     static Oop value()
     {
-        return Oop::fromObjectPtr(&instance);
+        if(rootOop.isNull())
+            rootOop = staticOopBasicNewInstance<T> ();
+        return rootOop.asOop();
     }
 };
 
@@ -618,8 +611,6 @@ struct NYAST_CORE_EXPORT ProtoObject : Subclass<NyastObject, ProtoObject>
     std::string asStdString() const;
     std::vector<Oop> asOopList() const;
     ByteArrayData asByteArrayData() const;
-
-    uint32_t __variableDataSize;
 
 private:
     Oop yourself();

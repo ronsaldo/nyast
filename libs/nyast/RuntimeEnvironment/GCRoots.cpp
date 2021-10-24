@@ -20,7 +20,8 @@ void registerGlobalOopRoots(size_t rootCount, Oop *roots)
 
 void unregisterGlobalOopRoots(size_t rootCount, Oop *roots)
 {
-    RuntimeEnvironment::getCurrent().getGarbageCollector().unregisterGlobalOopRoots(rootCount, roots);
+    if(RuntimeEnvironment::hasCurrent())
+        RuntimeEnvironment::getCurrent().getGarbageCollector().unregisterGlobalOopRoots(rootCount, roots);
 }
 
 void activateStackRangeRecord(StackRangeRecord *record)

@@ -36,6 +36,8 @@ struct NYAST_CORE_EXPORT GCLayout : SubclassWithVariableDataOfType<Object, GCLay
         auto &word = fixedLayoutData[layoutDataWordPosition];
         word &= ~(GCReferenceTypeBitMask << layoutDataWordBitPosition);
         word |= uintptr_t(value) << layoutDataWordBitPosition;
+
+        usedReferenceTypesInFixedLayout |= 1<<uint8_t(value);
     }
 
     void setGCReferenceTypeAtOffsetSize(size_t offset, size_t valueSize, GCReferenceType value)
@@ -67,18 +69,24 @@ struct NYAST_CORE_EXPORT GCLayout : SubclassWithVariableDataOfType<Object, GCLay
         return getGCReferenceTypeAtWordIndex(offset / BytesPerWord);
     }
 
+    bool hasFixedReferencesOfType(GCReferenceType referenceType) const
+    {
+        return (usedReferenceTypesInFixedLayout & (1<<uint8_t(referenceType))) != 0;
+    }
+
     template<typename FT>
     void fixedLayoutDo(const FT &f) const
     {
         size_t wordCount = instanceSize / BytesPerWord;
         for(size_t i = 0; i < wordCount; ++i)
         {
-            f(getGCReferenceTypeAtWordIndex(i));
+            f(i, getGCReferenceTypeAtWordIndex(i));
         }
     }
 
     size_t instanceSize;
     GCReferenceType variableDataLayout;
+    uint8_t usedReferenceTypesInFixedLayout;
 };
 
 } // End of namespace namespace nyast

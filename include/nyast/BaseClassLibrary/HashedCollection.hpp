@@ -13,6 +13,7 @@ struct NYAST_CORE_EXPORT HashedCollection : Subclass<Collection, HashedCollectio
     static constexpr char const __className__[] = "HashedCollection";
 
     static MethodCategories __instanceMethods__();
+    static SlotDefinitions __slots__();
 
     Oop initialize();
     void fullCheck();

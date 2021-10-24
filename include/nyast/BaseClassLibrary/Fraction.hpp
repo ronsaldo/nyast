@@ -12,6 +12,8 @@ struct NYAST_CORE_EXPORT Fraction : Subclass<Number, Fraction>
 {
     static constexpr char const __className__[] = "Fraction";
 
+    static SlotDefinitions __slots__();
+
     static Oop constructWithNumeratorDenominator(Oop numerator, Oop denominator);
 
     double asFloat64();

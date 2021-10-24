@@ -1,11 +1,20 @@
 #include "nyast/BaseClassLibrary/Fraction.hpp"
 
 #include "nyast/BaseClassLibrary/NativeClassRegistration.hpp"
+#include "nyast/BaseClassLibrary/CppMemberSlot.hpp"
 
 namespace nyast
 {
 
 static NativeClassRegistration<Fraction> fractionClassRegistration;
+
+SlotDefinitions Fraction::__slots__()
+{
+    return SlotDefinitions{
+        makeMemberSlot("numerator", &SelfType::numerator),
+        makeMemberSlot("denominator", &SelfType::denominator),
+    };
+}
 
 Oop Fraction::constructWithNumeratorDenominator(Oop numerator, Oop denominator)
 {

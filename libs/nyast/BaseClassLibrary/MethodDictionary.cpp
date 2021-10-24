@@ -3,10 +3,18 @@
 
 #include "nyast/BaseClassLibrary/NativeClassRegistration.hpp"
 #include "nyast/BaseClassLibrary/CppMethodBinding.hpp"
+#include "nyast/BaseClassLibrary/CppMemberSlot.hpp"
 
 namespace nyast
 {
 static NativeClassRegistration<MethodDictionary> methodDictionaryClassRegistration;
+
+SlotDefinitions MethodDictionary::__slots__()
+{
+    return SlotDefinitions{
+        makeMemberSlot("methods", &SelfType::methods),
+    };
+}
 
 MethodCategories MethodDictionary::__instanceMethods__()
 {
