@@ -16,11 +16,18 @@ environment.
 
 NyaST can be built with CMake by running the following commands in bash:
 
-```
+```bash
 mkdir build
 cd build
 cmake ..
 cmake --build .
+```
+
+Once nyast is built, the result artifact is provided in the dist folder. Basic evaluation can be tested from the command line with the following bash scripts:
+
+```bash
+cd build/dist
+./nyast -eval "1 + 1"
 ```
 
 ## Status
@@ -28,4 +35,12 @@ cmake --build .
 The following matrix describes the current implementation status of nyast:
 
 | Feature Name | Status |
-| ------------ | ------ |
+| ----------------- | ----------------- |
+| Large Integer Arithmetic | Not started |
+| Smalltalk Parser | Done |
+| Smalltalk Compiler | Not started. Basic AST evaluator provided for testing |
+| Garbage Collector | Initial implementation done. Full feature testing is missing |
+| Optimized GC heap | Not started |
+| Bytecode interpreter | Not started |
+| JIT compiler | Not started |
+| AoT compiler | Not started |
