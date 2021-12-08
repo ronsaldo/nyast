@@ -20,7 +20,7 @@ MethodCategories LookupKey::__classMethods__()
 {
     return MethodCategories{
         {"constructing", {
-            makeMethodBinding<Oop (Oop, Oop)> ("key:", [](Oop clazz, Oop key) {
+            makeMethodBinding<Oop (Oop, Oop)> ("key:", +[](Oop clazz, Oop key) {
                 auto result = clazz->basicNewInstance();
                 result.as<SelfType> ()->key = key;
                 return result;

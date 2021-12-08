@@ -75,7 +75,7 @@ Oop SmallFloat64::divisionWith(Oop other)
 std::string SmallFloat64::asString() const
 {
     std::ostringstream out;
-    out << self().decodeSmallFloat() << std::ends;
+    out << self().decodeSmallFloat();
     return out.str();
 }
 

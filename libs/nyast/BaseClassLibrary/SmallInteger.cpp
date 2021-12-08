@@ -29,7 +29,7 @@ MethodCategories SmallInteger::__instanceMethods__()
 std::string SmallInteger::asString() const
 {
     std::ostringstream out;
-    out << self().decodeSmallInteger() << std::ends;
+    out << self().decodeSmallInteger();
     return out.str();
 }
 

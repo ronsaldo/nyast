@@ -41,7 +41,7 @@ std::string ByteArray::printString() const
         out << int(v);
     }
 
-    out << ']' << std::ends;
+    out << ']';
     return out.str();
 }
 

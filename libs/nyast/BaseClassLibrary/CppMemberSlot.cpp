@@ -35,7 +35,7 @@ std::string CppMemberSlotBase::printString() const
     out << "CppMemberSlot named: " << name->printString()
         << " offset: " << offset
         << " fieldSize: " << fieldSize
-        << " referenceType: #" << GCReferenceTypeToString(referenceType) << std::ends;
+        << " referenceType: #" << GCReferenceTypeToString(referenceType);
     return out.str();
 }
 

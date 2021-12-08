@@ -29,7 +29,7 @@ MethodCategories CppMethodBindingBase::__instanceMethods__()
 std::string CppMethodBindingBase::printString() const
 {
     std::ostringstream out;
-    out << "CppMethodBinding selector: " << selector->printString() << std::ends;
+    out << "CppMethodBinding selector: " << selector->printString();
     return out.str();
 }
 

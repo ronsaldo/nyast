@@ -39,7 +39,7 @@ std::string GCLayout::printString() const
         out << ' ' << GCReferenceTypeToString(refType);
     });
 
-    out << " ) variableDataLayout: " << GCReferenceTypeToString(variableDataLayout) << std::ends;
+    out << " ) variableDataLayout: " << GCReferenceTypeToString(variableDataLayout);
     return out.str();
 }
 

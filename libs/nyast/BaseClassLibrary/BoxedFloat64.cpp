@@ -83,7 +83,7 @@ Oop BoxedFloat64::divisionWith(Oop other)
 std::string BoxedFloat64::asString() const
 {
     std::ostringstream out;
-    out << value << std::ends;
+    out << value;
     return out.str();
 }
 

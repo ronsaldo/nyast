@@ -21,7 +21,7 @@ MethodCategories Association::__classMethods__()
 {
     return MethodCategories{
         {"constructing", {
-            makeMethodBinding<Oop (Oop, Oop, Oop)> ("key:value:", [](Oop clazz, Oop key, Oop value) {
+            makeMethodBinding<Oop (Oop, Oop, Oop)> ("key:value:", +[](Oop clazz, Oop key, Oop value) {
                 auto result = clazz->basicNewInstance();
                 result.as<SelfType> ()->key = key;
                 result.as<SelfType> ()->value = value;

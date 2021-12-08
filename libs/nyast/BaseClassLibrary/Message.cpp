@@ -24,7 +24,6 @@ std::string Message::printString() const
     out << selector->printString();
     for(auto &arg : args->asOopList())
         out << " " << arg->printString();
-    out << std::ends;
     return out.str();
 }
 

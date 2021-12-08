@@ -12,7 +12,7 @@ MethodCategories Object::__instanceMethods__()
 {
     return MethodCategories{
         {"associating", {
-            makeMethodBinding<Oop (Oop, Oop)> ("->", [](Oop self, Oop value) {
+            makeMethodBinding<Oop (Oop, Oop)> ("->", +[](Oop self, Oop value) {
                 return Oop::fromObjectPtr(staticBasicNewInstance<Association> (0, self, value));
             }),
         }},

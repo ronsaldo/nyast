@@ -88,7 +88,7 @@ std::string Array::printString() const
         out << v;
     }
 
-    out << '}' << std::ends;
+    out << '}';
     return out.str();
 }
 
